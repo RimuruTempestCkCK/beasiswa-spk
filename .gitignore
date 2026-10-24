@@ -43,7 +43,6 @@ frontend/coverage/
 # ===========================
 # General
 # ===========================
-architectui-react-theme-free/
 *.log
 *.tmp
 .DS_Store
