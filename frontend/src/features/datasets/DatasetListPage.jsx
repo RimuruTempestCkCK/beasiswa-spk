@@ -92,13 +92,6 @@ export default function DatasetListPage() {
             <h2 className="panel-title">Daftar Batch Terdaftar</h2>
             <p className="panel-sub">Arsip batch data mahasiswa calon penerima beasiswa</p>
           </div>
-          <button
-            type="button"
-            className="btn btn-sm btn-outline-secondary"
-            onClick={() => fetchDatasets(page)}
-          >
-            Refresh
-          </button>
         </div>
 
         {loading ? (

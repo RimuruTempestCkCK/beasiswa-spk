@@ -373,13 +373,6 @@ export default function PredictionsPage() {
             <h2 className="panel-title">Riwayat Prediksi Terbaru</h2>
             <p className="panel-sub">Daftar ringkas log prediksi (klik tombol detail untuk melihat rincian pop-up)</p>
           </div>
-          <button
-            type="button"
-            className="btn btn-sm btn-outline-secondary"
-            onClick={fetchHistory}
-          >
-            Refresh
-          </button>
         </div>
         <div className="table-wrap">
           <table className="table-data table-stack">

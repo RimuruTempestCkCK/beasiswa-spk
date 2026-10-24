@@ -290,13 +290,6 @@ export default function ClusteringPage() {
             <h2 className="panel-title">Daftar Hasil Eksperimen Clustering</h2>
             <p className="panel-sub">Klik Detail untuk membuka popup profil klaster dan sampel data</p>
           </div>
-          <button
-            type="button"
-            className="btn btn-sm btn-outline-secondary"
-            onClick={fetchRuns}
-          >
-            Refresh
-          </button>
         </div>
         <div className="table-wrap">
           <table className="table-data table-stack">

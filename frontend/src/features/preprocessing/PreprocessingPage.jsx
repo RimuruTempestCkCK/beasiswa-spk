@@ -188,14 +188,6 @@ export default function PreprocessingPage() {
                 <h2 className="panel-title">Riwayat Preprocessing Runs</h2>
                 <p className="panel-sub">Log normalisasi dataset (klik detail untuk melihat pop-up parameter)</p>
               </div>
-              <button
-                type="button"
-                className="btn btn-sm btn-outline-secondary"
-                onClick={fetchRuns}
-                disabled={loading}
-              >
-                Refresh
-              </button>
             </div>
 
             {runs.length === 0 ? (

@@ -275,13 +275,6 @@ export default function TrainingPage() {
                 <h2 className="panel-title">Daftar Versi Model</h2>
                 <p className="panel-sub">Model Backpropagation dan status aktif</p>
               </div>
-              <button
-                type="button"
-                className="btn btn-sm btn-outline-secondary"
-                onClick={fetchModels}
-              >
-                Refresh
-              </button>
             </div>
 
             {models.length === 0 ? (

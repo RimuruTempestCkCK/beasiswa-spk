@@ -94,13 +94,6 @@ export default function UsersPage() {
                 <h2 className="panel-title">Daftar Pengguna Sistem</h2>
                 <p className="panel-sub">Staf dan pengelola seleksi beasiswa</p>
               </div>
-              <button
-                type="button"
-                className="btn btn-sm btn-outline-secondary"
-                onClick={fetchUsers}
-              >
-                Refresh
-              </button>
             </div>
             <div className="table-wrap">
               <table className="table-data table-compact">
@@ -165,13 +158,6 @@ export default function UsersPage() {
                 <h2 className="panel-title">Jejak Aktivitas (Audit Logs)</h2>
                 <p className="panel-sub">Catatan riwayat perubahan dan operasi sistem</p>
               </div>
-              <button
-                type="button"
-                className="btn btn-sm btn-outline-secondary"
-                onClick={fetchAuditLogs}
-              >
-                Refresh
-              </button>
             </div>
             <div className="table-wrap">
               <table className="table-data table-compact">
