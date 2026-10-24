@@ -4,6 +4,7 @@ import { toast } from 'react-toastify';
 import apiClient from '../../services/apiClient';
 import { API } from '../../services/endpoints';
 import PageTitle from '../../Layout/AppMain/PageTitle';
+import Modal from '../../components/Modal';
 
 export default function DatasetDetailPage() {
   const { id } = useParams();
@@ -15,6 +16,8 @@ export default function DatasetDetailPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [filter, setFilter] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
+  const [selectedRecord, setSelectedRecord] = useState(null);
+  const [detailModalOpen, setDetailModalOpen] = useState(false);
   const [form, setForm] = useState({
     nim: '',
     nama: '',
@@ -88,19 +91,25 @@ export default function DatasetDetailPage() {
         skor_prestasi_nonakademik: '',
         persentase_kehadiran: '',
       });
-      fetchRecords(page, filter);
+      fetchRecords(1);
+      fetchDataset();
     } catch (err) {
-      toast.error(err.response?.data?.detail || 'Gagal menambah record mahasiswa');
+      toast.error(err.response?.data?.detail || 'Gagal menambahkan data');
     } finally {
       setSaving(false);
     }
   };
 
+  const handleOpenDetail = (record) => {
+    setSelectedRecord(record);
+    setDetailModalOpen(true);
+  };
+
   return (
     <>
       <PageTitle
-        heading={dataset ? dataset.name : 'Data Mahasiswa'}
-        subheading="Daftar calon mahasiswa dan atribut akademik/sosial-ekonomi dalam batch ini"
+        heading={dataset?.batch_name || dataset?.name || 'Detail Batch Dataset'}
+        subheading={`Batch #${id} · ${dataset?.total_rows || dataset?.record_count || 0} Mahasiswa terdaftar`}
         eyebrow="Data Mahasiswa · SPK Beasiswa"
         actions={
           <div className="d-flex gap-2">
@@ -111,420 +120,377 @@ export default function DatasetDetailPage() {
             >
               &larr; Kembali
             </button>
-            {id && (
-              <button
-                type="button"
-                className="btn btn-outline-primary"
-                onClick={() => navigate(`/datasets/${id}/import`)}
-              >
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  aria-hidden="true"
-                  focusable="false"
-                >
-                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" />
-                </svg>
-                <span>Import File CSV</span>
-              </button>
-            )}
+            <button
+              type="button"
+              className="btn btn-outline-primary"
+              onClick={() => navigate(`/datasets/${id}/import`)}
+            >
+              Upload CSV
+            </button>
             <button
               type="button"
               className="btn btn-primary"
               onClick={() => setModalOpen(true)}
             >
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                aria-hidden="true"
-                focusable="false"
-              >
-                <path d="M12 5v14M5 12h14" />
-              </svg>
-              <span>Tambah Mahasiswa</span>
+              + Tambah Record
             </button>
           </div>
         }
       />
 
-      {/* Batch Overview Panel */}
-      {dataset && (
-        <section className="panel mb-4">
-          <div className="panel-body">
-            <div className="d-flex flex-wrap align-items-center justify-content-between gap-3">
-              <div>
-                <h3 className="h5 mb-1 fw-bold">{dataset.name}</h3>
-                <p className="text-muted mb-0">{dataset.description || 'Tidak ada deskripsi tambahan'}</p>
-              </div>
-              <div className="d-flex align-items-center gap-3">
-                <span className="text-muted small">
-                  Status Batch:
-                </span>
-                <span
-                  className={`status status-${
-                    dataset.status === 'validated'
-                      ? 'success'
-                      : dataset.status === 'imported'
-                        ? 'info'
-                        : dataset.status === 'rejected'
-                          ? 'danger'
-                          : 'neutral'
-                  }`}
-                >
-                  {dataset.status}
-                </span>
-              </div>
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* Records Table Panel */}
+      {/* Filter and Table Panel */}
       <section className="panel">
-        <div className="panel-head panel-head-flush">
-          <form className="filter-bar w-100" onSubmit={handleSearch}>
-            <div className="filter-search flex-grow-1">
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                aria-hidden="true"
-                focusable="false"
-              >
-                <circle cx="11" cy="11" r="7" />
-                <path d="m21 21-4.3-4.3" />
-              </svg>
-              <input
-                type="search"
-                className="form-control"
-                placeholder="Cari berdasarkan NIM atau Nama mahasiswa..."
-                value={filter}
-                onChange={(e) => setFilter(e.target.value)}
-              />
-            </div>
-            <button type="submit" className="btn btn-outline-secondary">
+        <div className="panel-head flex-wrap gap-2">
+          <div>
+            <h2 className="panel-title">Data Mahasiswa Calon Penerima</h2>
+            <p className="panel-sub">Tabel 6 indikator evaluasi akademik &amp; sosio-ekonomi</p>
+          </div>
+          <form onSubmit={handleSearch} className="d-flex gap-2">
+            <input
+              type="search"
+              className="form-control form-control-sm"
+              placeholder="Cari NIM atau Nama..."
+              value={filter}
+              onChange={(e) => setFilter(e.target.value)}
+              style={{ width: 220 }}
+            />
+            <button type="submit" className="btn btn-sm btn-secondary">
               Cari
             </button>
-            {filter && (
-              <button
-                type="button"
-                className="btn btn-link btn-clear"
-                onClick={() => {
-                  setFilter('');
-                  fetchRecords(1, '');
-                }}
-              >
-                Reset
-              </button>
-            )}
           </form>
         </div>
 
         {loading ? (
           <div className="text-center py-5">
-            <div
-              className="spinner-border text-primary"
-              role="status"
-              style={{ width: '2.5rem', height: '2.5rem' }}
-            >
-              <span className="visually-hidden">Loading...</span>
-            </div>
-            <p className="text-muted mt-2">Memuat rekod mahasiswa...</p>
-          </div>
-        ) : records.length === 0 ? (
-          <div className="p-4 text-center">
-            <p className="text-muted mb-0">Belum ada data mahasiswa untuk batch ini.</p>
+            <div className="spinner-border text-primary" role="status" />
+            <p className="text-muted mt-2">Memuat data mahasiswa...</p>
           </div>
         ) : (
-          <>
-            <div className="table-wrap">
-              <table className="table-data table-stack">
-                <thead>
-                  <tr>
-                    <th scope="col">NIM</th>
-                    <th scope="col">Nama Mahasiswa</th>
-                    <th scope="col" className="text-end">IPK</th>
-                    <th scope="col" className="text-end">Penghasilan Ortu</th>
-                    <th scope="col" className="text-end">Tanggungan</th>
-                    <th scope="col" className="text-end">Prestasi Akad.</th>
-                    <th scope="col" className="text-end">Prestasi Non-Akad.</th>
-                    <th scope="col" className="text-end">Kehadiran</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {records.map((r) => (
-                    <tr key={r.id}>
-                      <td className="num fw-semibold">{r.nim}</td>
-                      <td className="cell-main">{r.nama}</td>
-                      <td className="num text-end">
-                        {r.ipk !== undefined && r.ipk !== null ? Number(r.ipk).toFixed(2) : '-'}
-                      </td>
-                      <td className="num text-end">
-                        {r.penghasilan_ortu !== undefined && r.penghasilan_ortu !== null
+          <div className="table-wrap">
+            <table className="table-data table-stack">
+              <thead>
+                <tr>
+                  <th scope="col">NIM / Kode</th>
+                  <th scope="col">Nama Mahasiswa</th>
+                  <th scope="col" className="text-end">IPK</th>
+                  <th scope="col" className="text-end">Penghasilan Ortu</th>
+                  <th scope="col">Status</th>
+                  <th scope="col" className="text-end">Aksi</th>
+                </tr>
+              </thead>
+              <tbody>
+                {records.map((r, i) => (
+                  <tr key={r.id || i}>
+                    <td className="num fw-bold">{r.student_code || r.nim || `#${i + 1}`}</td>
+                    <td className="cell-main">
+                      <span className="fw-semibold">{r.student_name || r.nama || '-'}</span>
+                    </td>
+                    <td className="num text-end">
+                      {r.ipk !== undefined && r.ipk !== null ? Number(r.ipk).toFixed(2) : '-'}
+                    </td>
+                    <td className="num text-end">
+                      {r.parent_income !== undefined && r.parent_income !== null
+                        ? `Rp ${Number(r.parent_income).toLocaleString('id-ID')}`
+                        : r.penghasilan_ortu !== undefined && r.penghasilan_ortu !== null
                           ? `Rp ${Number(r.penghasilan_ortu).toLocaleString('id-ID')}`
                           : '-'}
-                      </td>
-                      <td className="num text-end">{r.jumlah_tanggungan ?? '-'}</td>
-                      <td className="num text-end">{r.skor_prestasi_akademik ?? '-'}</td>
-                      <td className="num text-end">{r.skor_prestasi_nonakademik ?? '-'}</td>
-                      <td className="num text-end">
-                        {r.persentase_kehadiran !== undefined && r.persentase_kehadiran !== null
-                          ? `${r.persentase_kehadiran}%`
-                          : '-'}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            {totalPages > 1 && (
-              <div className="panel-foot">
-                <p className="pager-info">
-                  Halaman <strong>{page}</strong> dari <strong>{totalPages}</strong>
-                </p>
-                <ul className="pager">
-                  <li>
-                    <button
-                      type="button"
-                      className="pager-btn"
-                      disabled={page <= 1}
-                      onClick={() => setPage(page - 1)}
-                    >
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="m15 18-6-6 6-6" />
-                      </svg>
-                    </button>
-                  </li>
-                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-                    <li key={p}>
+                    </td>
+                    <td>
+                      <span
+                        className={`status status-${
+                          r.data_status === 'validated' || r.status === 'valid'
+                            ? 'success'
+                            : r.data_status === 'invalid'
+                              ? 'danger'
+                              : 'neutral'
+                        }`}
+                      >
+                        {r.data_status || r.status || 'raw'}
+                      </span>
+                    </td>
+                    <td className="text-end">
                       <button
                         type="button"
-                        className={`pager-btn ${p === page ? 'is-current' : ''}`}
-                        onClick={() => setPage(p)}
+                        className="btn btn-sm btn-outline-primary"
+                        onClick={() => handleOpenDetail(r)}
                       >
-                        {p}
+                        Lihat 6 Variabel (Pop-Up)
                       </button>
-                    </li>
-                  ))}
-                  <li>
-                    <button
-                      type="button"
-                      className="pager-btn"
-                      disabled={page >= totalPages}
-                      onClick={() => setPage(page + 1)}
-                    >
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="m9 18 6-6-6-6" />
-                      </svg>
-                    </button>
-                  </li>
-                </ul>
-              </div>
-            )}
-          </>
+                    </td>
+                  </tr>
+                ))}
+                {records.length === 0 && (
+                  <tr>
+                    <td colSpan={6} className="text-center text-muted py-5">
+                      Belum ada data mahasiswa pada batch ini. Klik tombol <strong>+ Tambah Record</strong> atau <strong>Upload CSV</strong>.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {totalPages > 1 && (
+          <div className="p-3 d-flex justify-content-between align-items-center border-top">
+            <span className="text-muted small">
+              Halaman {page} dari {totalPages}
+            </span>
+            <div className="btn-group btn-group-sm">
+              <button
+                type="button"
+                className="btn btn-outline-secondary"
+                disabled={page <= 1}
+                onClick={() => {
+                  const p = Math.max(1, page - 1);
+                  setPage(p);
+                  fetchRecords(p, filter);
+                }}
+              >
+                Sebelumnya
+              </button>
+              <button
+                type="button"
+                className="btn btn-outline-secondary"
+                disabled={page >= totalPages}
+                onClick={() => {
+                  const p = Math.min(totalPages, page + 1);
+                  setPage(p);
+                  fetchRecords(p, filter);
+                }}
+              >
+                Selanjutnya
+              </button>
+            </div>
+          </div>
         )}
       </section>
 
-      {/* Modal Tambah Record */}
-      {modalOpen && (
-        <div
-          className="modal fade show d-block"
-          tabIndex="-1"
-          style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}
-        >
-          <div className="modal-dialog modal-dialog-centered modal-lg">
-            <div className="modal-content">
-              <div className="modal-header">
-                <h5 className="modal-title">Tambah Mahasiswa Baru</h5>
-                <button
-                  type="button"
-                  className="btn-close"
-                  onClick={() => setModalOpen(false)}
-                />
-              </div>
-              <form onSubmit={handleAddRecord}>
-                <div className="modal-body">
-                  <div className="row g-3">
-                    <div className="col-md-6">
-                      <label className="form-label" htmlFor="recNim">
-                        NIM *
-                      </label>
-                      <input
-                        id="recNim"
-                        type="text"
-                        className="form-control"
-                        value={form.nim}
-                        onChange={(e) => setForm({ ...form, nim: e.target.value })}
-                        required
-                        placeholder="Contoh: 202601001"
-                      />
-                    </div>
-                    <div className="col-md-6">
-                      <label className="form-label" htmlFor="recNama">
-                        Nama Lengkap *
-                      </label>
-                      <input
-                        id="recNama"
-                        type="text"
-                        className="form-control"
-                        value={form.nama}
-                        onChange={(e) => setForm({ ...form, nama: e.target.value })}
-                        required
-                        placeholder="Nama mahasiswa"
-                      />
-                    </div>
-                    <div className="col-md-4">
-                      <label className="form-label" htmlFor="recIpk">
-                        IPK (0.00 - 4.00) *
-                      </label>
-                      <input
-                        id="recIpk"
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        max="4"
-                        className="form-control"
-                        value={form.ipk}
-                        onChange={(e) => setForm({ ...form, ipk: e.target.value })}
-                        required
-                        placeholder="Contoh: 3.75"
-                      />
-                    </div>
-                    <div className="col-md-4">
-                      <label className="form-label" htmlFor="recGaji">
-                        Penghasilan Orang Tua (Rp) *
-                      </label>
-                      <input
-                        id="recGaji"
-                        type="number"
-                        min="0"
-                        className="form-control"
-                        value={form.penghasilan_ortu}
-                        onChange={(e) =>
-                          setForm({ ...form, penghasilan_ortu: e.target.value })
-                        }
-                        required
-                        placeholder="Contoh: 2500000"
-                      />
-                    </div>
-                    <div className="col-md-4">
-                      <label className="form-label" htmlFor="recTanggungan">
-                        Jumlah Tanggungan *
-                      </label>
-                      <input
-                        id="recTanggungan"
-                        type="number"
-                        min="0"
-                        className="form-control"
-                        value={form.jumlah_tanggungan}
-                        onChange={(e) =>
-                          setForm({ ...form, jumlah_tanggungan: e.target.value })
-                        }
-                        required
-                        placeholder="Contoh: 3"
-                      />
-                    </div>
-                    <div className="col-md-4">
-                      <label className="form-label" htmlFor="recPrestasiAkad">
-                        Skor Prestasi Akademik (0 - 100) *
-                      </label>
-                      <input
-                        id="recPrestasiAkad"
-                        type="number"
-                        step="0.1"
-                        min="0"
-                        max="100"
-                        className="form-control"
-                        value={form.skor_prestasi_akademik}
-                        onChange={(e) =>
-                          setForm({
-                            ...form,
-                            skor_prestasi_akademik: e.target.value,
-                          })
-                        }
-                        required
-                        placeholder="Contoh: 85"
-                      />
-                    </div>
-                    <div className="col-md-4">
-                      <label className="form-label" htmlFor="recPrestasiNon">
-                        Skor Prestasi Nonakademik (0 - 100) *
-                      </label>
-                      <input
-                        id="recPrestasiNon"
-                        type="number"
-                        step="0.1"
-                        min="0"
-                        max="100"
-                        className="form-control"
-                        value={form.skor_prestasi_nonakademik}
-                        onChange={(e) =>
-                          setForm({
-                            ...form,
-                            skor_prestasi_nonakademik: e.target.value,
-                          })
-                        }
-                        required
-                        placeholder="Contoh: 70"
-                      />
-                    </div>
-                    <div className="col-md-4">
-                      <label className="form-label" htmlFor="recKehadiran">
-                        Kehadiran (%) *
-                      </label>
-                      <input
-                        id="recKehadiran"
-                        type="number"
-                        step="0.1"
-                        min="0"
-                        max="100"
-                        className="form-control"
-                        value={form.persentase_kehadiran}
-                        onChange={(e) =>
-                          setForm({
-                            ...form,
-                            persentase_kehadiran: e.target.value,
-                          })
-                        }
-                        required
-                        placeholder="Contoh: 95.5"
-                      />
-                    </div>
-                  </div>
-                </div>
-                <div className="modal-footer">
-                  <button
-                    type="button"
-                    className="btn btn-outline-secondary"
-                    onClick={() => setModalOpen(false)}
-                  >
-                    Batal
-                  </button>
-                  <button
-                    type="submit"
-                    className="btn btn-primary"
-                    disabled={saving}
-                  >
-                    {saving ? 'Menyimpan...' : 'Simpan Data'}
-                  </button>
-                </div>
-              </form>
+      {/* POPUP MODAL: Tambah Record */}
+      <Modal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        size="lg"
+        title="Tambah Mahasiswa Baru"
+        subtitle="Input 6 indikator kanonis seleksi beasiswa"
+        footer={
+          <div className="d-flex justify-content-end gap-2 w-100">
+            <button
+              type="button"
+              className="btn btn-secondary"
+              onClick={() => setModalOpen(false)}
+            >
+              Batal
+            </button>
+            <button
+              type="submit"
+              form="addRecordForm"
+              className="btn btn-primary"
+              disabled={saving}
+            >
+              {saving ? 'Menyimpan...' : 'Simpan Data Mahasiswa'}
+            </button>
+          </div>
+        }
+      >
+        <form id="addRecordForm" onSubmit={handleAddRecord}>
+          <div className="row g-3">
+            <div className="col-md-6">
+              <label className="form-label" htmlFor="nim">
+                NIM / Kode Mahasiswa *
+              </label>
+              <input
+                id="nim"
+                type="text"
+                className="form-control"
+                value={form.nim}
+                onChange={(e) => setForm({ ...form, nim: e.target.value })}
+                required
+                placeholder="Contoh: 202100123"
+              />
+            </div>
+            <div className="col-md-6">
+              <label className="form-label" htmlFor="nama">
+                Nama Lengkap Mahasiswa *
+              </label>
+              <input
+                id="nama"
+                type="text"
+                className="form-control"
+                value={form.nama}
+                onChange={(e) => setForm({ ...form, nama: e.target.value })}
+                required
+                placeholder="Contoh: Ahmad Fauzi"
+              />
+            </div>
+            <div className="col-md-6">
+              <label className="form-label" htmlFor="ipk">
+                Indeks Prestasi Kumulatif (0.00 - 4.00) *
+              </label>
+              <input
+                id="ipk"
+                type="number"
+                step="0.01"
+                min="0"
+                max="4"
+                className="form-control"
+                value={form.ipk}
+                onChange={(e) => setForm({ ...form, ipk: e.target.value })}
+                required
+                placeholder="Contoh: 3.75"
+              />
+            </div>
+            <div className="col-md-6">
+              <label className="form-label" htmlFor="penghasilan_ortu">
+                Penghasilan Orang Tua (Rp) *
+              </label>
+              <input
+                id="penghasilan_ortu"
+                type="number"
+                min="0"
+                className="form-control"
+                value={form.penghasilan_ortu}
+                onChange={(e) => setForm({ ...form, penghasilan_ortu: e.target.value })}
+                required
+                placeholder="Contoh: 1500000"
+              />
+            </div>
+            <div className="col-md-6">
+              <label className="form-label" htmlFor="jumlah_tanggungan">
+                Jumlah Tanggungan Keluarga *
+              </label>
+              <input
+                id="jumlah_tanggungan"
+                type="number"
+                min="0"
+                className="form-control"
+                value={form.jumlah_tanggungan}
+                onChange={(e) => setForm({ ...form, jumlah_tanggungan: e.target.value })}
+                required
+                placeholder="Contoh: 3"
+              />
+            </div>
+            <div className="col-md-6">
+              <label className="form-label" htmlFor="skor_prestasi_akademik">
+                Skor Prestasi Akademik (0 - 100) *
+              </label>
+              <input
+                id="skor_prestasi_akademik"
+                type="number"
+                step="0.1"
+                min="0"
+                max="100"
+                className="form-control"
+                value={form.skor_prestasi_akademik}
+                onChange={(e) => setForm({ ...form, skor_prestasi_akademik: e.target.value })}
+                required
+                placeholder="Contoh: 80"
+              />
+            </div>
+            <div className="col-md-6">
+              <label className="form-label" htmlFor="skor_prestasi_nonakademik">
+                Skor Prestasi Non-Akademik (0 - 100) *
+              </label>
+              <input
+                id="skor_prestasi_nonakademik"
+                type="number"
+                step="0.1"
+                min="0"
+                max="100"
+                className="form-control"
+                value={form.skor_prestasi_nonakademik}
+                onChange={(e) => setForm({ ...form, skor_prestasi_nonakademik: e.target.value })}
+                required
+                placeholder="Contoh: 75"
+              />
+            </div>
+            <div className="col-md-6">
+              <label className="form-label" htmlFor="persentase_kehadiran">
+                Persentase Kehadiran (%) *
+              </label>
+              <input
+                id="persentase_kehadiran"
+                type="number"
+                step="0.1"
+                min="0"
+                max="100"
+                className="form-control"
+                value={form.persentase_kehadiran}
+                onChange={(e) => setForm({ ...form, persentase_kehadiran: e.target.value })}
+                required
+                placeholder="Contoh: 95.0"
+              />
             </div>
           </div>
-        </div>
-      )}
+        </form>
+      </Modal>
+
+      {/* POPUP MODAL: Rincian 6 Variabel Record */}
+      <Modal
+        isOpen={detailModalOpen}
+        onClose={() => setDetailModalOpen(false)}
+        size="md"
+        title={`Rincian Mahasiswa: ${selectedRecord?.student_name || selectedRecord?.nama || '-'}`}
+        subtitle={`NIM: ${selectedRecord?.student_code || selectedRecord?.nim || '-'}`}
+        footer={
+          <button
+            type="button"
+            className="btn btn-secondary"
+            onClick={() => setDetailModalOpen(false)}
+          >
+            Tutup
+          </button>
+        }
+      >
+        {selectedRecord && (
+          <div>
+            <div className="d-flex justify-content-between align-items-center p-3 mb-3 bg-light rounded border">
+              <div>
+                <span className="text-muted small d-block">Status Data</span>
+                <span className="fw-bold fs-6 text-success">
+                  {(selectedRecord.data_status || selectedRecord.status || 'valid').toUpperCase()}
+                </span>
+              </div>
+              <div className="text-end">
+                <span className="text-muted small d-block">IPK</span>
+                <span className="fs-5 fw-bold text-primary font-monospace">
+                  {Number(selectedRecord.ipk || 0).toFixed(2)}
+                </span>
+              </div>
+            </div>
+
+            <h6 className="fw-bold text-primary mb-2">Nilai 6 Parameter:</h6>
+            <ul className="list-group list-group-flush border rounded small">
+              <li className="list-group-item d-flex justify-content-between align-items-center">
+                <span>Indeks Prestasi Kumulatif (IPK)</span>
+                <span className="fw-bold font-monospace">{Number(selectedRecord.ipk || 0).toFixed(2)}</span>
+              </li>
+              <li className="list-group-item d-flex justify-content-between align-items-center">
+                <span>Penghasilan Orang Tua</span>
+                <span className="fw-bold font-monospace">
+                  Rp {Number(selectedRecord.parent_income || selectedRecord.penghasilan_ortu || 0).toLocaleString('id-ID')}
+                </span>
+              </li>
+              <li className="list-group-item d-flex justify-content-between align-items-center">
+                <span>Jumlah Tanggungan Keluarga</span>
+                <span className="fw-bold font-monospace">{selectedRecord.family_dependents || selectedRecord.jumlah_tanggungan || 0} Orang</span>
+              </li>
+              <li className="list-group-item d-flex justify-content-between align-items-center">
+                <span>Skor Prestasi Akademik</span>
+                <span className="fw-bold font-monospace">{selectedRecord.academic_achievement_score || selectedRecord.skor_prestasi_akademik || 0} / 100</span>
+              </li>
+              <li className="list-group-item d-flex justify-content-between align-items-center">
+                <span>Skor Prestasi Non-Akademik</span>
+                <span className="fw-bold font-monospace">{selectedRecord.nonacademic_achievement_score || selectedRecord.skor_prestasi_nonakademik || 0} / 100</span>
+              </li>
+              <li className="list-group-item d-flex justify-content-between align-items-center">
+                <span>Persentase Kehadiran</span>
+                <span className="fw-bold font-monospace">{selectedRecord.attendance_percentage || selectedRecord.persentase_kehadiran || 0}%</span>
+              </li>
+            </ul>
+          </div>
+        )}
+      </Modal>
     </>
   );
 }

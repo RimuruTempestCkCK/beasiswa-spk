@@ -4,6 +4,7 @@ import { toast } from 'react-toastify';
 import apiClient from '../../services/apiClient';
 import { API } from '../../services/endpoints';
 import PageTitle from '../../Layout/AppMain/PageTitle';
+import Modal from '../../components/Modal';
 
 export default function DatasetListPage() {
   const navigate = useNavigate();
@@ -12,6 +13,8 @@ export default function DatasetListPage() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [modalOpen, setModalOpen] = useState(false);
+  const [selectedBatch, setSelectedBatch] = useState(null);
+  const [detailModalOpen, setDetailModalOpen] = useState(false);
   const [form, setForm] = useState({ name: '', description: '' });
   const [saving, setSaving] = useState(false);
 
@@ -48,6 +51,11 @@ export default function DatasetListPage() {
     }
   };
 
+  const handleOpenDetail = (batch) => {
+    setSelectedBatch(batch);
+    setDetailModalOpen(true);
+  };
+
   return (
     <>
       <PageTitle
@@ -70,248 +78,265 @@ export default function DatasetListPage() {
               aria-hidden="true"
               focusable="false"
             >
-              <path d="M12 5v14M5 12h14" />
+              <line x1="12" y1="5" x2="12" y2="19" />
+              <line x1="5" y1="12" x2="19" y2="12" />
             </svg>
             <span>Buat Batch Baru</span>
           </button>
         }
       />
 
-      <section className="panel" aria-labelledby="datasetListTitle">
+      <section className="panel">
         <div className="panel-head">
           <div>
-            <h2 className="panel-title" id="datasetListTitle">
-              Daftar Batch Dataset
-            </h2>
-            <p className="panel-sub">
-              Total {datasets.length} batch dataset terdaftar di sistem
-            </p>
+            <h2 className="panel-title">Daftar Batch Terdaftar</h2>
+            <p className="panel-sub">Arsip batch data mahasiswa calon penerima beasiswa</p>
           </div>
+          <button
+            type="button"
+            className="btn btn-sm btn-outline-secondary"
+            onClick={() => fetchDatasets(page)}
+          >
+            Refresh
+          </button>
         </div>
 
         {loading ? (
           <div className="text-center py-5">
-            <div
-              className="spinner-border text-primary"
-              role="status"
-              style={{ width: '2.5rem', height: '2.5rem' }}
-            >
-              <span className="visually-hidden">Loading...</span>
-            </div>
-            <p className="text-muted mt-2">Memuat dataset...</p>
-          </div>
-        ) : datasets.length === 0 ? (
-          <div className="p-4 text-center">
-            <div className="alert alert-info d-inline-block">
-              Belum ada batch dataset. Klik <strong>Buat Batch Baru</strong> untuk memulai.
-            </div>
+            <div className="spinner-border text-primary" role="status" />
+            <p className="text-muted mt-2">Memuat batch dataset...</p>
           </div>
         ) : (
-          <>
-            <div className="table-wrap">
-              <table className="table-data table-stack">
-                <thead>
-                  <tr>
-                    <th scope="col" style={{ width: '50px' }}>
-                      #
-                    </th>
-                    <th scope="col">Nama Batch</th>
-                    <th scope="col">Deskripsi</th>
-                    <th scope="col" className="text-end">
-                      Records
-                    </th>
-                    <th scope="col">Status</th>
-                    <th scope="col">Tanggal Dibuat</th>
-                    <th scope="col" className="text-end">
-                      Aksi
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {datasets.map((d, idx) => (
-                    <tr key={d.id}>
-                      <td className="num">{(page - 1) * 10 + idx + 1}</td>
-                      <td className="cell-main">
-                        <span
-                          className="fw-semibold text-primary cursor-pointer"
-                          style={{ cursor: 'pointer' }}
+          <div className="table-wrap">
+            <table className="table-data table-stack">
+              <thead>
+                <tr>
+                  <th scope="col">ID</th>
+                  <th scope="col">Nama Batch</th>
+                  <th scope="col">Sumber</th>
+                  <th scope="col" className="text-end">Jumlah Data</th>
+                  <th scope="col">Status</th>
+                  <th scope="col">Dibuat</th>
+                  <th scope="col" className="text-end">Aksi</th>
+                </tr>
+              </thead>
+              <tbody>
+                {datasets.map((d) => (
+                  <tr key={d.id}>
+                    <td className="num fw-bold">#{d.id}</td>
+                    <td className="cell-main">
+                      <span className="fw-semibold">{d.batch_name || d.name}</span>
+                      {d.dataset_description && (
+                        <span className="cell-sub text-truncate" style={{ maxWidth: 260 }}>
+                          {d.dataset_description}
+                        </span>
+                      )}
+                    </td>
+                    <td>
+                      <span className="badge bg-secondary-subtle text-secondary border">
+                        {d.source_type || 'csv'}
+                      </span>
+                    </td>
+                    <td className="num text-end fw-semibold">
+                      {d.total_rows || d.record_count || 0}
+                    </td>
+                    <td>
+                      <span
+                        className={`status status-${
+                          d.status === 'imported' || d.status === 'validated'
+                            ? 'success'
+                            : d.status === 'processing'
+                              ? 'warning'
+                              : 'neutral'
+                        }`}
+                      >
+                        {d.status}
+                      </span>
+                    </td>
+                    <td className="num">
+                      {d.created_at
+                        ? new Date(d.created_at).toLocaleDateString('id-ID', {
+                            day: 'numeric',
+                            month: 'short',
+                            year: 'numeric',
+                          })
+                        : '-'}
+                    </td>
+                    <td className="text-end">
+                      <div className="d-inline-flex gap-2">
+                        <button
+                          type="button"
+                          className="btn btn-sm btn-outline-secondary"
+                          onClick={() => handleOpenDetail(d)}
+                        >
+                          Info (Pop-Up)
+                        </button>
+                        <button
+                          type="button"
+                          className="btn btn-sm btn-outline-primary"
                           onClick={() => navigate(`/datasets/${d.id}`)}
                         >
-                          {d.batch_name || d.name}
-                        </span>
-                      </td>
-                      <td>{d.dataset_description || d.description || <span className="text-muted">-</span>}</td>
-                      <td className="num text-end">{(d.total_rows ?? d.record_count ?? 0).toLocaleString('id-ID')}</td>
-                      <td>
-                        <span
-                          className={`status status-${
-                            d.status === 'validated'
-                              ? 'success'
-                              : d.status === 'imported'
-                                ? 'info'
-                                : d.status === 'rejected'
-                                  ? 'danger'
-                                  : 'neutral'
-                          }`}
+                          Buka Data
+                        </button>
+                        <button
+                          type="button"
+                          className="btn btn-sm btn-primary"
+                          onClick={() => navigate(`/datasets/${d.id}/import`)}
                         >
-                          {d.status}
-                        </span>
-                      </td>
-                      <td className="num">
-                        {d.created_at
-                          ? new Date(d.created_at).toLocaleDateString('id-ID', {
-                              day: 'numeric',
-                              month: 'short',
-                              year: 'numeric',
-                            })
-                          : '-'}
-                      </td>
-                      <td className="text-end">
-                        <div className="d-inline-flex gap-2">
-                          <button
-                            type="button"
-                            className="btn btn-sm btn-outline-secondary"
-                            onClick={() => navigate(`/datasets/${d.id}`)}
-                          >
-                            Detail
-                          </button>
-                          <button
-                            type="button"
-                            className="btn btn-sm btn-primary"
-                            onClick={() => navigate(`/datasets/${d.id}/import`)}
-                          >
-                            Import CSV
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                          Upload CSV
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+                {datasets.length === 0 && (
+                  <tr>
+                    <td colSpan={7} className="text-center text-muted py-5">
+                      Belum ada batch dataset. Buat batch pertama Anda untuk mulai mengimpor data.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
 
-            {totalPages > 1 && (
-              <div className="panel-foot">
-                <p className="pager-info">
-                  Halaman <strong>{page}</strong> dari <strong>{totalPages}</strong>
-                </p>
-                <ul className="pager">
-                  <li>
-                    <button
-                      type="button"
-                      className="pager-btn"
-                      disabled={page <= 1}
-                      onClick={() => setPage(page - 1)}
-                      aria-label="Halaman sebelumnya"
-                    >
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="m15 18-6-6 6-6" />
-                      </svg>
-                    </button>
-                  </li>
-                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-                    <li key={p}>
-                      <button
-                        type="button"
-                        className={`pager-btn ${p === page ? 'is-current' : ''}`}
-                        onClick={() => setPage(p)}
-                        aria-current={p === page ? 'page' : undefined}
-                      >
-                        {p}
-                      </button>
-                    </li>
-                  ))}
-                  <li>
-                    <button
-                      type="button"
-                      className="pager-btn"
-                      disabled={page >= totalPages}
-                      onClick={() => setPage(page + 1)}
-                      aria-label="Halaman berikutnya"
-                    >
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="m9 18 6-6-6-6" />
-                      </svg>
-                    </button>
-                  </li>
-                </ul>
-              </div>
-            )}
-          </>
+        {totalPages > 1 && (
+          <div className="p-3 d-flex justify-content-between align-items-center border-top">
+            <span className="text-muted small">
+              Halaman {page} dari {totalPages}
+            </span>
+            <div className="btn-group btn-group-sm">
+              <button
+                type="button"
+                className="btn btn-outline-secondary"
+                disabled={page <= 1}
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+              >
+                Sebelumnya
+              </button>
+              <button
+                type="button"
+                className="btn btn-outline-secondary"
+                disabled={page >= totalPages}
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              >
+                Selanjutnya
+              </button>
+            </div>
+          </div>
         )}
       </section>
 
-      {/* Modal Buat Batch Baru */}
-      {modalOpen && (
-        <div
-          className="modal fade show d-block"
-          tabIndex="-1"
-          style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}
-        >
-          <div className="modal-dialog modal-dialog-centered">
-            <div className="modal-content">
-              <div className="modal-header">
-                <h5 className="modal-title">Buat Batch Dataset Baru</h5>
-                <button
-                  type="button"
-                  className="btn-close"
-                  onClick={() => setModalOpen(false)}
-                  aria-label="Close"
-                />
-              </div>
-              <form onSubmit={handleCreate}>
-                <div className="modal-body">
-                  <div className="mb-3">
-                    <label className="form-label" htmlFor="batchName">
-                      Nama Batch *
-                    </label>
-                    <input
-                      id="batchName"
-                      type="text"
-                      className="form-control"
-                      value={form.name}
-                      onChange={(e) => setForm({ ...form, name: e.target.value })}
-                      required
-                      placeholder="Contoh: Pendaftar Semester Gasal 2026"
-                    />
-                  </div>
-                  <div className="mb-3">
-                    <label className="form-label" htmlFor="batchDesc">
-                      Deskripsi
-                    </label>
-                    <textarea
-                      id="batchDesc"
-                      rows={3}
-                      className="form-control"
-                      value={form.description}
-                      onChange={(e) =>
-                        setForm({ ...form, description: e.target.value })
-                      }
-                      placeholder="Keterangan opsional mengenai dataset pendaftaran ini"
-                    />
-                  </div>
-                </div>
-                <div className="modal-footer">
-                  <button
-                    type="button"
-                    className="btn btn-outline-secondary"
-                    onClick={() => setModalOpen(false)}
-                  >
-                    Batal
-                  </button>
-                  <button
-                    type="submit"
-                    className="btn btn-primary"
-                    disabled={saving}
-                  >
-                    {saving ? 'Menyimpan...' : 'Simpan Batch'}
-                  </button>
-                </div>
-              </form>
-            </div>
+      {/* POPUP MODAL: Buat Batch Baru */}
+      <Modal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        size="md"
+        title="Buat Batch Dataset Baru"
+        subtitle="Alokasikan wadah batch dataset pendaftar beasiswa"
+        footer={
+          <div className="d-flex justify-content-end gap-2 w-100">
+            <button
+              type="button"
+              className="btn btn-secondary"
+              onClick={() => setModalOpen(false)}
+            >
+              Batal
+            </button>
+            <button
+              type="submit"
+              form="createBatchForm"
+              className="btn btn-primary"
+              disabled={saving}
+            >
+              {saving ? 'Menyimpan...' : 'Simpan Batch'}
+            </button>
           </div>
-        </div>
-      )}
+        }
+      >
+        <form id="createBatchForm" onSubmit={handleCreate}>
+          <div className="mb-3">
+            <label className="form-label" htmlFor="batchName">
+              Nama Batch Dataset *
+            </label>
+            <input
+              id="batchName"
+              type="text"
+              className="form-control"
+              value={form.name}
+              onChange={(e) => setForm({ ...form, name: e.target.value })}
+              placeholder="Contoh: Seleksi Beasiswa Prestasi 2026/2027"
+              required
+            />
+          </div>
+          <div className="mb-3">
+            <label className="form-label" htmlFor="batchDesc">
+              Deskripsi / Catatan Periode
+            </label>
+            <textarea
+              id="batchDesc"
+              rows={3}
+              className="form-control"
+              value={form.description}
+              onChange={(e) => setForm({ ...form, description: e.target.value })}
+              placeholder="Catatan tambahan mengenai gelombang pendaftaran atau syarat khusus"
+            />
+          </div>
+        </form>
+      </Modal>
+
+      {/* POPUP MODAL: Info Detail Batch */}
+      <Modal
+        isOpen={detailModalOpen}
+        onClose={() => setDetailModalOpen(false)}
+        size="md"
+        title={`Informasi Batch #${selectedBatch?.id || ''}`}
+        subtitle={selectedBatch?.batch_name || selectedBatch?.name}
+        footer={
+          <button
+            type="button"
+            className="btn btn-secondary"
+            onClick={() => setDetailModalOpen(false)}
+          >
+            Tutup
+          </button>
+        }
+      >
+        {selectedBatch && (
+          <div>
+            <div className="p-3 mb-3 bg-light rounded border">
+              <span className="text-muted small d-block">Status Batch</span>
+              <span className="fw-bold fs-5 text-success">{selectedBatch.status.toUpperCase()}</span>
+            </div>
+            <ul className="list-group list-group-flush border rounded small mb-3">
+              <li className="list-group-item d-flex justify-content-between align-items-center">
+                <span>Total Baris Mahasiswa</span>
+                <span className="fw-bold font-monospace">{selectedBatch.total_rows || selectedBatch.record_count || 0} Data</span>
+              </li>
+              <li className="list-group-item d-flex justify-content-between align-items-center">
+                <span>Tipe Sumber Data</span>
+                <span className="badge bg-secondary">{selectedBatch.source_type || 'csv'}</span>
+              </li>
+              <li className="list-group-item d-flex justify-content-between align-items-center">
+                <span>Nama File Sumber</span>
+                <span className="text-truncate text-muted" style={{ maxWidth: 200 }}>
+                  {selectedBatch.source_filename || 'Input Manual / Seed'}
+                </span>
+              </li>
+              <li className="list-group-item d-flex justify-content-between align-items-center">
+                <span>Waktu Dibuat</span>
+                <span>{selectedBatch.created_at ? new Date(selectedBatch.created_at).toLocaleString('id-ID') : '-'}</span>
+              </li>
+            </ul>
+            {selectedBatch.dataset_description && (
+              <div className="p-3 bg-light rounded border small">
+                <strong>Deskripsi:</strong> {selectedBatch.dataset_description}
+              </div>
+            )}
+          </div>
+        )}
+      </Modal>
     </>
   );
 }

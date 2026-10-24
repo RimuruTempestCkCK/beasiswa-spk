@@ -2,10 +2,13 @@ import { useEffect, useState, useCallback } from 'react';
 import apiClient from '../../services/apiClient';
 import { API } from '../../services/endpoints';
 import PageTitle from '../../Layout/AppMain/PageTitle';
+import Modal from '../../components/Modal';
 
 export default function ReportsPage() {
   const [report, setReport] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [selectedClusteringRun, setSelectedClusteringRun] = useState(null);
+  const [selectedModel, setSelectedModel] = useState(null);
 
   const fetchReport = useCallback(() => {
     setLoading(true);
@@ -24,6 +27,9 @@ export default function ReportsPage() {
     const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
     window.open(`${baseUrl}${API.REPORTS.EXPORT_PREDICTIONS}`, '_blank');
   };
+
+  const clusteringRuns = report?.clustering_runs || [];
+  const models = report?.models || [];
 
   return (
     <>
@@ -70,57 +76,59 @@ export default function ReportsPage() {
             <section className="panel h-100">
               <div className="panel-head">
                 <div>
-                  <h2 className="panel-title">Eksperimen Clustering K-Means</h2>
-                  <p className="panel-sub">Riwayat pengujian cluster dan evaluasi DBI</p>
+                  <h2 className="panel-title">Riwayat Eksperimen K-Means</h2>
+                  <p className="panel-sub">Evaluasi Davies-Bouldin Index (DBI)</p>
                 </div>
               </div>
               <div className="table-wrap">
-                <table className="table-data table-stack">
+                <table className="table-data table-compact">
                   <thead>
                     <tr>
-                      <th scope="col">ID Run</th>
-                      <th scope="col">Prep ID</th>
+                      <th scope="col">ID</th>
                       <th scope="col" className="text-end">K</th>
-                      <th scope="col" className="text-end">Skor DBI</th>
+                      <th scope="col" className="text-end">DBI</th>
                       <th scope="col">Status</th>
-                      <th scope="col">Terpilih</th>
+                      <th scope="col" className="text-end">Aksi</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {report?.clusters?.map((c) => (
-                      <tr key={c.id}>
-                        <td className="num fw-bold">#{c.id}</td>
-                        <td className="num">#{c.preprocessing_run_id}</td>
-                        <td className="num text-end">{c.k_value || c.k}</td>
+                    {clusteringRuns.map((r) => (
+                      <tr key={r.id}>
+                        <td className="num fw-bold">#{r.id}</td>
+                        <td className="num text-end">{r.k_value || r.k}</td>
                         <td className="num text-end">
-                          {c.dbi_score !== null && c.dbi_score !== undefined
-                            ? Number(c.dbi_score).toFixed(4)
+                          {r.dbi_score !== null && r.dbi_score !== undefined
+                            ? Number(r.dbi_score).toFixed(4)
                             : '-'}
                         </td>
                         <td>
                           <span
                             className={`status status-${
-                              c.status === 'completed' ? 'success' : 'neutral'
+                              r.status === 'completed'
+                                ? 'success'
+                                : r.status === 'failed'
+                                  ? 'danger'
+                                  : 'neutral'
                             }`}
                           >
-                            {c.status}
+                            {r.status}
                           </span>
                         </td>
-                        <td>
-                          {c.is_selected ? (
-                            <span className="badge bg-success-subtle text-success border border-success">
-                              Ya
-                            </span>
-                          ) : (
-                            <span className="text-muted">-</span>
-                          )}
+                        <td className="text-end">
+                          <button
+                            type="button"
+                            className="btn btn-sm btn-outline-primary"
+                            onClick={() => setSelectedClusteringRun(r)}
+                          >
+                            Detail (Pop-Up)
+                          </button>
                         </td>
                       </tr>
                     ))}
-                    {(!report?.clusters || report.clusters.length === 0) && (
+                    {clusteringRuns.length === 0 && (
                       <tr>
-                        <td colSpan={6} className="text-center text-muted py-4">
-                          Belum ada clustering run tercatat.
+                        <td colSpan={5} className="text-center text-muted py-4">
+                          Belum ada riwayat eksperimen clustering.
                         </td>
                       </tr>
                     )}
@@ -130,40 +138,33 @@ export default function ReportsPage() {
             </section>
           </div>
 
-          {/* Model Backpropagation Table */}
+          {/* Model Versions Table */}
           <div className="col-lg-6">
             <section className="panel h-100">
               <div className="panel-head">
                 <div>
-                  <h2 className="panel-title">Versi Model Backpropagation</h2>
-                  <p className="panel-sub">Daftar model terlatih dan performa akurasi</p>
+                  <h2 className="panel-title">Riwayat Model Backpropagation</h2>
+                  <p className="panel-sub">Versi model Multi-Layer Perceptron (MLP)</p>
                 </div>
               </div>
               <div className="table-wrap">
-                <table className="table-data table-stack">
+                <table className="table-data table-compact">
                   <thead>
                     <tr>
                       <th scope="col">Versi</th>
-                      <th scope="col">Nama Model</th>
-                      <th scope="col">Target Cluster</th>
                       <th scope="col" className="text-end">Akurasi</th>
                       <th scope="col">Status</th>
+                      <th scope="col" className="text-end">Aksi</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {report?.models?.map((m) => (
+                    {models.map((m) => (
                       <tr key={m.id}>
-                        <td className="num fw-bold">v{m.version || m.model_version || m.id}</td>
-                        <td className="cell-main">
-                          <span className="fw-semibold">{m.name || m.model_name || `Model #${m.id}`}</span>
-                        </td>
-                        <td>Run #{m.target_clustering_run_id || m.clustering_run_id || '-'}</td>
+                        <td className="num fw-bold">v{m.model_version || m.version || m.id}</td>
                         <td className="num text-end">
-                          {m.metrics?.accuracy !== undefined && m.metrics.accuracy !== null
-                            ? `${(Number(m.metrics.accuracy) * 100).toFixed(1)}%`
-                            : m.accuracy !== undefined && m.accuracy !== null
-                              ? `${(Number(m.accuracy) * 100).toFixed(1)}%`
-                              : '-'}
+                          {m.accuracy !== undefined && m.accuracy !== null
+                            ? `${(Number(m.accuracy) * 100).toFixed(2)}%`
+                            : '-'}
                         </td>
                         <td>
                           <span
@@ -178,12 +179,21 @@ export default function ReportsPage() {
                             {m.status}
                           </span>
                         </td>
+                        <td className="text-end">
+                          <button
+                            type="button"
+                            className="btn btn-sm btn-outline-primary"
+                            onClick={() => setSelectedModel(m)}
+                          >
+                            Detail (Pop-Up)
+                          </button>
+                        </td>
                       </tr>
                     ))}
-                    {(!report?.models || report.models.length === 0) && (
+                    {models.length === 0 && (
                       <tr>
-                        <td colSpan={5} className="text-center text-muted py-4">
-                          Belum ada model Backpropagation tercatat.
+                        <td colSpan={4} className="text-center text-muted py-4">
+                          Belum ada model Backpropagation yang dilatih.
                         </td>
                       </tr>
                     )}
@@ -194,6 +204,136 @@ export default function ReportsPage() {
           </div>
         </div>
       )}
+
+      {/* POPUP MODAL: Detail Clustering Run */}
+      <Modal
+        isOpen={!!selectedClusteringRun}
+        onClose={() => setSelectedClusteringRun(null)}
+        size="md"
+        title={`Audit Clustering Run #${selectedClusteringRun?.id || ''}`}
+        subtitle={`Kandidat K = ${selectedClusteringRun?.k_value || selectedClusteringRun?.k || '-'}`}
+        footer={
+          <button
+            type="button"
+            className="btn btn-secondary"
+            onClick={() => setSelectedClusteringRun(null)}
+          >
+            Tutup
+          </button>
+        }
+      >
+        {selectedClusteringRun && (
+          <div>
+            <div className="d-flex justify-content-between align-items-center p-3 mb-3 bg-light rounded border">
+              <div>
+                <span className="text-muted small d-block">Status Eksperimen</span>
+                <span className="fw-bold text-success">{selectedClusteringRun.status.toUpperCase()}</span>
+              </div>
+              <div className="text-end">
+                <span className="text-muted small d-block">Skor DBI</span>
+                <span className="fs-5 fw-bold text-primary font-monospace">
+                  {selectedClusteringRun.dbi_score ? Number(selectedClusteringRun.dbi_score).toFixed(4) : '-'}
+                </span>
+              </div>
+            </div>
+            <ul className="list-group list-group-flush border rounded small">
+              <li className="list-group-item d-flex justify-content-between align-items-center">
+                <span>Preprocessing Run Acuan</span>
+                <span className="badge bg-secondary font-monospace">Run #{selectedClusteringRun.preprocessing_run_id}</span>
+              </li>
+              <li className="list-group-item d-flex justify-content-between align-items-center">
+                <span>Algoritma</span>
+                <span className="fw-semibold">{selectedClusteringRun.algorithm || 'K-Means'}</span>
+              </li>
+              <li className="list-group-item d-flex justify-content-between align-items-center">
+                <span>Random Seed</span>
+                <span className="font-monospace">{selectedClusteringRun.random_seed || '42'}</span>
+              </li>
+              <li className="list-group-item d-flex justify-content-between align-items-center">
+                <span>Model Acuan Terpilih</span>
+                <span>{selectedClusteringRun.is_selected ? 'Ya (Model Acuan)' : 'Bukan'}</span>
+              </li>
+              <li className="list-group-item d-flex justify-content-between align-items-center">
+                <span>Waktu Dijalankan</span>
+                <span>{selectedClusteringRun.created_at ? new Date(selectedClusteringRun.created_at).toLocaleString('id-ID') : '-'}</span>
+              </li>
+            </ul>
+          </div>
+        )}
+      </Modal>
+
+      {/* POPUP MODAL: Detail Model Run */}
+      <Modal
+        isOpen={!!selectedModel}
+        onClose={() => setSelectedModel(null)}
+        size="md"
+        title={`Audit Model v${selectedModel?.model_version || selectedModel?.version || ''}`}
+        subtitle={`ID Model #${selectedModel?.id || ''}`}
+        footer={
+          <button
+            type="button"
+            className="btn btn-secondary"
+            onClick={() => setSelectedModel(null)}
+          >
+            Tutup
+          </button>
+        }
+      >
+        {selectedModel && (
+          <div>
+            <div className="d-flex justify-content-between align-items-center p-3 mb-3 bg-light rounded border">
+              <div>
+                <span className="text-muted small d-block">Status Kesiapan</span>
+                <span className={`fw-bold text-${selectedModel.status === 'ready' ? 'success' : 'secondary'}`}>
+                  {selectedModel.status.toUpperCase()}
+                </span>
+              </div>
+              <div className="text-end">
+                <span className="text-muted small d-block">Akurasi Pengujian</span>
+                <span className="fs-5 fw-bold text-primary font-monospace">
+                  {selectedModel.accuracy ? `${(Number(selectedModel.accuracy) * 100).toFixed(2)}%` : '-'}
+                </span>
+              </div>
+            </div>
+            <ul className="list-group list-group-flush border rounded small">
+              <li className="list-group-item d-flex justify-content-between align-items-center">
+                <span>Nama Model</span>
+                <span className="fw-semibold">{selectedModel.model_name || `Model #${selectedModel.id}`}</span>
+              </li>
+              <li className="list-group-item d-flex justify-content-between align-items-center">
+                <span>Clustering Run Asal</span>
+                <span className="badge bg-secondary font-monospace">Run #{selectedModel.target_clustering_run_id || selectedModel.clustering_run_id}</span>
+              </li>
+              <li className="list-group-item d-flex justify-content-between align-items-center">
+                <span>Algoritma</span>
+                <span className="fw-semibold">Backpropagation MLP</span>
+              </li>
+              <li className="list-group-item d-flex justify-content-between align-items-center">
+                <span>Macro Precision</span>
+                <span className="font-monospace">
+                  {selectedModel.metrics?.precision_macro ? `${(Number(selectedModel.metrics.precision_macro) * 100).toFixed(2)}%` : '-'}
+                </span>
+              </li>
+              <li className="list-group-item d-flex justify-content-between align-items-center">
+                <span>Macro Recall</span>
+                <span className="font-monospace">
+                  {selectedModel.metrics?.recall_macro ? `${(Number(selectedModel.metrics.recall_macro) * 100).toFixed(2)}%` : '-'}
+                </span>
+              </li>
+              <li className="list-group-item d-flex justify-content-between align-items-center">
+                <span>Macro F1-Score</span>
+                <span className="font-monospace">
+                  {selectedModel.metrics?.f1_macro ? `${(Number(selectedModel.metrics.f1_macro) * 100).toFixed(2)}%` : '-'}
+                </span>
+              </li>
+              <li className="list-group-item d-flex justify-content-between align-items-center">
+                <span>Waktu Pelatihan</span>
+                <span>{selectedModel.created_at ? new Date(selectedModel.created_at).toLocaleString('id-ID') : '-'}</span>
+              </li>
+            </ul>
+          </div>
+        )}
+      </Modal>
     </>
   );
 }
