@@ -42,3 +42,7 @@ class ClusterProfile(BaseModel):
     count: int
     centroid: List[float]
     feature_means: Dict[str, float]
+
+
+ClusteringRunCreateRequest = ClusteringRunCreate
+ClusteringRunResponse = ClusteringRunOut

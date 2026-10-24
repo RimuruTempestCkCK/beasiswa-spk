@@ -78,3 +78,11 @@ class PaginatedRecords(BaseModel):
     page: int
     page_size: int
     items: List[StudentRecordOut]
+
+
+# Aliases for endpoints consistency
+BatchCreateRequest = DatasetBatchCreate
+BatchResponse = DatasetBatchOut
+RecordCreateRequest = StudentRecordCreate
+RecordUpdateRequest = StudentRecordUpdate
+RecordResponse = StudentRecordOut

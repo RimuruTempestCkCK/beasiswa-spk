@@ -13,7 +13,7 @@ router = APIRouter(tags=["Users & Audit"])
 
 class UserCreate(BaseModel):
     name: str
-    email: EmailStr
+    email: str
     password: str
     role: str = "operator"
     is_active: bool = True

@@ -26,3 +26,7 @@ class PreprocessingRunOut(BaseModel):
     created_at: datetime
 
     model_config = {"from_attributes": True}
+
+
+PreprocessingRunCreateRequest = PreprocessingRunCreate
+PreprocessingRunResponse = PreprocessingRunOut

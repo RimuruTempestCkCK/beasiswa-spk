@@ -60,6 +60,10 @@ class PredictionOut(BaseModel):
     model_config = {"from_attributes": True}
 
 
+PredictionCreateRequest = PredictionRequest
+PredictionResponse = PredictionOut
+
+
 class PaginatedPredictions(BaseModel):
     total: int
     page: int

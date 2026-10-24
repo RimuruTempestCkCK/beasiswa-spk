@@ -6,6 +6,7 @@ from app.core.config import settings
 from app.core.logging import setup_logging
 from app.api.v1.router import api_router
 from app.db.base import Base
+import app.models  # noqa: F401 - load all models to register with Base.metadata
 from app.db.session import engine
 
 # Setup app logging

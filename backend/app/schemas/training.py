@@ -34,3 +34,7 @@ class ModelVersionOut(BaseModel):
     created_at: datetime
 
     model_config = {"from_attributes": True}
+
+
+TrainingCreateRequest = ModelTrainRequest
+ModelVersionResponse = ModelVersionOut
