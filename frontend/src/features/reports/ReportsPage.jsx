@@ -28,7 +28,7 @@ export default function ReportsPage() {
     window.open(`${baseUrl}${API.REPORTS.EXPORT_PREDICTIONS}`, '_blank');
   };
 
-  const clusteringRuns = report?.clustering_runs || [];
+  const clusteringRuns = report?.clustering_runs || report?.clusters || [];
   const models = report?.models || [];
 
   return (
