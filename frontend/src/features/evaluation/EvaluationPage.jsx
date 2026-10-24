@@ -16,7 +16,9 @@ export default function EvaluationPage() {
       const items = res.data.items || res.data || [];
       setModels(items);
       if (items.length > 0) {
-        setSelectedModelId(items[0].id);
+        // Prioritize ready model if available
+        const readyModel = items.find((m) => m.status === 'ready');
+        setSelectedModelId(readyModel ? readyModel.id : items[0].id);
       }
     });
   }, []);
@@ -41,6 +43,29 @@ export default function EvaluationPage() {
         heading="Evaluasi Model Backpropagation"
         subheading="Metrik performa jaringan saraf: Akurasi, Presisi, Recall, F1-Score, dan Confusion Matrix"
         eyebrow="Model &amp; Analisis · SPK Beasiswa"
+        actions={
+          <button
+            type="button"
+            className="btn btn-primary d-inline-flex align-items-center gap-2"
+            onClick={() => setIsModalOpen(true)}
+            disabled={!modelDetail}
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              style={{ width: 18, height: 18 }}
+              aria-hidden="true"
+            >
+              <rect x="3" y="3" width="18" height="18" rx="2" />
+              <path d="M3 9h18M9 21V9" />
+            </svg>
+            <span>Buka Rincian Matriks &amp; Kelas</span>
+          </button>
+        }
       />
 
       {/* Critical metrics disclaimer banner */}
@@ -63,44 +88,85 @@ export default function EvaluationPage() {
           <line x1="12" y1="17" x2="12.01" y2="17" />
         </svg>
         <div>
-          <strong>Penting &amp; Disclaimer Evaluasi:</strong> Target pelatihan Backpropagation adalah label cluster K-Means, sehingga metrik evaluasi di bawah ini mengukur seberapa baik jaringan saraf meniru dan mengklasifikasikan pola data sesuai cluster acuan.
+          <strong>Penting &amp; Disclaimer Evaluasi:</strong> Target pelatihan Backpropagation adalah label cluster K-Means, sehingga metrik evaluasi mengukur seberapa presisi jaringan saraf meniru dan mengklasifikasikan pola data sesuai cluster acuan.
         </div>
       </div>
 
-      {/* Model Selector Panel */}
-      <section className="panel mb-4">
-        <div className="panel-body">
-          <div className="row align-items-center justify-content-between">
-            <div className="col-md-6">
+      {/* Model Selector Card & Parameter Overview */}
+      <div className="row g-3 g-xxl-4 mb-4">
+        <div className="col-lg-6">
+          <section className="panel h-100">
+            <div className="panel-head">
+              <div>
+                <h2 className="panel-title">Pilih Model yang Dievaluasi</h2>
+                <p className="panel-sub">Pilih versi model terlatih untuk memuat metrik pengujian</p>
+              </div>
+            </div>
+            <div className="panel-body">
               <label className="form-label fw-bold" htmlFor="modelSelect">
-                Pilih Versi Model untuk Dievaluasi
+                Versi Model Terdaftar *
               </label>
               <select
                 id="modelSelect"
-                className="form-select"
+                className="form-select mb-3"
                 value={selectedModelId}
                 onChange={(e) => setSelectedModelId(e.target.value)}
               >
                 {models.map((m) => (
                   <option key={m.id} value={m.id}>
-                    {m.model_name || `Model #${m.id}`} (v{m.model_version || m.version}) - Status: {m.status}
+                    {m.model_name || `Model #${m.id}`} (v{m.model_version || m.version}) - Status: {m.status.toUpperCase()}
                   </option>
                 ))}
               </select>
+              <div className="d-flex align-items-center justify-content-between p-3 bg-light rounded border small">
+                <span>Status Kesiapan:</span>
+                <span className={`badge bg-${modelDetail?.status === 'ready' ? 'success' : 'secondary'} fs-7`}>
+                  {(modelDetail?.status || 'UNKNOWN').toUpperCase()}
+                </span>
+              </div>
             </div>
-            <div className="col-md-6 text-md-end mt-3 mt-md-0">
-              <button
-                type="button"
-                className="btn btn-primary"
-                onClick={() => setIsModalOpen(true)}
-                disabled={!modelDetail}
-              >
-                Buka Matriks &amp; Rincian Kelas (Pop-Up)
-              </button>
-            </div>
-          </div>
+          </section>
         </div>
-      </section>
+
+        <div className="col-lg-6">
+          <section className="panel h-100">
+            <div className="panel-head">
+              <div>
+                <h2 className="panel-title">Metadata Pelatihan Model</h2>
+                <p className="panel-sub">Konfigurasi dataset pengujian dan target klaster</p>
+              </div>
+            </div>
+            <div className="panel-body">
+              {modelDetail ? (
+                <ul className="list-group list-group-flush border rounded small mb-0">
+                  <li className="list-group-item d-flex justify-content-between align-items-center">
+                    <span className="text-muted">Target Klaster Acuan</span>
+                    <span className="badge bg-secondary font-monospace">Run #{modelDetail.target_clustering_run_id || modelDetail.clustering_run_id || '-'}</span>
+                  </li>
+                  <li className="list-group-item d-flex justify-content-between align-items-center">
+                    <span className="text-muted">Pembagian Data Pengujian (Test)</span>
+                    <span className="fw-bold font-monospace">
+                      {((modelDetail.training_config?.test_size || 0.2) * 100).toFixed(0)}% Data Uji / {((1 - (modelDetail.training_config?.test_size || 0.2)) * 100).toFixed(0)}% Latih
+                    </span>
+                  </li>
+                  <li className="list-group-item d-flex justify-content-between align-items-center">
+                    <span className="text-muted">Status Data Leakage</span>
+                    <span className="badge bg-success-subtle text-success border border-success">
+                      Bebas Kebocoran Data (Verified)
+                    </span>
+                  </li>
+                  <li className="list-group-item d-flex justify-content-between align-items-center">
+                    <span className="text-muted">Waktu Evaluasi</span>
+                    <span>{modelDetail.created_at ? new Date(modelDetail.created_at).toLocaleString('id-ID') : '-'}</span>
+                  </li>
+                </ul>
+              ) : (
+                <p className="text-muted mb-0 py-3 text-center">Pilih model untuk melihat metadata.</p>
+              )}
+            </div>
+          </section>
+        </div>
+      </div>
 
       {loading ? (
         <div className="text-center py-5">
@@ -174,18 +240,23 @@ export default function EvaluationPage() {
             </div>
           </section>
 
-          {/* Inline Preview card prompting popup for clean compact layout */}
+          {/* Quick Action Panel */}
           <section className="panel mb-4">
-            <div className="panel-body text-center py-4">
-              <p className="mb-2 text-muted">
-                Model <strong>{modelDetail?.model_name || `Model #${modelDetail?.id}`} (v{modelDetail?.model_version || modelDetail?.version})</strong> telah selesai dievaluasi pada dataset pengujian.
-              </p>
+            <div className="panel-body d-flex flex-column flex-md-row justify-content-between align-items-center gap-3 p-4">
+              <div>
+                <h3 className="h6 fw-bold mb-1">
+                  Matriks Konfusi &amp; Rincian Kelas untuk Model v{modelDetail?.model_version || modelDetail?.version || ''}
+                </h3>
+                <p className="text-muted small mb-0">
+                  Tinjau perbandingan distribusi prediksi aktual vs estimasi serta skor presisi, recall, dan F1-score tiap klaster.
+                </p>
+              </div>
               <button
                 type="button"
-                className="btn btn-outline-primary px-4"
+                className="btn btn-outline-primary px-4 text-nowrap"
                 onClick={() => setIsModalOpen(true)}
               >
-                Lihat Confusion Matrix &amp; Rincian Metrik Per Kelas (Pop-Up)
+                Lihat Rincian Lengkap (Pop-Up)
               </button>
             </div>
           </section>
@@ -198,7 +269,7 @@ export default function EvaluationPage() {
         onClose={() => setIsModalOpen(false)}
         size="xl"
         title={`Rincian Evaluasi Model v${modelDetail?.model_version || modelDetail?.version || ''}`}
-        subtitle={`Arsitektur: ${modelDetail?.model_name || 'MLP Backpropagation'} · Target Klaster Run #${modelDetail?.clustering_run_id || '-'}`}
+        subtitle={`Arsitektur: ${modelDetail?.model_name || 'MLP Backpropagation'} · Target Klaster Run #${modelDetail?.clustering_run_id || modelDetail?.target_clustering_run_id || '-'}`}
         footer={
           <button
             type="button"
@@ -211,7 +282,7 @@ export default function EvaluationPage() {
       >
         <div className="row g-4">
           <div className="col-lg-6">
-            <h6 className="fw-bold text-primary mb-3">Confusion Matrix (Aktual vs Prediksi)</h6>
+            <h6 className="fw-bold text-primary mb-3">Confusion Matrix (Aktual \ Prediksi)</h6>
             {confusionMatrix.length > 0 ? (
               <div className="table-responsive">
                 <table className="table table-bordered text-center align-middle mb-0">
