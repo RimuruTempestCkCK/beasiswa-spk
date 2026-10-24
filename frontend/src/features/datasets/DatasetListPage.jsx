@@ -15,6 +15,9 @@ export default function DatasetListPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedBatch, setSelectedBatch] = useState(null);
   const [detailModalOpen, setDetailModalOpen] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [batchToDelete, setBatchToDelete] = useState(null);
+  const [deleting, setDeleting] = useState(false);
   const [form, setForm] = useState({ name: '', description: '' });
   const [saving, setSaving] = useState(false);
 
@@ -54,6 +57,27 @@ export default function DatasetListPage() {
   const handleOpenDetail = (batch) => {
     setSelectedBatch(batch);
     setDetailModalOpen(true);
+  };
+
+  const handleConfirmDelete = (batch) => {
+    setBatchToDelete(batch);
+    setDeleteModalOpen(true);
+  };
+
+  const handleDeleteBatch = async () => {
+    if (!batchToDelete) return;
+    setDeleting(true);
+    try {
+      await apiClient.delete(API.DATASETS.DELETE(batchToDelete.id));
+      toast.success(`Batch #${batchToDelete.id} berhasil dihapus!`);
+      setDeleteModalOpen(false);
+      setBatchToDelete(null);
+      fetchDatasets(page);
+    } catch (err) {
+      toast.error(err.response?.data?.detail || 'Gagal menghapus batch dataset');
+    } finally {
+      setDeleting(false);
+    }
   };
 
   return (
@@ -177,6 +201,14 @@ export default function DatasetListPage() {
                           onClick={() => navigate(`/datasets/${d.id}/import`)}
                         >
                           Upload CSV
+                        </button>
+                        <button
+                          type="button"
+                          className="btn btn-sm btn-outline-danger"
+                          onClick={() => handleConfirmDelete(d)}
+                          title="Hapus batch dataset"
+                        >
+                          Hapus
                         </button>
                       </div>
                     </td>
@@ -327,6 +359,46 @@ export default function DatasetListPage() {
                 <strong>Deskripsi:</strong> {selectedBatch.dataset_description}
               </div>
             )}
+          </div>
+        )}
+      </Modal>
+
+      {/* POPUP MODAL: Konfirmasi Hapus Batch */}
+      <Modal
+        isOpen={deleteModalOpen}
+        onClose={() => setDeleteModalOpen(false)}
+        size="md"
+        title="Konfirmasi Hapus Batch Dataset"
+        subtitle={`Apakah Anda yakin ingin menghapus Batch #${batchToDelete?.id || ''}?`}
+        footer={
+          <div className="d-flex justify-content-end gap-2 w-100">
+            <button
+              type="button"
+              className="btn btn-secondary"
+              onClick={() => setDeleteModalOpen(false)}
+              disabled={deleting}
+            >
+              Batal
+            </button>
+            <button
+              type="button"
+              className="btn btn-danger"
+              onClick={handleDeleteBatch}
+              disabled={deleting}
+            >
+              {deleting ? 'Menghapus...' : 'Ya, Hapus Batch'}
+            </button>
+          </div>
+        }
+      >
+        {batchToDelete && (
+          <div className="py-2">
+            <div className="alert alert-danger mb-3" role="alert">
+              <strong>Peringatan:</strong> Menghapus batch <strong>"{batchToDelete.batch_name || batchToDelete.name}"</strong> akan menghapus seluruh data mahasiswa yang ada di dalam batch ini.
+            </div>
+            <p className="text-muted small mb-0">
+              Total data mahasiswa yang akan terhapus: <strong>{batchToDelete.total_rows || batchToDelete.record_count || 0} Mahasiswa</strong>.
+            </p>
           </div>
         )}
       </Modal>

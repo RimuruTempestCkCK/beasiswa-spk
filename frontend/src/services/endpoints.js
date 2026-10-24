@@ -14,6 +14,7 @@ export const API = {
     IMPORT: (id) => `/api/v1/datasets/${id}/import`,
     VALIDATION: (id) => `/api/v1/datasets/${id}/validation`,
     PREVIEW: (id) => `/api/v1/datasets/${id}/preview`,
+    DELETE: (id) => `/api/v1/datasets/${id}`,
   },
   RECORDS: {
     LIST: '/api/v1/records',
