@@ -54,3 +54,6 @@ Thumbs.db
 
 artifacts/*
 !artifacts/.gitkeep
+
+# Local documentation only
+docs/
