@@ -7,7 +7,8 @@ from app.core.logging import setup_logging
 from app.api.v1.router import api_router
 from app.db.base import Base
 import app.models  # noqa: F401 - load all models to register with Base.metadata
-from app.db.session import engine
+from app.db.session import engine, SessionLocal
+from app.db.seed import auto_seed_data
 
 # Setup app logging
 setup_logging()
@@ -21,8 +22,12 @@ async def lifespan(app: FastAPI):
     try:
         Base.metadata.create_all(bind=engine)
         logger.info("Database tables initialized successfully.")
+
+        # Auto-seed database if empty (users and initial synthetic dataset)
+        with SessionLocal() as db_session:
+            auto_seed_data(db_session)
     except Exception as e:
-        logger.warning(f"Could not automatically create tables at startup (MySQL might not be connected yet): {e}")
+        logger.warning(f"Could not automatically initialize tables or seed data at startup: {e}")
 
     yield
     logger.info("Shutting down application...")
