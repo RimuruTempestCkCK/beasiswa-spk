@@ -439,40 +439,75 @@ export default function PredictionsPage() {
         isOpen={isResultModalOpen}
         onClose={() => setIsResultModalOpen(false)}
         size="md"
-        title="Hasil Rekomendasi Prediksi"
-        subtitle="Inferensi Jaringan Saraf Backpropagation MLP"
+        title="Hasil Rekomendasi Prediksi Beasiswa"
+        subtitle="Inferensi Jaringan Saraf Backpropagation MLP (6 Indikator)"
         footer={
           <button
             type="button"
-            className="btn btn-primary"
+            className="btn btn-primary px-4"
             onClick={() => setIsResultModalOpen(false)}
           >
-            Selesai
+            Tutup
           </button>
         }
       >
-        {result && (
-          <div className="text-center py-2">
-            <span className="avatar av-2 avatar-lg mb-3 mx-auto" style={{ width: 72, height: 72, fontSize: '1.75rem' }}>
-              C{result.predicted_cluster ?? result.cluster_label}
-            </span>
-            <h3 className="h4 fw-bold mb-1">
-              Klaster Prediksi: C{result.predicted_cluster ?? result.cluster_label}
-            </h3>
-            <p className="text-muted small mb-3">
-              Confidence Score: {result.confidence_score ? `${(Number(result.confidence_score) * 100).toFixed(2)}%` : 'Tinggi'}
-            </p>
-            <div className="p-3 rounded mb-3 text-start bg-light border">
-              <h6 className="fw-bold mb-2">Interpretasi Analitis:</h6>
-              <p className="small mb-0 text-muted">
-                Kandidat memiliki kombinasi karakteristik akademik (IPK, Prestasi, Kehadiran) dan sosio-ekonomi (Penghasilan, Tanggungan) yang konsisten dengan pola sentroid <strong>Klaster #{result.predicted_cluster ?? result.cluster_label}</strong>.
-              </p>
+        {result && (() => {
+          const clusterNum = Number(result.predicted_cluster ?? result.cluster_label);
+          // Berdasarkan analisis sentroid K=4 aktif:
+          // C2: IPK 3.80, Gaji 872rb, Tanggungan 5, Prestasi 3.7 -> PRIORITAS UTAMA
+          // C1: IPK 3.40, Gaji 1.69jt, Tanggungan 3.3, Prestasi 2.3 -> LAYAK (CADANGAN)
+          // C3: IPK 2.84, Gaji 3.50jt, Tanggungan 1.8, Prestasi 0.6 -> KURANG LAYAK / DIPERTIMBANGKAN
+          // C0: IPK 2.38, Gaji 6.28jt, Tanggungan 0.7, Prestasi 0.0 -> TIDAK LAYAK
+          let badgeColor = 'bg-primary-subtle text-primary border-primary';
+          let titleStatus = 'Hasil Klasifikasi Klaster';
+          let descStatus = 'Kandidat memiliki karakteristik yang sesuai dengan pola klaster ini.';
+
+          if (clusterNum === 2) {
+            badgeColor = 'bg-success-subtle text-success border-success';
+            titleStatus = 'SANGAT LAYAK (Prioritas Utama Beasiswa)';
+            descStatus = 'Kandidat memiliki prestasi akademik sangat tinggi (IPK tinggi, keaktifan prestasi & kehadiran) serta kondisi ekonomi keluarga yang paling membutuhkan bantuan finansial.';
+          } else if (clusterNum === 1) {
+            badgeColor = 'bg-info-subtle text-info border-info';
+            titleStatus = 'LAYAK (Kandidat Cadangan / Kuota Lanjutan)';
+            descStatus = 'Kandidat memiliki catatan akademik baik dan kondisi ekonomi menengah-ke-bawah yang memenuhi kriteria penerimaan beasiswa.';
+          } else if (clusterNum === 3) {
+            badgeColor = 'bg-warning-subtle text-warning border-warning';
+            titleStatus = 'DIPERTIMBANGKAN (Prioritas Rendah)';
+            descStatus = 'Kandidat memiliki capaian akademik cukup, namun tingkat kebutuhan finansial tidak mendesak dibanding klaster prioritas.';
+          } else if (clusterNum === 0) {
+            badgeColor = 'bg-danger-subtle text-danger border-danger';
+            titleStatus = 'TIDAK LAYAK / TIDAK DIREKOMENDASIKAN';
+            descStatus = 'Kandidat tergolong mampu secara sosio-ekonomi (penghasilan ortu tinggi) atau catatan akademik/kehadiran belum memenuhi ambang seleksi beasiswa.';
+          }
+
+          return (
+            <div className="py-2">
+              <div className="text-center mb-3">
+                <span className={`badge ${badgeColor} fs-5 px-3 py-2 border mb-2 d-inline-block`}>
+                  Klaster C{clusterNum}
+                </span>
+                <h4 className="fw-bold mb-1">{titleStatus}</h4>
+                <p className="text-muted small mb-0 font-monospace">
+                  Confidence Score: {result.confidence_score ? `${(Number(result.confidence_score) * 100).toFixed(2)}% (Tingkat Keyakinan Model)` : '-'}
+                </p>
+              </div>
+
+              <div className="p-3 rounded mb-3 bg-light border small">
+                <h6 className="fw-bold mb-2 text-dark">Makna &amp; Profil Rekomendasi:</h6>
+                <p className="mb-2 text-muted">
+                  {descStatus}
+                </p>
+                <div className="border-top pt-2 mt-2 text-muted" style={{ fontSize: '0.8rem' }}>
+                  Model Jaringan Saraf Tiruan telah memetakan 6 indikator kandidat (IPK, Gaji Ortu, Tanggungan, Prestasi Akademik/Non-akademik, Kehadiran) terhadap pola sentroid klaster.
+                </div>
+              </div>
+
+              <div className="alert alert-secondary py-2 small mb-0">
+                <strong>Catatan SPK:</strong> Rekomendasi ini adalah sistem pendukung keputusan analitis untuk membantu panitia dalam memprioritaskan kuota beasiswa.
+              </div>
             </div>
-            <div className="alert alert-secondary py-2 small mb-0 text-start">
-              <strong>Catatan:</strong> Hasil ini merupakan rekomendasi sistem analitis pendukung keputusan dan tidak menggantikan proses verifikasi faktual.
-            </div>
-          </div>
-        )}
+          );
+        })()}
       </Modal>
 
       {/* POPUP MODAL: Detail Riwayat Prediksi */}
