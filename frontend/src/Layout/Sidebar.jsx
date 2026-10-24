@@ -296,17 +296,6 @@ export default function Sidebar({ mobileOpen, onCloseMobile }) {
               </li>
             </ul>
           </nav>
-
-          <div className="sidebar-foot">
-            <div className="term-card">
-              <p className="term-label">Sistem SPK Beasiswa</p>
-              <p className="term-week">K-Means &amp; Backpropagation</p>
-              <div className="term-bar" role="img" aria-label="Status Sistem">
-                <span style={{ width: '100%' }}></span>
-              </div>
-              <p className="term-dates">Rekomendasi Analitis Data Mining</p>
-            </div>
-          </div>
         </div>
       </div>
       {mobileOpen && (
