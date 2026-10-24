@@ -37,3 +37,14 @@ def create_prediction(
         notes=payload.notes,
         created_by=current_user.id,
     )
+
+
+@router.delete("/{prediction_id}")
+def delete_prediction(
+    prediction_id: int,
+    db: Session = Depends(get_db),
+    current_user=Depends(check_role("admin", "operator")),
+):
+    service = PredictionService(db)
+    service.delete_prediction(prediction_id)
+    return {"message": f"Prediction #{prediction_id} successfully deleted", "id": prediction_id}

@@ -28,5 +28,13 @@ class PredictionRepository:
         self.db.refresh(prediction)
         return prediction
 
+    def delete(self, prediction_id: int) -> bool:
+        pred = self.get_by_id(prediction_id)
+        if pred:
+            self.db.delete(pred)
+            self.db.commit()
+            return True
+        return False
+
     def get_all_for_export(self) -> List[Prediction]:
         return self.db.query(Prediction).order_by(Prediction.created_at.desc()).all()

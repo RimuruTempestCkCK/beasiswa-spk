@@ -21,6 +21,9 @@ export default function PredictionsPage() {
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(false);
   const [selectedHistoryItem, setSelectedHistoryItem] = useState(null);
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [isResultModalOpen, setIsResultModalOpen] = useState(false);
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
 
@@ -96,6 +99,27 @@ export default function PredictionsPage() {
   const handleOpenHistoryDetail = (item) => {
     setSelectedHistoryItem(item);
     setIsHistoryModalOpen(true);
+  };
+
+  const handlePromptDelete = (item) => {
+    setDeleteTarget(item);
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    try {
+      await apiClient.delete(API.PREDICTIONS.DELETE(deleteTarget.id));
+      toast.success(`Riwayat inferensi #${deleteTarget.id} berhasil dihapus`);
+      setIsDeleteModalOpen(false);
+      setDeleteTarget(null);
+      fetchHistory();
+    } catch (err) {
+      toast.error(err.response?.data?.detail || 'Gagal menghapus riwayat inferensi');
+    } finally {
+      setDeleting(false);
+    }
   };
 
   return (
@@ -412,13 +436,22 @@ export default function PredictionsPage() {
                     </span>
                   </td>
                   <td className="text-end">
-                    <button
-                      type="button"
-                      className="btn btn-sm btn-outline-primary"
-                      onClick={() => handleOpenHistoryDetail(h)}
-                    >
-                      Detail (Pop-Up)
-                    </button>
+                    <div className="d-inline-flex gap-2">
+                      <button
+                        type="button"
+                        className="btn btn-sm btn-outline-primary"
+                        onClick={() => handleOpenHistoryDetail(h)}
+                      >
+                        Detail (Pop-Up)
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-sm btn-outline-danger"
+                        onClick={() => handlePromptDelete(h)}
+                      >
+                        Hapus
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -575,6 +608,40 @@ export default function PredictionsPage() {
             )}
           </div>
         )}
+      </Modal>
+
+      {/* POPUP MODAL: Konfirmasi Hapus Riwayat */}
+      <Modal
+        isOpen={isDeleteModalOpen}
+        onClose={() => !deleting && setIsDeleteModalOpen(false)}
+        size="sm"
+        title="Konfirmasi Hapus Riwayat"
+        subtitle="Tindakan ini tidak dapat dibatalkan"
+        footer={
+          <div className="d-flex justify-content-end gap-2 w-100">
+            <button
+              type="button"
+              className="btn btn-secondary"
+              onClick={() => setIsDeleteModalOpen(false)}
+              disabled={deleting}
+            >
+              Batal
+            </button>
+            <button
+              type="button"
+              className="btn btn-danger"
+              onClick={handleConfirmDelete}
+              disabled={deleting}
+            >
+              {deleting ? 'Menghapus...' : 'Ya, Hapus'}
+            </button>
+          </div>
+        }
+      >
+        <p className="mb-0">
+          Apakah Anda yakin ingin menghapus riwayat inferensi{' '}
+          <strong>#{deleteTarget?.id}</strong> (Klaster C{deleteTarget?.predicted_cluster})?
+        </p>
       </Modal>
     </>
   );

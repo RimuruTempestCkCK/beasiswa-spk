@@ -20,6 +20,12 @@ class PredictionService:
         total, items = self.prediction_repo.list_predictions(skip=skip, limit=page_size)
         return {"total": total, "page": page, "page_size": page_size, "items": items}
 
+    def delete_prediction(self, prediction_id: int) -> bool:
+        pred = self.prediction_repo.get_by_id(prediction_id)
+        if not pred:
+            raise HTTPException(status_code=404, detail="Prediction record not found")
+        return self.prediction_repo.delete(prediction_id)
+
     def predict(
         self,
         model_version_id: Optional[int],
