@@ -99,10 +99,22 @@ export default function ClusteringPage() {
   const handleSelectRun = async (run) => {
     setSelectedRun(run);
     setIsModalOpen(true);
+    setProfile([]);
+    setAssignments([]);
     try {
-      const res = await apiClient.get(API.CLUSTERING.DETAIL(run.id));
-      setProfile(res.data.profile || res.data.cluster_profiles || []);
-      setAssignments(res.data.assignments || res.data.sample_assignments || []);
+      const [profileRes, assignmentsRes] = await Promise.allSettled([
+        apiClient.get(API.CLUSTERING.PROFILE(run.id)),
+        apiClient.get(API.CLUSTERING.ASSIGNMENTS(run.id)),
+      ]);
+
+      if (profileRes.status === 'fulfilled') {
+        const pData = profileRes.value.data;
+        setProfile(Array.isArray(pData) ? pData : pData.profile || pData.cluster_profiles || []);
+      }
+      if (assignmentsRes.status === 'fulfilled') {
+        const aData = assignmentsRes.value.data;
+        setAssignments(Array.isArray(aData) ? aData : aData.assignments || aData.items || []);
+      }
     } catch {
       toast.error('Gagal memuat detail profil klaster');
     }
