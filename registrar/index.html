@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script>document.documentElement.classList.add('js')</script>
+  <script>try{var t=localStorage.getItem('registrar-theme');if(t!=='light'&&t!=='dark')t=matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';document.documentElement.setAttribute('data-bs-theme',t);if(localStorage.getItem('registrar-sidebar')==='collapsed')document.documentElement.classList.add('sidebar-collapsed')}catch(e){}</script>
+  <title>Dashboard · Registrar School Management System</title>
+  <meta name="description" content="Registrar dashboard for Harbourview Academy: enrolment, attendance today, fees collected, staff present, admissions, notices and upcoming exams.">
+  <meta name="theme-color" content="#0b3a3d">
+  <link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Figtree:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/vendor/bootstrap.min.css">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body data-page="dashboard">
+  <a class="skip-link" href="#main">Skip to main content</a>
+  <div class="app">
+  <div id="sidebar" class="sidebar offcanvas-lg offcanvas-start" tabindex="-1" aria-label="Main menu">
+    <div class="sidebar-inner">
+      <div class="sidebar-head">
+        <a class="brand" href="index.html" aria-label="Registrar, Harbourview Academy: dashboard">
+          <span class="brand-mark"><svg class="crest" viewBox="0 0 32 32" aria-hidden="true" focusable="false"><path class="crest-shield" d="M16 2 4 6.5v8.2c0 7.3 5 13.3 12 15.3 7-2 12-8 12-15.3V6.5z"/><path class="crest-line" d="M10 14 16 9.5l6 4.5"/><path class="crest-line" d="M9.5 19c2.2-1.6 4.3-1.6 6.5 0s4.3 1.6 6.5 0"/><path class="crest-line" d="M9.5 23c2.2-1.6 4.3-1.6 6.5 0s4.3 1.6 6.5 0"/></svg></span>
+          <span class="brand-text"><span class="brand-name">Registrar</span><span class="brand-sub">Harbourview Academy</span></span>
+        </a>
+        <button type="button" class="sidebar-close d-lg-none" data-bs-dismiss="offcanvas" data-bs-target="#sidebar" aria-label="Close menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+      </div>
+      <nav class="sidebar-nav" aria-label="Main">
+        <p class="nav-heading">Overview</p>
+        <ul class="nav-list">
+          <li><a class="nav-item-link is-active" href="index.html" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg><span class="nav-label">Dashboard</span></a></li>
+        </ul>
+        <p class="nav-heading">School office</p>
+        <ul class="nav-list">
+          <li><a class="nav-item-link" href="students.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8"/></svg><span class="nav-label">Students</span></a></li>
+          <li><a class="nav-item-link" href="attendance.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="m9 14 2 2 4-4"/></svg><span class="nav-label">Attendance</span></a></li>
+          <li><a class="nav-item-link" href="fees.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M4 2v20l3-2 3 2 2-2 2 2 3-2 3 2V2l-3 2-3-2-2 2-2-2-3 2z"/><path d="M8 8h8M8 12h8M8 16h5"/></svg><span class="nav-label">Fees &amp; invoices</span></a></li>
+          <li><a class="nav-item-link" href="timetable.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01"/></svg><span class="nav-label">Timetable</span></a></li>
+        </ul>
+        <p class="nav-heading">Account</p>
+        <ul class="nav-list">
+          <li><a class="nav-item-link" href="login.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg><span class="nav-label">Sign out</span></a></li>
+        </ul>
+      </nav>
+      <div class="sidebar-foot">
+        <div class="term-card">
+          <p class="term-label">Term 1 · 2026–27</p>
+          <p class="term-week">Week 6 of 15</p>
+          <div class="term-bar" role="img" aria-label="Term 40 percent complete"><span style="width:40%"></span></div>
+          <p class="term-dates">8 Sep to 18 Dec · 45 school days left</p>
+        </div>
+      </div>
+    </div>
+  </div>
+    <div class="app-main">
+    <header class="topbar">
+      <button type="button" class="icon-btn d-lg-none" data-bs-toggle="offcanvas" data-bs-target="#sidebar" aria-controls="sidebar" aria-label="Open menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+      <button type="button" class="icon-btn d-none d-lg-inline-flex" id="sidebarCollapse" aria-controls="sidebar" aria-expanded="true" aria-label="Toggle sidebar" title="Collapse or expand the sidebar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18"/><path d="m15 10-2 2 2 2"/></svg></button>
+      <form class="topbar-search" id="globalSearchForm" role="search" action="students.html" method="get">
+        <label class="visually-hidden" for="globalSearch">Search students</label>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+        <input type="search" id="globalSearch" name="q" class="form-control" placeholder="Search students" autocomplete="off">
+        <kbd class="search-kbd" aria-hidden="true">/</kbd>
+      </form>
+      <div class="topbar-actions">
+        <span class="topbar-date"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg><span>Thu 15 Oct 2026</span></span>
+        <button type="button" class="icon-btn" data-theme-toggle aria-pressed="false" aria-label="Dark mode" title="Toggle dark mode"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" class="ic-moon"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" class="ic-sun"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg></button>
+        <div class="dropdown">
+          <button type="button" class="icon-btn" id="notifToggle" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false" aria-label="Notifications, 4 unread"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"/></svg><span class="notif-count" aria-hidden="true">4</span></button>
+          <div class="dropdown-menu dropdown-menu-end notif-menu">
+            <div class="notif-head"><p class="notif-heading">Notifications</p><button type="button" class="link-btn" data-mark-read>Mark all as read</button></div>
+            <ul class="notif-list" data-render="notifications"><li><a class="notif is-unread" href="attendance.html?class=9B"><span class="notif-icon tone-warning"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg></span><span class="notif-text"><span class="notif-title">9B morning register has 2 students unmarked</span><span class="notif-meta">Today, 08:47</span></span></a></li><li><a class="notif is-unread" href="student.html?id=HV-26164"><span class="notif-icon tone-info"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="8" r="4"></circle><path d="M4 21a8 8 0 0 1 16 0"></path></svg></span><span class="notif-text"><span class="notif-title">Caleb Cormier joined 7A, documents outstanding</span><span class="notif-meta">Wed 14 Oct</span></span></a></li><li><a class="notif is-unread" href="fees.html?status=overdue"><span class="notif-icon tone-danger"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M4 2v20l3-2 3 2 2-2 2 2 3-2 3 2V2l-3 2-3-2-2 2-2-2-3 2z"></path><path d="M8 8h8M8 12h8M8 16h5"></path></svg></span><span class="notif-text"><span class="notif-title">INV-26-0074 for Aaliyah Campbell is 30 days overdue</span><span class="notif-meta">Fees reminder</span></span></a></li><li><a class="notif is-unread" href="index.html#noticesTitle"><span class="notif-icon tone-primary"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M16 2v4M8 2v4M3 10h18"></path></svg></span><span class="notif-text"><span class="notif-title">Parent–teacher conference sign-ups close on Monday</span><span class="notif-meta">Notice board</span></span></a></li></ul>
+          </div>
+        </div>
+        <div class="dropdown">
+          <button type="button" class="user-btn" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Account menu, Eleanor Hughes"><span class="avatar av-2" aria-hidden="true">EH</span><span class="user-text"><span class="user-name">Eleanor Hughes</span><span class="user-role">Registrar</span></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="m6 9 6 6 6-6"/></svg></button>
+          <ul class="dropdown-menu dropdown-menu-end user-menu">
+            <li class="user-menu-head"><span class="avatar av-2 avatar-lg" aria-hidden="true">EH</span><span><span class="user-name">Eleanor Hughes</span><span class="user-role">eleanor.hughes@example.com</span></span></li>
+            <li><a class="dropdown-item" href="attendance.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="m9 14 2 2 4-4"/></svg>Today's registers</a></li>
+            <li><a class="dropdown-item" href="fees.html#record-payment"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>Record a payment</a></li>
+            <li><a class="dropdown-item" href="mailto:helpdesk@example.com"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3M12 17h.01"/></svg>IT help desk</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="login.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>Sign out</a></li>
+          </ul>
+        </div>
+      </div>
+    </header>
+      <main id="main" class="app-content" tabindex="-1">
+        <!-- Elements with data-render are filled by js/main.js from the demo data at the top of that file. The markup inside them is a pre-rendered copy so the page still reads without JavaScript. -->
+
+        <div class="page-head">
+          <div>
+            <p class="eyebrow">Dashboard · Thursday 15 October 2026</p>
+            <h1 class="page-title" data-render="greeting">Good morning, Eleanor</h1>
+            <p class="page-sub">Term 1, week 6 at Harbourview Academy. Registers, fees and admissions at a glance.</p>
+          </div>
+          <div class="page-actions">
+            <a class="btn btn-outline-secondary" href="students.html#add-student"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg><span>Add student</span></a>
+            <a class="btn btn-primary" href="attendance.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="m9 14 2 2 4-4"/></svg><span>Take attendance</span></a>
+          </div>
+        </div>
+
+        <section class="kpi-grid" aria-label="Key figures">
+          <div class="kpi">
+            <div class="kpi-top"><span class="kpi-icon tone-teal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8"/></svg></span><p class="kpi-label">Enrolment</p></div>
+            <p class="kpi-value" data-render="kpi-enrolment">652</p>
+            <p class="kpi-note" data-render="kpi-enrolment-note"><span class="delta is-up"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 19V5M5 12l7-7 7 7"></path></svg>+11</span> joined since 8 Sep</p>
+          </div>
+          <div class="kpi">
+            <div class="kpi-top"><span class="kpi-icon tone-green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="m9 14 2 2 4-4"/></svg></span><p class="kpi-label">Attendance today</p></div>
+            <p class="kpi-value" data-render="kpi-attendance">95.2%</p>
+            <p class="kpi-note" data-render="kpi-attendance-note"><span class="delta is-down"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 5v14M19 12l-7 7-7-7"></path></svg>0.9 pts</span> vs yesterday · 31 absent, 16 late</p>
+          </div>
+          <div class="kpi">
+            <div class="kpi-top"><span class="kpi-icon tone-amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M4 2v20l3-2 3 2 2-2 2 2 3-2 3 2V2l-3 2-3-2-2 2-2-2-3 2z"/><path d="M8 8h8M8 12h8M8 16h5"/></svg></span><p class="kpi-label">Fees collected</p></div>
+            <p class="kpi-value"><span data-render="kpi-fees">$2.85M</span> <span class="kpi-of" data-render="kpi-fees-of">of $3.44M</span></p>
+            <div class="kpi-meter" data-render="kpi-fees-meter"><span class="meter" aria-hidden="true"><span style="width:82.8%"></span></span></div>
+            <p class="kpi-note" data-render="kpi-fees-note"><strong>83%</strong> of Term 1 billing · $588k past due on 167 invoices</p>
+          </div>
+          <div class="kpi">
+            <div class="kpi-top"><span class="kpi-icon tone-slate"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="m16 11 2 2 4-4"/></svg></span><p class="kpi-label">Staff present</p></div>
+            <p class="kpi-value">58 <span class="kpi-of">of 62</span></p>
+            <p class="kpi-note">3 on leave, 1 off sick · cover set for 5 lessons</p>
+          </div>
+        </section>
+
+        <div class="row g-3 g-xxl-4">
+          <div class="col-xl-8">
+            <section class="panel h-100" aria-labelledby="attTitle">
+              <div class="panel-head">
+                <div><h2 class="panel-title" id="attTitle">Attendance, last 30 days</h2><p class="panel-sub" data-render="att-sub">21 school days · average 95.7%</p></div>
+                <div class="seg seg-sm" role="group" aria-label="Attendance view" data-view-toggle><button type="button" class="seg-btn" data-view="chart" aria-pressed="true">Chart</button><button type="button" class="seg-btn" data-view="table" aria-pressed="false">Table</button></div>
+              </div>
+              <div class="panel-body">
+                <ul class="viz-legend" aria-label="Chart key"><li><span class="viz-key key-line"></span>Share of students in school</li><li><span class="viz-key key-target"></span>Target 95%</li></ul>
+                <div class="viz-wrap">
+                  <div class="viz-host" data-render="att-chart" tabindex="0" role="group" aria-label="Daily attendance rate chart. Use the left and right arrow keys to read each day."><svg class="viz" width="697" height="308" viewBox="0 0 697 308" aria-hidden="true" focusable="false"><line class="viz-grid" x1="40" x2="643" y1="278" y2="278"></line><text class="viz-tick" x="32" y="282" text-anchor="end">90%</text><line class="viz-grid" x1="40" x2="643" y1="226.4" y2="226.4"></line><text class="viz-tick" x="32" y="230.4" text-anchor="end">92%</text><line class="viz-grid" x1="40" x2="643" y1="174.8" y2="174.8"></line><text class="viz-tick" x="32" y="178.8" text-anchor="end">94%</text><line class="viz-grid" x1="40" x2="643" y1="123.20000000000002" y2="123.20000000000002"></line><text class="viz-tick" x="32" y="127.20000000000002" text-anchor="end">96%</text><line class="viz-grid" x1="40" x2="643" y1="71.6" y2="71.6"></line><text class="viz-tick" x="32" y="75.6" text-anchor="end">98%</text><line class="viz-grid" x1="40" x2="643" y1="20" y2="20"></line><text class="viz-tick" x="32" y="24" text-anchor="end">100%</text><text class="viz-tick" x="40" y="300" text-anchor="middle">16 Sep</text><text class="viz-tick" x="160.6" y="300" text-anchor="middle">22 Sep</text><text class="viz-tick" x="281.2" y="300" text-anchor="middle">28 Sep</text><text class="viz-tick" x="401.8" y="300" text-anchor="middle">2 Oct</text><text class="viz-tick" x="522.4" y="300" text-anchor="middle">8 Oct</text><text class="viz-tick" x="643" y="300" text-anchor="middle">15 Oct</text><line class="viz-target" x1="40" x2="643" y1="149" y2="149"></line><path class="viz-area" d="M40.0,132.5L70.2,132.2L100.3,168.2L130.4,96.1L160.6,107.7L190.8,103.7L220.9,87.8L251.1,115.7L281.2,95.8L311.4,159.4L341.5,179.3L371.6,131.5L401.8,135.1L431.9,124.2L462.1,136.2L492.3,160.2L522.4,112.0L552.5,168.0L582.7,132.0L612.9,119.8L643.0,143.8L643.0,278L40.0,278Z"></path><line class="viz-axis" x1="40" x2="643" y1="278" y2="278"></line><path class="viz-line" d="M40.0,132.5L70.2,132.2L100.3,168.2L130.4,96.1L160.6,107.7L190.8,103.7L220.9,87.8L251.1,115.7L281.2,95.8L311.4,159.4L341.5,179.3L371.6,131.5L401.8,135.1L431.9,124.2L462.1,136.2L492.3,160.2L522.4,112.0L552.5,168.0L582.7,132.0L612.9,119.8L643.0,143.8"></path><circle class="viz-dot-soft" cx="341.5" cy="179.25925925925952" r="4"></circle><text class="viz-note" x="341.5" y="199.25925925925952" text-anchor="middle">Low 93.8%</text><circle class="viz-dot" cx="643" cy="143.80804953560363" r="4.5"></circle><text class="viz-value" x="652" y="147.80804953560363">95.2%</text><line class="viz-cross" x1="0" x2="0" y1="20" y2="278" visibility="hidden"></line><circle class="viz-hover" r="5" cx="0" cy="0" visibility="hidden"></circle></svg></div>
+                  <div class="viz-tip" aria-live="polite" hidden></div>
+                </div>
+                <div class="viz-table table-scroll">
+                  <table class="table-data table-compact">
+                    <caption class="visually-hidden">Daily attendance, most recent first</caption>
+                    <thead><tr><th scope="col">Day</th><th scope="col" class="text-end">Attended</th><th scope="col" class="text-end">Present</th><th scope="col" class="text-end">Late</th><th scope="col" class="text-end">Absent</th></tr></thead>
+                    <tbody data-render="att-table"><tr><th scope="row">Thu 15 Oct</th><td class="num">95.2%</td><td class="num">599</td><td class="num">16</td><td class="num">31</td></tr><tr><th scope="row">Wed 14 Oct</th><td class="num">96.1%</td><td class="num">614</td><td class="num">7</td><td class="num">25</td></tr><tr><th scope="row">Tue 13 Oct</th><td class="num">95.7%</td><td class="num">599</td><td class="num">18</td><td class="num">28</td></tr><tr><th scope="row">Fri 9 Oct</th><td class="num">94.3%</td><td class="num">595</td><td class="num">13</td><td class="num">37</td></tr><tr><th scope="row">Thu 8 Oct</th><td class="num">96.4%</td><td class="num">614</td><td class="num">8</td><td class="num">23</td></tr><tr><th scope="row">Wed 7 Oct</th><td class="num">94.6%</td><td class="num">606</td><td class="num">3</td><td class="num">35</td></tr><tr><th scope="row">Tue 6 Oct</th><td class="num">95.5%</td><td class="num">603</td><td class="num">12</td><td class="num">29</td></tr><tr><th scope="row">Mon 5 Oct</th><td class="num">96.0%</td><td class="num">615</td><td class="num">3</td><td class="num">26</td></tr><tr><th scope="row">Fri 2 Oct</th><td class="num">95.5%</td><td class="num">608</td><td class="num">13</td><td class="num">29</td></tr><tr><th scope="row">Thu 1 Oct</th><td class="num">95.7%</td><td class="num">612</td><td class="num">8</td><td class="num">28</td></tr><tr><th scope="row">Wed 30 Sep</th><td class="num">93.8%</td><td class="num">596</td><td class="num">12</td><td class="num">40</td></tr><tr><th scope="row">Tue 29 Sep</th><td class="num">94.6%</td><td class="num">604</td><td class="num">9</td><td class="num">35</td></tr><tr><th scope="row">Mon 28 Sep</th><td class="num">97.1%</td><td class="num">612</td><td class="num">16</td><td class="num">19</td></tr><tr><th scope="row">Fri 25 Sep</th><td class="num">96.3%</td><td class="num">613</td><td class="num">10</td><td class="num">24</td></tr><tr><th scope="row">Thu 24 Sep</th><td class="num">97.4%</td><td class="num">620</td><td class="num">10</td><td class="num">17</td></tr><tr><th scope="row">Wed 23 Sep</th><td class="num">96.8%</td><td class="num">625</td><td class="num">1</td><td class="num">21</td></tr><tr><th scope="row">Tue 22 Sep</th><td class="num">96.6%</td><td class="num">611</td><td class="num">14</td><td class="num">22</td></tr><tr><th scope="row">Mon 21 Sep</th><td class="num">97.0%</td><td class="num">613</td><td class="num">12</td><td class="num">19</td></tr><tr><th scope="row">Fri 18 Sep</th><td class="num">94.3%</td><td class="num">598</td><td class="num">9</td><td class="num">37</td></tr><tr><th scope="row">Thu 17 Sep</th><td class="num">95.7%</td><td class="num">605</td><td class="num">11</td><td class="num">28</td></tr><tr><th scope="row">Wed 16 Sep</th><td class="num">95.6%</td><td class="num">607</td><td class="num">7</td><td class="num">28</td></tr></tbody>
+                  </table>
+                </div>
+              </div>
+            </section>
+          </div>
+          <div class="col-xl-4">
+            <section class="panel h-100" aria-labelledby="todayTitle">
+              <div class="panel-head"><div><h2 class="panel-title" id="todayTitle">Today by grade</h2><p class="panel-sub">Morning registration, 08:30–08:45</p></div></div>
+              <div class="panel-body">
+                <ul class="split-legend split-legend-grid" data-render="today-split"><li><span class="split-key is-p"></span>Present <strong>599</strong></li><li><span class="split-key is-l"></span>Late <strong>16</strong></li><li><span class="split-key is-a"></span>Absent <strong>31</strong></li><li><span class="split-key is-e"></span>On leave <strong>6</strong></li></ul>
+                <ul class="bar-list" data-render="grade-bars"><li><span class="bar-label">Grade 7</span><span class="meter meter-good" aria-hidden="true"><span style="width:97.2%"></span></span><span class="bar-value num">97.2%</span></li><li><span class="bar-label">Grade 8</span><span class="meter meter-ok" aria-hidden="true"><span style="width:93.7%"></span></span><span class="bar-value num">93.7%</span></li><li><span class="bar-label">Grade 9</span><span class="meter meter-good" aria-hidden="true"><span style="width:97.3%"></span></span><span class="bar-value num">97.3%</span></li><li><span class="bar-label">Grade 10</span><span class="meter meter-ok" aria-hidden="true"><span style="width:93.5%"></span></span><span class="bar-value num">93.5%</span></li><li><span class="bar-label">Grade 11</span><span class="meter meter-ok" aria-hidden="true"><span style="width:94.1%"></span></span><span class="bar-value num">94.1%</span></li><li><span class="bar-label">Grade 12</span><span class="meter meter-good" aria-hidden="true"><span style="width:95.3%"></span></span><span class="bar-value num">95.3%</span></li></ul>
+                <a class="link-arrow" href="attendance.html">Open registers <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+              </div>
+            </section>
+          </div>
+
+          <div class="col-xl-7">
+            <section class="panel h-100" aria-labelledby="feeTitle">
+              <div class="panel-head">
+                <div><h2 class="panel-title" id="feeTitle">Fee collection by month</h2><p class="panel-sub" data-render="fee-sub">Last 12 months · $2.85M received since Term 1 invoices went out</p></div>
+                <div class="seg seg-sm" role="group" aria-label="Fee collection view" data-view-toggle><button type="button" class="seg-btn" data-view="chart" aria-pressed="true">Chart</button><button type="button" class="seg-btn" data-view="table" aria-pressed="false">Table</button></div>
+              </div>
+              <div class="panel-body">
+                <div class="viz-wrap">
+                  <div class="viz-host" data-render="fee-chart" tabindex="0" role="group" aria-label="Fees collected per month chart. Use the left and right arrow keys to read each month."><svg class="viz" width="601" height="315" viewBox="0 0 601 315" aria-hidden="true" focusable="false"><line class="viz-grid" x1="48" x2="593" y1="285" y2="285"></line><text class="viz-tick" x="40" y="289" text-anchor="end">$0</text><line class="viz-grid" x1="48" x2="593" y1="219.75" y2="219.75"></line><text class="viz-tick" x="40" y="223.75" text-anchor="end">$500k</text><line class="viz-grid" x1="48" x2="593" y1="154.5" y2="154.5"></line><text class="viz-tick" x="40" y="158.5" text-anchor="end">$1.0M</text><line class="viz-grid" x1="48" x2="593" y1="89.25" y2="89.25"></line><text class="viz-tick" x="40" y="93.25" text-anchor="end">$1.5M</text><line class="viz-grid" x1="48" x2="593" y1="24" y2="24"></line><text class="viz-tick" x="40" y="28" text-anchor="end">$2.0M</text><path class="viz-bar" data-i="0" d="M58.7,285V261.0Q58.7,257.0 62.7,257.0H78.7Q82.7,257.0 82.7,261.0V285Z"></path><text class="viz-tick" x="70.70833333333333" y="307" text-anchor="middle">Nov</text><path class="viz-bar" data-i="1" d="M104.1,285V276.4Q104.1,272.4 108.1,272.4H124.1Q128.1,272.4 128.1,276.4V285Z"></path><text class="viz-tick" x="116.12499999999999" y="307" text-anchor="middle">Dec</text><path class="viz-bar" data-i="2" d="M149.5,285V77.8Q149.5,73.8 153.5,73.8H169.5Q173.5,73.8 173.5,77.8V285Z"></path><text class="viz-tick" x="161.54166666666666" y="307" text-anchor="middle">Jan</text><text class="viz-value" x="161.54166666666666" y="66.7988" text-anchor="middle">$1.62M</text><path class="viz-bar" data-i="3" d="M195.0,285V147.7Q195.0,143.7 199.0,143.7H215.0Q219.0,143.7 219.0,147.7V285Z"></path><text class="viz-tick" x="206.95833333333334" y="307" text-anchor="middle">Feb</text><path class="viz-bar" data-i="4" d="M240.4,285V247.4Q240.4,243.4 244.4,243.4H260.4Q264.4,243.4 264.4,247.4V285Z"></path><text class="viz-tick" x="252.375" y="307" text-anchor="middle">Mar</text><path class="viz-bar" data-i="5" d="M285.8,285V87.1Q285.8,83.1 289.8,83.1H305.8Q309.8,83.1 309.8,87.1V285Z"></path><text class="viz-tick" x="297.79166666666663" y="307" text-anchor="middle">Apr</text><path class="viz-bar" data-i="6" d="M331.2,285V142.4Q331.2,138.4 335.2,138.4H351.2Q355.2,138.4 355.2,142.4V285Z"></path><text class="viz-tick" x="343.2083333333333" y="307" text-anchor="middle">May</text><path class="viz-bar" data-i="7" d="M376.6,285V236.4Q376.6,232.4 380.6,232.4H396.6Q400.6,232.4 400.6,236.4V285Z"></path><text class="viz-tick" x="388.62499999999994" y="307" text-anchor="middle">Jun</text><path class="viz-bar" data-i="8" d="M422.0,285V281.0Q422.0,277.0 426.0,277.0H442.0Q446.0,277.0 446.0,281.0V285Z"></path><text class="viz-tick" x="434.04166666666663" y="307" text-anchor="middle">Jul</text><path class="viz-bar" data-i="9" d="M467.5,285V141.5Q467.5,137.5 471.5,137.5H487.5Q491.5,137.5 491.5,141.5V285Z"></path><text class="viz-tick" x="479.4583333333333" y="307" text-anchor="middle">Aug</text><path class="viz-bar" data-i="10" d="M512.9,285V80.4Q512.9,76.4 516.9,76.4H532.9Q536.9,76.4 536.9,80.4V285Z"></path><text class="viz-tick" x="524.875" y="307" text-anchor="middle">Sep</text><path class="viz-bar is-current" data-i="11" d="M558.3,285V273.2Q558.3,269.2 562.3,269.2H578.3Q582.3,269.2 582.3,273.2V285Z"></path><text class="viz-tick is-strong" x="570.2916666666666" y="307" text-anchor="middle">Oct</text><text class="viz-value" x="570.2916666666666" y="262.1573" text-anchor="middle">$121k</text><line class="viz-axis" x1="48" x2="593" y1="285" y2="285"></line></svg></div>
+                  <div class="viz-tip" aria-live="polite" hidden></div>
+                </div>
+                <div class="viz-table table-scroll">
+                  <table class="table-data table-compact">
+                    <caption class="visually-hidden">Fees collected per month</caption>
+                    <thead><tr><th scope="col">Month</th><th scope="col" class="text-end">Collected</th></tr></thead>
+                    <tbody data-render="fee-table"><tr><th scope="row">November 2025</th><td class="num">$214,300.00</td></tr><tr><th scope="row">December 2025</th><td class="num">$96,800.00</td></tr><tr><th scope="row">January 2026</th><td class="num">$1,618,400.00</td></tr><tr><th scope="row">February 2026</th><td class="num">$1,082,500.00</td></tr><tr><th scope="row">March 2026</th><td class="num">$318,900.00</td></tr><tr><th scope="row">April 2026</th><td class="num">$1,547,200.00</td></tr><tr><th scope="row">May 2026</th><td class="num">$1,123,600.00</td></tr><tr><th scope="row">June 2026</th><td class="num">$402,700.00</td></tr><tr><th scope="row">July 2026</th><td class="num">$61,500.00</td></tr><tr><th scope="row">August 2026</th><td class="num">$1,130,350.00</td></tr><tr><th scope="row">September 2026</th><td class="num">$1,598,130.00</td></tr><tr><th scope="row">October 2026 (to date)</th><td class="num">$121,400.00</td></tr></tbody>
+                  </table>
+                </div>
+              </div>
+            </section>
+          </div>
+          <div class="col-xl-5">
+            <section class="panel h-100" aria-labelledby="noticesTitle">
+              <div class="panel-head"><div><h2 class="panel-title" id="noticesTitle">Notices and events</h2><p class="panel-sub">Next three weeks</p></div><span class="panel-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="m3 11 18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg></span></div>
+              <ul class="notice-list">
+                <li class="notice">
+                  <span class="date-chip"><span class="date-chip-m">Oct</span><span class="date-chip-d">16</span></span>
+                  <div class="notice-body"><p class="notice-title">Fire drill, all buildings</p><p class="notice-meta"><span class="tag tag-notice">Notice</span>Fri 16 Oct · 10:40 · staff briefing at 08:15</p></div>
+                  
+                </li>
+                <li class="notice">
+                  <span class="date-chip"><span class="date-chip-m">Oct</span><span class="date-chip-d">19</span></span>
+                  <div class="notice-body"><p class="notice-title">Conference sign-ups close</p><p class="notice-meta"><span class="tag tag-deadline">Deadline</span>Mon 19 Oct · 17:00 · families book online</p></div>
+                  
+                </li>
+                <li class="notice">
+                  <span class="date-chip"><span class="date-chip-m">Oct</span><span class="date-chip-d">22</span></span>
+                  <div class="notice-body"><p class="notice-title">Parent–teacher conferences</p><p class="notice-meta"><span class="tag tag-event">Event</span>Thu 22 Oct · 16:00–19:30 · Gym A and B</p></div>
+                  
+                </li>
+                <li class="notice">
+                  <span class="date-chip"><span class="date-chip-m">Oct</span><span class="date-chip-d">27</span></span>
+                  <div class="notice-body"><p class="notice-title">Grade 12 university applications evening</p><p class="notice-meta"><span class="tag tag-event">Event</span>Tue 27 Oct · 18:30 · Auditorium</p></div>
+                  
+                </li>
+                <li class="notice">
+                  <span class="date-chip"><span class="date-chip-m">Nov</span><span class="date-chip-d">2</span></span>
+                  <div class="notice-body"><p class="notice-title">Term 2 bursary applications open</p><p class="notice-meta"><span class="tag tag-notice">Notice</span>Mon 2 Nov · forms from the school office</p></div>
+                  
+                </li>
+              </ul>
+            </section>
+          </div>
+
+          <div class="col-xl-8">
+            <section class="panel h-100" aria-labelledby="admTitle">
+              <div class="panel-head"><div><h2 class="panel-title" id="admTitle">Recent admissions</h2><p class="panel-sub">Students who joined after the first week of term</p></div><a class="link-arrow" href="students.html?sort=admitted">Newest admissions <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a></div>
+              <div class="table-wrap">
+                <table class="table-data table-stack">
+                  <caption class="visually-hidden">Recent admissions</caption>
+                  <thead><tr><th scope="col">Student</th><th scope="col">Class</th><th scope="col">Admitted</th><th scope="col">Primary guardian</th><th scope="col">Documents</th></tr></thead>
+                  <tbody data-render="admissions"><tr>
+      <td class="cell-main" data-label="Student"><div class="person"><span class="avatar av-3" aria-hidden="true">CC</span><div><a class="person-name" href="student.html?id=HV-26164">Caleb Cormier</a><span class="person-meta">HV-26164</span></div></div></td>
+      <td data-label="Class"><span class="class-tag">7A</span></td>
+      <td data-label="Admitted" class="num">14 Oct</td>
+      <td data-label="Guardian">Grace Sinclair<span class="cell-sub">Mother</span></td>
+      <td data-label="Documents"><span class="status status-warning">2 missing</span></td>
+    </tr><tr>
+      <td class="cell-main" data-label="Student"><div class="person"><span class="avatar av-5" aria-hidden="true">GM</span><div><a class="person-name" href="student.html?id=HV-26163">Grace MacDonald</a><span class="person-meta">HV-26163</span></div></div></td>
+      <td data-label="Class"><span class="class-tag">8A</span></td>
+      <td data-label="Admitted" class="num">8 Oct</td>
+      <td data-label="Guardian">Monique MacDonald<span class="cell-sub">Grandmother</span></td>
+      <td data-label="Documents"><span class="status status-warning">2 missing</span></td>
+    </tr><tr>
+      <td class="cell-main" data-label="Student"><div class="person"><span class="avatar av-5" aria-hidden="true">EP</span><div><a class="person-name" href="student.html?id=HV-26162">Ethan Park</a><span class="person-meta">HV-26162</span></div></div></td>
+      <td data-label="Class"><span class="class-tag">10B</span></td>
+      <td data-label="Admitted" class="num">2 Oct</td>
+      <td data-label="Guardian">Fatima Park<span class="cell-sub">Mother</span></td>
+      <td data-label="Documents"><span class="status status-success">Complete</span></td>
+    </tr><tr>
+      <td class="cell-main" data-label="Student"><div class="person"><span class="avatar av-2" aria-hidden="true">TL</span><div><a class="person-name" href="student.html?id=HV-26161">Tomas Lee</a><span class="person-meta">HV-26161</span></div></div></td>
+      <td data-label="Class"><span class="class-tag">10C</span></td>
+      <td data-label="Admitted" class="num">2 Oct</td>
+      <td data-label="Guardian">Fatima Lavoie<span class="cell-sub">Mother</span></td>
+      <td data-label="Documents"><span class="status status-warning">2 missing</span></td>
+    </tr><tr>
+      <td class="cell-main" data-label="Student"><div class="person"><span class="avatar av-4" aria-hidden="true">IP</span><div><a class="person-name" href="student.html?id=HV-26160">Isaac Petrov</a><span class="person-meta">HV-26160</span></div></div></td>
+      <td data-label="Class"><span class="class-tag">11C</span></td>
+      <td data-label="Admitted" class="num">29 Sep</td>
+      <td data-label="Guardian">Irene Petrov<span class="cell-sub">Mother</span></td>
+      <td data-label="Documents"><span class="status status-warning">2 missing</span></td>
+    </tr><tr>
+      <td class="cell-main" data-label="Student"><div class="person"><span class="avatar av-6" aria-hidden="true">MD</span><div><a class="person-name" href="student.html?id=HV-26157">Maya Duarte</a><span class="person-meta">HV-26157</span></div></div></td>
+      <td data-label="Class"><span class="class-tag">8C</span></td>
+      <td data-label="Admitted" class="num">22 Sep</td>
+      <td data-label="Guardian">Heather Duarte<span class="cell-sub">Guardian</span></td>
+      <td data-label="Documents"><span class="status status-success">Complete</span></td>
+    </tr></tbody>
+                </table>
+              </div>
+            </section>
+          </div>
+          <div class="col-xl-4">
+            <section class="panel h-100" aria-labelledby="examTitle">
+              <div class="panel-head"><div><h2 class="panel-title" id="examTitle">Upcoming exams</h2><p class="panel-sub">Mid-term assessment window</p></div><span class="panel-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 15l2 2 4-4"/></svg></span></div>
+              <ul class="exam-list">
+                <li class="exam"><div class="exam-when"><span class="exam-day">Mon 19</span><span class="exam-time">08:50</span><span class="exam-in">in 4 days</span></div><div class="exam-what"><p class="exam-title"><span class="subj-dot subj-ma" aria-hidden="true"></span>Mathematics mid-term</p><p class="exam-meta">Grade 12 · Hall A · 90 min · Ms. Siddiqui</p></div></li>
+                <li class="exam"><div class="exam-when"><span class="exam-day">Tue 20</span><span class="exam-time">10:55</span><span class="exam-in">in 5 days</span></div><div class="exam-what"><p class="exam-title"><span class="subj-dot subj-en" aria-hidden="true"></span>English essay exam</p><p class="exam-meta">Grade 11 · Library · 100 min · Ms. Fortin</p></div></li>
+                <li class="exam"><div class="exam-when"><span class="exam-day">Wed 21</span><span class="exam-time">08:50</span><span class="exam-in">in 6 days</span></div><div class="exam-what"><p class="exam-title"><span class="subj-dot subj-sc" aria-hidden="true"></span>Science mid-term</p><p class="exam-meta">Grade 12 · Labs 5 and 6 · 90 min · Dr. Menon</p></div></li>
+                <li class="exam"><div class="exam-when"><span class="exam-day">Thu 22</span><span class="exam-time">13:25</span><span class="exam-in">in 7 days</span></div><div class="exam-what"><p class="exam-title"><span class="subj-dot subj-fr" aria-hidden="true"></span>French oral assessments</p><p class="exam-meta">Grade 10 · Rooms 401–404 · M. Thibault</p></div></li>
+                <li class="exam"><div class="exam-when"><span class="exam-day">Mon 26</span><span class="exam-time">09:45</span><span class="exam-in">in 11 days</span></div><div class="exam-what"><p class="exam-title"><span class="subj-dot subj-ma" aria-hidden="true"></span>Mathematics unit test</p><p class="exam-meta">Grade 9 · Rooms 301–304 · Mr. Lefebvre</p></div></li>
+              </ul>
+            </section>
+          </div>
+        </div>
+      </main>
+    <footer class="app-footer">
+      <p>&copy; 2026 Harbourview Academy · 12 Wharf Road, Harbourview · <a href="tel:9025550100">(902) 555-0100</a></p>
+      <p>Template by <a href="https://uicookies.com/">uiCookies</a></p>
+    </footer>
+    </div>
+  </div>
+
+  <div id="toastRegion" class="toast-region" role="status" aria-live="polite"></div>
+  <script src="js/vendor/bootstrap.bundle.min.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
