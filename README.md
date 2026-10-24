@@ -27,7 +27,15 @@ Hasil sistem ini adalah **prediksi cluster berbasis pola data**, bukan keputusan
 
 ## Cara Menjalankan
 
-### Backend (FastAPI)
+### 1. Database (MySQL Lokal)
+Pastikan MySQL sudah berjalan di komputer Anda, lalu import skema dan data awal:
+```sql
+-- Jalankan di MySQL client / phpMyAdmin / DBeaver:
+SOURCE database/schema.sql;
+SOURCE database/seed_dev.sql;
+```
+
+### 2. Backend (FastAPI)
 ```bash
 cd backend
 python -m venv venv
@@ -36,14 +44,16 @@ pip install -r requirements.txt
 cp .env.example .env         # sesuaikan DATABASE_URL dan SECRET_KEY
 uvicorn app.main:app --reload
 ```
+Akses API Docs: http://localhost:8000/docs
 
-### Frontend (React + Vite)
+### 3. Frontend (React + Vite)
 ```bash
 cd frontend
 npm install
-cp .env.example .env.local   # konfigurasi VITE_API_URL
+cp .env.example .env.local   # konfigurasi VITE_API_URL=http://localhost:8000
 npm run dev
 ```
+Akses Aplikasi: http://localhost:5173 (atau port default Vite)
 
 ---
 
