@@ -358,7 +358,7 @@ export default function ClusteringPage() {
                         className="btn btn-sm btn-outline-primary"
                         onClick={() => handleSelectRun(r)}
                       >
-                        Lihat Detail (Pop-Up)
+                        Detail
                       </button>
                       {!r.is_selected && r.status === 'completed' && (
                         <button

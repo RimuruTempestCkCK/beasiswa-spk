@@ -320,7 +320,7 @@ export default function PredictionsPage() {
 
                 <button
                   type="submit"
-                  className="btn btn-primary w-100 btn-lg"
+                  className="btn btn-primary w-100"
                   disabled={loading || models.length === 0}
                 >
                   {loading ? (
@@ -329,7 +329,7 @@ export default function PredictionsPage() {
                       Memproses Inferensi...
                     </>
                   ) : (
-                    'Jalankan Prediksi Kelayakan (Pop-Up)'
+                    'Jalankan Prediksi'
                   )}
                 </button>
               </form>
@@ -358,10 +358,10 @@ export default function PredictionsPage() {
                   </p>
                   <button
                     type="button"
-                    className="btn btn-outline-primary"
+                    className="btn btn-sm btn-outline-primary"
                     onClick={() => setIsResultModalOpen(true)}
                   >
-                    Buka Rincian Hasil (Pop-Up)
+                    Buka Hasil
                   </button>
                 </div>
               ) : (
@@ -442,7 +442,7 @@ export default function PredictionsPage() {
                         className="btn btn-sm btn-outline-primary"
                         onClick={() => handleOpenHistoryDetail(h)}
                       >
-                        Detail (Pop-Up)
+                        Detail
                       </button>
                       <button
                         type="button"

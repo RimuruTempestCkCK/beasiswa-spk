@@ -329,7 +329,7 @@ export default function TrainingPage() {
                               className="btn btn-sm btn-outline-primary"
                               onClick={() => handleOpenDetail(m)}
                             >
-                              Detail (Pop-Up)
+                              Detail
                             </button>
                             {m.status !== 'ready' && m.status !== 'training' && (
                               <button

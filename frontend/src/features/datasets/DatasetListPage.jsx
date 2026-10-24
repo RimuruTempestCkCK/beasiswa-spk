@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
+import { useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
 import apiClient from '../../services/apiClient';
 import { API } from '../../services/endpoints';
@@ -8,6 +9,9 @@ import Modal from '../../components/Modal';
 
 export default function DatasetListPage() {
   const navigate = useNavigate();
+  const user = useSelector((s) => s.auth?.user);
+  const isReviewer = user?.role === 'reviewer';
+
   const [datasets, setDatasets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
@@ -87,26 +91,28 @@ export default function DatasetListPage() {
         subheading="Kelola kumpulan berkas dan data pendaftar beasiswa per periode"
         eyebrow="Data Mahasiswa · SPK Beasiswa"
         actions={
-          <button
-            type="button"
-            className="btn btn-primary"
-            onClick={() => setModalOpen(true)}
-          >
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
-              focusable="false"
+          !isReviewer && (
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={() => setModalOpen(true)}
             >
-              <line x1="12" y1="5" x2="12" y2="19" />
-              <line x1="5" y1="12" x2="19" y2="12" />
-            </svg>
-            <span>Buat Batch Baru</span>
-          </button>
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+                focusable="false"
+              >
+                <line x1="12" y1="5" x2="12" y2="19" />
+                <line x1="5" y1="12" x2="19" y2="12" />
+              </svg>
+              <span>Buat Batch Baru</span>
+            </button>
+          )
         }
       />
 
@@ -186,7 +192,7 @@ export default function DatasetListPage() {
                           className="btn btn-sm btn-outline-secondary"
                           onClick={() => handleOpenDetail(d)}
                         >
-                          Info (Pop-Up)
+                          Info
                         </button>
                         <button
                           type="button"
@@ -195,21 +201,25 @@ export default function DatasetListPage() {
                         >
                           Buka Data
                         </button>
-                        <button
-                          type="button"
-                          className="btn btn-sm btn-primary"
-                          onClick={() => navigate(`/datasets/${d.id}/import`)}
-                        >
-                          Upload CSV
-                        </button>
-                        <button
-                          type="button"
-                          className="btn btn-sm btn-outline-danger"
-                          onClick={() => handleConfirmDelete(d)}
-                          title="Hapus batch dataset"
-                        >
-                          Hapus
-                        </button>
+                        {!isReviewer && (
+                          <>
+                            <button
+                              type="button"
+                              className="btn btn-sm btn-primary"
+                              onClick={() => navigate(`/datasets/${d.id}/import`)}
+                            >
+                              Upload
+                            </button>
+                            <button
+                              type="button"
+                              className="btn btn-sm btn-outline-danger"
+                              onClick={() => handleConfirmDelete(d)}
+                              title="Hapus batch dataset"
+                            >
+                              Hapus
+                            </button>
+                          </>
+                        )}
                       </div>
                     </td>
                   </tr>

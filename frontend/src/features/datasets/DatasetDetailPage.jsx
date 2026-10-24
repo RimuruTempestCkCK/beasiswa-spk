@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router';
+import { useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
 import apiClient from '../../services/apiClient';
 import { API } from '../../services/endpoints';
@@ -9,6 +10,9 @@ import Modal from '../../components/Modal';
 export default function DatasetDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const user = useSelector((s) => s.auth?.user);
+  const isReviewer = user?.role === 'reviewer';
+
   const [dataset, setDataset] = useState(null);
   const [records, setRecords] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -120,20 +124,24 @@ export default function DatasetDetailPage() {
             >
               &larr; Kembali
             </button>
-            <button
-              type="button"
-              className="btn btn-outline-primary"
-              onClick={() => navigate(`/datasets/${id}/import`)}
-            >
-              Upload CSV
-            </button>
-            <button
-              type="button"
-              className="btn btn-primary"
-              onClick={() => setModalOpen(true)}
-            >
-              + Tambah Record
-            </button>
+            {!isReviewer && (
+              <>
+                <button
+                  type="button"
+                  className="btn btn-outline-primary"
+                  onClick={() => navigate(`/datasets/${id}/import`)}
+                >
+                  Upload CSV
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={() => setModalOpen(true)}
+                >
+                  + Tambah Record
+                </button>
+              </>
+            )}
           </div>
         }
       />
@@ -214,7 +222,7 @@ export default function DatasetDetailPage() {
                         className="btn btn-sm btn-outline-primary"
                         onClick={() => handleOpenDetail(r)}
                       >
-                        Lihat 6 Variabel (Pop-Up)
+                        Detail
                       </button>
                     </td>
                   </tr>

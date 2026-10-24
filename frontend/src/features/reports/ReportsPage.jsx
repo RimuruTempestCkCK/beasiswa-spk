@@ -120,7 +120,7 @@ export default function ReportsPage() {
                             className="btn btn-sm btn-outline-primary"
                             onClick={() => setSelectedClusteringRun(r)}
                           >
-                            Detail (Pop-Up)
+                            Detail
                           </button>
                         </td>
                       </tr>
@@ -185,7 +185,7 @@ export default function ReportsPage() {
                             className="btn btn-sm btn-outline-primary"
                             onClick={() => setSelectedModel(m)}
                           >
-                            Detail (Pop-Up)
+                            Detail
                           </button>
                         </td>
                       </tr>

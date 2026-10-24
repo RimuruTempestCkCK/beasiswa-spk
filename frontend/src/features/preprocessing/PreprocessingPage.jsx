@@ -241,7 +241,7 @@ export default function PreprocessingPage() {
                             className="btn btn-sm btn-outline-primary"
                             onClick={() => handleOpenDetail(r)}
                           >
-                            Detail (Pop-Up)
+                            Detail
                           </button>
                         </td>
                       </tr>
