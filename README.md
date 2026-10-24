@@ -1,107 +1,151 @@
-# Sistem Pendukung Keputusan Prediksi Kelayakan Beasiswa
+# Sistem Pendukung Keputusan Seleksi Penerima Beasiswa
+### Kombinasi Metode K-Means Clustering & Backpropagation Neural Network
 
-> **Sistem berbasis web** untuk analisis kelayakan beasiswa menggunakan K-Means Clustering dan Backpropagation Neural Network.
-
-## ⚠️ Disclaimer Penting
-
-Hasil sistem ini adalah **prediksi cluster berbasis pola data**, bukan keputusan resmi kelayakan beasiswa. Interpretasi cluster memerlukan validasi domain dari pihak kampus. Keputusan akhir penerimaan beasiswa tetap memerlukan verifikasi kriteria dan otorisasi petugas yang berwenang.
+Aplikasi Sistem Pendukung Keputusan (SPK) berbasis web untuk seleksi penerima beasiswa menggunakan **K-Means Clustering** (pengelompokan data tanpa label) dan **Artificial Neural Network Backpropagation (Multi-Layer Perceptron)** untuk prediksi rekomendasi kelayakan berbasis 6 indikator kriteria.
 
 ---
 
-## Stack Teknologi
+## ⚠️ Disclaimer Ilmiah & Akademik
 
-| Komponen | Teknologi |
+Hasil komputasi sistem ini merupakan **rekomendasi analitis pendukung keputusan** berbasis pola matematis (K-Means & Backpropagation). Keputusan mutlak pemberian beasiswa tetap berada pada wewenang panitia pengelola beasiswa setelah proses verifikasi berkas faktual.
+
+---
+
+## 🛠️ Stack Teknologi
+
+| Komponen | Spesifikasi & Teknologi |
 |---|---|
-| Frontend | React 19 + Vite (ArchitectUI template) |
-| Backend | Python FastAPI |
-| Database | MySQL 8.0 |
-| ML | scikit-learn (K-Means, MLP, MinMaxScaler) |
-
-## Metode
-
-- **K-Means Clustering** dengan evaluasi **Davies-Bouldin Index (DBI)**
-- **Backpropagation** (MLP Classifier) dengan target = label cluster K-Means
-- **6 Fitur Input**: IPK, Penghasilan Orang Tua, Jumlah Tanggungan, Prestasi Akademik, Prestasi Nonakademik, Kehadiran
+| **Frontend** | React 19, Vite, React Router, Redux Toolkit, Chart.js, Bootstrap 5 UI |
+| **Backend** | Python 3.10+ / 3.14, FastAPI, SQLAlchemy ORM, Uvicorn, Pydantic |
+| **Machine Learning** | scikit-learn (K-Means, MLPClassifier, MinMaxScaler), Joblib, NumPy, Pandas |
+| **Database** | MySQL 8.0 (XAMPP / Standalone) |
+| **Port Default** | Frontend: `http://localhost:3001` · Backend: `http://localhost:8000` |
 
 ---
 
-## Cara Menjalankan
+## 📌 6 Indikator Kanonis Penilaian
 
-### 1. Database (MySQL Lokal)
-Pastikan MySQL sudah berjalan di komputer Anda, lalu import skema dan data awal:
-```sql
--- Jalankan di MySQL client / phpMyAdmin / DBeaver:
-SOURCE database/schema.sql;
-SOURCE database/seed_dev.sql;
-```
+Sistem beroperasi secara konsisten menggunakan 6 fitur evaluasi:
+1. **IPK** (Indeks Prestasi Kumulatif): Rentang $0.00 - 4.00$
+2. **Penghasilan Orang Tua**: Nilai nominal Rupiah (Rp)
+3. **Jumlah Tanggungan Keluarga**: Jumlah anggota keluarga yang ditanggung
+4. **Skor Prestasi Akademik**: Bobot prestasi perlombaan / kejuaraan ilmiah ($0 - 4$)
+5. **Skor Prestasi Non-Akademik**: Bobot prestasi minat, bakat, & seni ($0 - 4$)
+6. **Persentase Kehadiran**: Kehadiran perkuliahan mahasiswa ($0\% - 100\%$)
 
-### 2. Backend (FastAPI)
-```bash
+---
+
+## 🚀 Panduan Lengkap Cara Menjalankan Aplikasi
+
+### 1. Database (MySQL / XAMPP)
+1. Buka aplikasi **XAMPP Control Panel**, lalu aktifkan modul **MySQL** (Start pada port `3306`).
+2. Buat database baru bernama `beasiswa_spk`:
+   - Bisa melalui browser: `http://localhost/phpmyadmin` $\rightarrow$ klik **New** $\rightarrow$ beri nama `beasiswa_spk` $\rightarrow$ klik **Create**.
+3. **Auto-Seed Otomatis**:
+   - Skema tabel, akun pengguna default, dan 50 data awal mahasiswa **akan dibuat secara otomatis oleh backend** saat pertama kali dijalankan. Anda tidak perlu import file SQL secara manual.
+
+---
+
+### 2. Menjalankan Backend (FastAPI)
+Buka terminal baru (PowerShell / Command Prompt) di direktori utama:
+
+```powershell
+# 1. Masuk ke direktori backend
 cd backend
-python -m venv venv
-venv\Scripts\activate        # Windows
-pip install -r requirements.txt
-cp .env.example .env         # sesuaikan DATABASE_URL dan SECRET_KEY
-uvicorn app.main:app --reload
-```
-Akses API Docs: http://localhost:8000/docs
 
-### 3. Frontend (React + Vite)
-```bash
+# 2. Buat & aktifkan virtual environment (jika belum ada)
+python -m venv venv
+venv\Scripts\activate
+
+# 3. Install dependency Python
+pip install -r requirements.txt
+
+# 4. Pastikan file .env sesuai dengan konfigurasi database lokal Anda
+# Default database: mysql+pymysql://root:password@localhost:3306/beasiswa_spk
+# (Jika root MySQL Anda tanpa password, ubah menjadi: root:@localhost:3306/beasiswa_spk)
+
+# 5. Jalankan server FastAPI
+uvicorn app.main:app --reload --port 8000
+```
+- API Backend berjalan di: `http://127.0.0.1:8000`
+- Dokumentasi Interaktif Swagger UI: `http://127.0.0.1:8000/docs`
+
+---
+
+### 3. Menjalankan Frontend (React + Vite)
+Buka terminal kedua (PowerShell terpisah) di direktori utama:
+
+```powershell
+# 1. Masuk ke direktori frontend
 cd frontend
+
+# 2. Install package node modules (jika belum ada)
 npm install
-cp .env.example .env.local   # konfigurasi VITE_API_URL=http://localhost:8000
+
+# 3. Jalankan server development Vite
 npm run dev
 ```
-Akses Aplikasi: http://localhost:5173 (atau port default Vite)
+- Aplikasi Web dapat diakses di: **`http://localhost:3001`** (atau `http://localhost:5173`)
 
 ---
 
-## Akun Default (Development)
+## 👥 Akun Login Bawaan (Role-Based Access)
 
-| Role | Email | Password |
-|---|---|---|
-| Admin | admin@beasiswa.local | admin123 |
-| Operator | operator@beasiswa.local | admin123 |
-| Reviewer | reviewer@beasiswa.local | admin123 |
+Sistem telah dilengkapi dengan otentikasi JWT dan 3 tingkatan peran (*Role*):
 
-> **Ganti semua password di production!**
-
----
-
-## Alur Penggunaan
-
-1. **Login** → masuk sebagai admin/operator
-2. **Dataset** → buat batch, import CSV/Excel
-3. **Preprocessing** → cleaning & normalisasi data
-4. **Clustering** → jalankan K-Means beberapa kandidat K, bandingkan DBI
-5. **Training** → latih Backpropagation dari label cluster terpilih
-6. **Evaluasi** → lihat confusion matrix dan metrik
-7. **Prediksi** → masukkan data baru, dapatkan cluster prediksi
-8. **Laporan** → ekspor hasil
+| Role | Email Login | Password Default | Hak Akses & Tugas |
+|---|---|---|---|
+| **Administrator** | `admin@beasiswa.local` | `admin123` | Akses penuh: Kelola semua modul, manajemen user, reset password, dan hapus dataset. |
+| **Operator** | `operator@beasiswa.local` | `admin123` | Operasional: Input/import dataset, normalisasi preprocessing, training model, dan input prediksi mahasiswa baru. |
+| **Reviewer** | `reviewer@beasiswa.local` | `admin123` | Penelaah: Melihat data pendaftar (*read-only*), evaluasi model, menelaah laporan akhir, serta mencetak PDF / ekspor CSV. |
 
 ---
 
-## Struktur Direktori
+## 🔄 Alur Kerja Operasional Sistem
+
+```
+[Import/Batch Dataset] 
+       ↓
+[Preprocessing] (Pembersihan Missing Value & Normalisasi Min-Max)
+       ↓
+[Clustering K-Means] (Eksperimen K=2, 3, 4 & Pilih Model Acuan Berdasarkan Skor DBI Terendah)
+       ↓
+[Training Backpropagation] (Pelatihan Neural Network MLP & Set Ready Status)
+       ↓
+[Evaluasi Model] (Pemeriksaan Akurasi, Precision, Recall, & Confusion Matrix)
+       ↓
+[Prediksi Kelayakan] (Inferensi Rekomendasi Mahasiswa Baru & Confidence Score)
+       ↓
+[Laporan & Rekomendasi] (Pemeringkatan Keputusan Beasiswa, Cetak PDF, Ekspor CSV)
+```
+
+---
+
+## 📂 Struktur Direktori Proyek
 
 ```
 beasiswa-spk/
-├── README.md
-├── CHANGELOG.md
-├── .gitignore
-├── docs/
-│   ├── DATA_DICTIONARY.md
-│   └── ALGORITHM_METHOD.md
-├── frontend/          # React + Vite (ArchitectUI)
-├── backend/           # Python FastAPI
-└── database/          # SQL schema & seed
+├── README.md                      # Panduan lengkap instalasi dan operasional sistem
+├── .gitignore                     # Aturan ignore file git
+├── docs/                          # Dokumentasi sistem, metodologi, dan prompt spreadsheet
+│   ├── ALUR_SISTEM_DAN_PANDUAN.md
+│   └── PROMPT_SPREADSHEET_SPK_BEASISWA.txt
+├── backend/                       # Service Backend (Python FastAPI)
+│   ├── app/
+│   │   ├── api/                   # Route endpoints API
+│   │   ├── core/                  # Konfigurasi keamanan JWT & database
+│   │   ├── db/                    # Session & Auto-seed generator
+│   │   ├── ml/                    # Logika algoritma K-Means & Backpropagation
+│   │   ├── models/                # Model tabel database SQLAlchemy
+│   │   ├── repositories/          # Akses query database
+│   │   └── services/              # Logika bisnis SPK
+│   ├── artifacts/                 # Tempat penyimpanan joblib model terlatih
+│   └── requirements.txt           # Daftar library Python
+└── frontend/                      # User Interface (React 19 + Vite)
+    ├── src/
+    │   ├── features/              # Modul halaman (Dashboard, Datasets, Preprocessing, dll)
+    │   ├── Layout/                # Komponen layout (Sidebar dinamis per role, Topbar, Footer)
+    │   └── services/              # Client API axios & endpoints
+    ├── package.json
+    └── vite.config.js
 ```
-
----
-
-## Dokumentasi
-
-- [Kamus Data](docs/DATA_DICTIONARY.md)
-- [Metode Algoritma](docs/ALGORITHM_METHOD.md)
-- [Changelog](CHANGELOG.md)
-- API Docs: http://localhost:8000/docs (saat server berjalan)
