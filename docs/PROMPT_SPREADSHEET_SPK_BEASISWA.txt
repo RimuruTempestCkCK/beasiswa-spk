@@ -1,0 +1,158 @@
+================================================================================
+PROMPT GEMINI / GOOGLE SPREADSHEETS: SISTEM PENDUKUNG KEPUTUSAN BEASISWA
+(K-MEANS CLUSTERING & BACKPROPAGATION SIMULATION 6 INDIKATOR)
+================================================================================
+
+Tolong buatkan dokumen spreadsheet (Google Sheets / Excel) 2 Sheet yang saling terintegrasi untuk Sistem Pendukung Keputusan (SPK) Seleksi Penerima Beasiswa. Sistem ini menggunakan 6 Indikator Penilaian Kanonis dengan metode Data Mining K-Means Clustering dan Evaluasi Rekomendasi.
+
+Berikut adalah spesifikasi lengkap struktur, data, dan rumus yang harus diimplementasikan:
+
+--------------------------------------------------------------------------------
+6 INDIKATOR KANONIS & PARAMETER NORMALISASI MIN-MAX:
+--------------------------------------------------------------------------------
+1. IPK (Indeks Prestasi Kumulatif)       : Min = 2.20, Max = 3.95
+2. Penghasilan Orang Tua (Rp)            : Min = 700.000, Max = 8.000.000
+3. Jumlah Tanggungan Keluarga            : Min = 0, Max = 6
+4. Skor Prestasi Akademik                : Min = 0, Max = 4
+5. Skor Prestasi Non-Akademik            : Min = 0, Max = 4
+6. Persentase Kehadiran Kuliah (%)       : Min = 62.0%, Max = 100.0%
+
+Rumus Normalisasi Min-Max [0, 1]:
+X_norm = (X - X_min) / (X_max - X_min)
+
+--------------------------------------------------------------------------------
+KOORDINAT SENTROID KLASTER ACUAN (K = 4):
+--------------------------------------------------------------------------------
+- C0 (TIDAK LAYAK)                     : [0.1003, 0.7641, 0.1111, 0.0000, 0.0000, 0.1053]
+- C1 (LAYAK / KANDIDAT CADANGAN)       : [0.6848, 0.1359, 0.5513, 0.5769, 0.4423, 0.6883]
+- C2 (SANGAT LAYAK / PRIORITAS UTAMA)  : [0.9167, 0.0236, 0.8333, 0.9167, 0.8333, 0.9112]
+- C3 (DIPERTIMBANGKAN)                 : [0.3639, 0.3831, 0.2917, 0.1406, 0.1875, 0.4005]
+
+================================================================================
+STRUKTUR SHEET 1: "DATASET_HISTORIS" (50 DATA LATIH LAMA)
+================================================================================
+Sheet ini berisi 50 data latih mahasiswa lama yang menjadi dasar pembentukan model.
+Kolom Sheet 1:
+- Kolom A: No (1 s/d 50)
+- Kolom B: NIM (MHS2024001 s/d MHS2024050)
+- Kolom C: Nama Mahasiswa
+- Kolom D: IPK
+- Kolom E: Penghasilan Orang Tua (Rp)
+- Kolom F: Tanggungan Keluarga (Orang)
+- Kolom G: Skor Prestasi Akademik (0 - 4)
+- Kolom H: Skor Prestasi Non-Akademik (0 - 4)
+- Kolom I: Persentase Kehadiran (%)
+
+Data 50 Mahasiswa:
+1. MHS2024001 | Ahmad Fauzi | 3.75 | 1500000 | 3 | 3.0 | 2.0 | 95.0
+2. MHS2024002 | Siti Nurhaliza | 2.90 | 3500000 | 1 | 1.0 | 1.0 | 80.0
+3. MHS2024003 | Budi Santoso | 3.50 | 1200000 | 4 | 2.0 | 3.0 | 92.0
+4. MHS2024004 | Dewi Lestari | 2.50 | 5000000 | 2 | 0.0 | 0.0 | 70.0
+5. MHS2024005 | Rizky Ramadhan | 3.85 | 800000 | 5 | 4.0 | 3.0 | 98.0
+6. MHS2024006 | Putri Ayu Wardani | 3.10 | 2000000 | 2 | 2.0 | 1.0 | 85.0
+7. MHS2024007 | Muhammad Ilham Pratama | 2.70 | 4500000 | 1 | 0.0 | 2.0 | 75.0
+8. MHS2024008 | Anisa Rahmawati | 3.60 | 1000000 | 4 | 3.0 | 2.0 | 90.0
+9. MHS2024009 | Fajar Hidayat | 2.30 | 6000000 | 0 | 0.0 | 0.0 | 65.0
+10. MHS2024010 | Nabila Syahrani | 3.90 | 900000 | 5 | 4.0 | 4.0 | 99.0
+11. MHS2024011 | Dimas Arya Kusuma | 3.20 | 2500000 | 3 | 1.0 | 1.0 | 82.0
+12. MHS2024012 | Rina Wulandari | 2.80 | 3000000 | 2 | 1.0 | 0.0 | 78.0
+13. MHS2024013 | Hendra Gunawan | 3.70 | 1100000 | 4 | 3.0 | 3.0 | 94.0
+14. MHS2024014 | Tiara Andini | 2.40 | 7000000 | 1 | 0.0 | 0.0 | 68.0
+15. MHS2024015 | Bayu Pratama | 3.45 | 1800000 | 3 | 2.0 | 2.0 | 88.0
+16. MHS2024016 | Maya Safitri | 2.60 | 4000000 | 2 | 0.0 | 1.0 | 72.0
+17. MHS2024017 | Reza Firmansyah | 3.80 | 750000 | 5 | 4.0 | 3.0 | 97.0
+18. MHS2024018 | Indah Permatasari | 3.00 | 3200000 | 1 | 1.0 | 1.0 | 81.0
+19. MHS2024019 | Doni Saputra | 2.20 | 8000000 | 0 | 0.0 | 0.0 | 62.0
+20. MHS2024020 | Zahra Aulia | 3.95 | 700000 | 6 | 4.0 | 4.0 | 100.0
+21. MHS2024021 | Eko Prasetyo | 3.30 | 2200000 | 3 | 2.0 | 1.0 | 84.0
+22. MHS2024022 | Fitri Handayani | 2.75 | 3800000 | 2 | 0.0 | 1.0 | 76.0
+23. MHS2024023 | Gilang Ramadhan | 3.55 | 1300000 | 4 | 3.0 | 2.0 | 91.0
+24. MHS2024024 | Nurul Hidayah | 2.45 | 5500000 | 1 | 0.0 | 0.0 | 67.0
+25. MHS2024025 | Yusuf Maulana | 3.65 | 1050000 | 5 | 3.0 | 3.0 | 93.0
+26. MHS2024026 | Tri Wahyuni | 2.95 | 2800000 | 2 | 1.0 | 0.0 | 79.0
+27. MHS2024027 | Alif Akbar | 3.15 | 1900000 | 3 | 2.0 | 2.0 | 86.0
+28. MHS2024028 | Dian Sastro | 2.55 | 4200000 | 1 | 0.0 | 1.0 | 73.0
+29. MHS2024029 | Bagas Pangestu | 3.82 | 850000 | 5 | 4.0 | 3.0 | 96.0
+30. MHS2024030 | Mega Utami | 3.05 | 3100000 | 2 | 1.0 | 1.0 | 80.5
+31. MHS2024031 | Arif Kurniawan | 2.35 | 6500000 | 0 | 0.0 | 0.0 | 64.0
+32. MHS2024032 | Salma Khairunnisa | 3.88 | 780000 | 5 | 4.0 | 4.0 | 98.5
+33. MHS2024033 | Rifky Alamsyah | 3.25 | 2100000 | 3 | 2.0 | 1.0 | 83.0
+34. MHS2024034 | Kartika Sari | 2.65 | 4100000 | 2 | 0.0 | 0.0 | 74.0
+35. MHS2024035 | Faisal Rachman | 3.48 | 1400000 | 4 | 2.0 | 2.0 | 89.0
+36. MHS2024036 | Annisa Maharani | 2.42 | 5800000 | 1 | 0.0 | 0.0 | 66.0
+37. MHS2024037 | Wahyu Nugroho | 3.72 | 980000 | 5 | 3.0 | 3.0 | 95.5
+38. MHS2024038 | Lestari Anggraini | 2.88 | 3300000 | 2 | 1.0 | 0.0 | 77.0
+39. MHS2024039 | Kevin Sanjaya | 3.18 | 2050000 | 3 | 2.0 | 1.0 | 85.5
+40. MHS2024040 | Nadya Octaviani | 2.58 | 4300000 | 1 | 0.0 | 1.0 | 71.0
+41. MHS2024041 | Danang Wicaksono | 3.78 | 820000 | 5 | 4.0 | 3.0 | 96.5
+42. MHS2024042 | Novi Anggraeni | 3.08 | 2900000 | 2 | 1.0 | 1.0 | 81.5
+43. MHS2024043 | Taufik Hidayatullah | 2.28 | 7500000 | 0 | 0.0 | 0.0 | 63.0
+44. MHS2024044 | Aulia Rahmania | 3.92 | 720000 | 6 | 4.0 | 4.0 | 99.5
+45. MHS2024045 | Rangga Wijaya | 3.35 | 2300000 | 3 | 2.0 | 2.0 | 87.0
+46. MHS2024046 | Intan Pertiwi | 2.72 | 3700000 | 2 | 0.0 | 1.0 | 75.5
+47. MHS2024047 | Iqbal Maulana | 3.52 | 1250000 | 4 | 3.0 | 2.0 | 90.5
+48. MHS2024048 | Farah Diba | 2.48 | 5200000 | 1 | 0.0 | 0.0 | 69.0
+49. MHS2024049 | Syahrul Ramadhan | 3.68 | 1020000 | 4 | 3.0 | 3.0 | 92.5
+50. MHS2024050 | Dwi Cahyani | 2.98 | 3050000 | 2 | 1.0 | 0.0 | 80.0
+
+================================================================================
+STRUKTUR SHEET 2: "PREDIKSI_REKOMENDASI" (TEMPAT EKSEKUSI DATA BARU)
+================================================================================
+Sheet ini digunakan untuk memasukkan data pendaftar baru dan langsung menghitung rekomendasi kelayakan secara otomatis menggunakan rumus Excel/Spreadsheet.
+
+Tata Letak Kolom:
+[BAGIAN 1: INPUT DATA MAHASISWA BARU]
+- Kolom A : No
+- Kolom B : Nama Pendaftar
+- Kolom C : IPK (contoh: 3.80)
+- Kolom D : Penghasilan Ortu (contoh: 800000)
+- Kolom E : Tanggungan (contoh: 5)
+- Kolom F : Prestasi Akademik (contoh: 3)
+- Kolom G : Prestasi Non-Akademik (contoh: 3)
+- Kolom H : Kehadiran % (contoh: 95)
+
+[BAGIAN 2: NORMALISASI FITUR MIN-MAX [0, 1] - RUMUS KODE SPK]
+- Kolom I (IPK_norm)           : =(C2-2.2)/(3.95-2.2)
+- Kolom J (Gaji_norm)          : =(D2-700000)/(8000000-700000)
+- Kolom K (Tanggungan_norm)    : =(E2-0)/(6-0)
+- Kolom L (PresAkad_norm)      : =(F2-0)/(4-0)
+- Kolom M (PresNonAkad_norm)   : =(G2-0)/(4-0)
+- Kolom N (Kehadiran_norm)     : =(H2-62)/(100-62)
+
+[BAGIAN 3: JARAK EUCLIDEAN KE SENTROID KLASTER ACUAN]
+- Kolom O (Jarak ke C0 - Tidak Layak):
+  =SQRT((I2-0.1003)^2 + (J2-0.7641)^2 + (K2-0.1111)^2 + (L2-0)^2 + (M2-0)^2 + (N2-0.1053)^2)
+
+- Kolom P (Jarak ke C1 - Layak Cadangan):
+  =SQRT((I2-0.6848)^2 + (J2-0.1359)^2 + (K2-0.5513)^2 + (L2-0.5769)^2 + (M2-0.4423)^2 + (N2-0.6883)^2)
+
+- Kolom Q (Jarak ke C2 - Sangat Layak):
+  =SQRT((I2-0.9167)^2 + (J2-0.0236)^2 + (K2-0.8333)^2 + (L2-0.9167)^2 + (M2-0.8333)^2 + (N2-0.9112)^2)
+
+- Kolom R (Jarak ke C3 - Dipertimbangkan):
+  =SQRT((I2-0.3639)^2 + (J2-0.3831)^2 + (K2-0.2917)^2 + (L2-0.1406)^2 + (M2-0.1875)^2 + (N2-0.4005)^2)
+
+[BAGIAN 4: KEPUTUSAN KLASTER & KELAYAKAN BEASISWA]
+- Kolom S (Jarak Terdekat Minimum):
+  =MIN(O2:R2)
+
+- Kolom T (Klaster Hasil Prediksi):
+  =IF(S2=O2, "C0", IF(S2=P2, "C1", IF(S2=Q2, "C2", "C3")))
+
+- Kolom U (Status Rekomendasi Resmi):
+  =IF(T2="C2", "SANGAT LAYAK (Prioritas Utama)", IF(T2="C1", "LAYAK (Kandidat Cadangan)", IF(T2="C3", "DIPERTIMBANGKAN", "TIDAK LAYAK")))
+
+- Kolom V (Skor SPK / Ranking):
+  =ROUND(IF(T2="C2", 95 - S2*10, IF(T2="C1", 80 - S2*10, IF(T2="C3", 65 - S2*10, 45 - S2*10))), 2)
+
+--------------------------------------------------------------------------------
+PETUNJUK FORMAT TAMPILAN:
+--------------------------------------------------------------------------------
+1. Berikan format angka Rupiah pada Kolom D dan Kolom Penghasilan Ortu di Sheet 1.
+2. Tambahkan Conditional Formatting pada Kolom U (Status Rekomendasi):
+   - Jika teks "SANGAT LAYAK" -> Latar Hijau Muda, Teks Hijau Tua.
+   - Jika teks "LAYAK (Kandidat Cadangan)" -> Latar Biru Muda, Teks Biru Tua.
+   - Jika teks "DIPERTIMBANGKAN" -> Latar Kuning Muda, Teks Coklat Tua.
+   - Jika teks "TIDAK LAYAK" -> Latar Merah Muda, Teks Merah Tua.
+3. Buat header tabel dengan latar belakang Navy Blue (#1B365D), teks putih tebal (Bold), dan rata tengah (Center).
+================================================================================
