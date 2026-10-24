@@ -3,7 +3,10 @@ import { createRoot } from 'react-dom/client';
 import { HashRouter } from 'react-router';
 import { Provider } from 'react-redux';
 
-import './assets/base.scss';
+import './assets/registrar/bootstrap.min.css';
+import './assets/registrar/style.css';
+import 'react-toastify/dist/ReactToastify.css';
+
 import configureAppStore from './config/configureStore';
 import ErrorBoundary from './components/ErrorBoundary';
 import App from './App';

@@ -71,7 +71,7 @@ def get_run_assignments(
     current_user=Depends(get_current_user),
 ):
     service = ClusteringService(db)
-    return service.get_assignments(run_id=run_id, page=page, page_size=page_size)
+    return service.get_assignments(run_id=run_id)
 
 
 @router.get("/runs/{run_id}/profile")
@@ -81,4 +81,4 @@ def get_run_profile(
     current_user=Depends(get_current_user),
 ):
     service = ClusteringService(db)
-    return service.get_profile(run_id=run_id)
+    return service.get_cluster_profile(run_id=run_id)

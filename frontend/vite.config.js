@@ -116,15 +116,7 @@ export default defineConfig(({ mode }) => {
     plugins: [
       cjsInteropPlugin(cjsInteropPackages),
       react(),
-      false &&
-        visualizer({
-          filename: 'build/stats.html',
-          open: true,
-          gzipSize: true,
-          brotliSize: true,
-          template: 'treemap',
-        }),
-    ].filter(Boolean),
+          ].filter(Boolean),
     resolve: {
       alias: {
         src: path.resolve(__dirname, './src'),

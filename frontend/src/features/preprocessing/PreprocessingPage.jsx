@@ -1,28 +1,26 @@
 import { useEffect, useState, useRef } from 'react';
-import { Card, CardBody, Button, FormGroup, Label, Input, Badge } from 'reactstrap';
 import { toast } from 'react-toastify';
 import apiClient from '../../services/apiClient';
 import { API } from '../../services/endpoints';
 import PageTitle from '../../Layout/AppMain/PageTitle';
-
-const STATUS_COLOR = {
-  queued: 'secondary',
-  running: 'warning',
-  completed: 'success',
-  failed: 'danger',
-};
 
 export default function PreprocessingPage() {
   const [datasets, setDatasets] = useState([]);
   const [runs, setRuns] = useState([]);
   const [loading, setLoading] = useState(false);
   const [selectedDataset, setSelectedDataset] = useState('');
-  const [config, setConfig] = useState({ missing_strategy: 'median', normalization: 'minmax' });
+  const [config, setConfig] = useState({
+    missing_strategy: 'median',
+    normalization: 'minmax',
+  });
   const [running, setRunning] = useState(false);
   const pollingRef = useRef(null);
 
   useEffect(() => {
-    apiClient.get(API.DATASETS.LIST).then((res) => setDatasets(res.data.items || res.data));
+    apiClient
+      .get(API.DATASETS.LIST)
+      .then((res) => setDatasets(res.data.items || res.data || []))
+      .catch(() => {});
     fetchRuns();
   }, []);
 
@@ -31,12 +29,13 @@ export default function PreprocessingPage() {
     apiClient
       .get(API.PREPROCESSING.RUNS)
       .then((res) => {
-        const items = res.data.items || res.data;
+        const items = res.data.items || res.data || [];
         setRuns(items);
-        // Check if any are running
-        const hasRunning = items.some((r) => r.status === 'running' || r.status === 'queued');
+        const hasRunning = items.some(
+          (r) => r.status === 'running' || r.status === 'queued'
+        );
         if (hasRunning && !pollingRef.current) {
-          pollingRef.current = setInterval(fetchRuns, 2000);
+          pollingRef.current = setInterval(fetchRuns, 2500);
         } else if (!hasRunning && pollingRef.current) {
           clearInterval(pollingRef.current);
           pollingRef.current = null;
@@ -61,10 +60,10 @@ export default function PreprocessingPage() {
         dataset_id: parseInt(selectedDataset),
         ...config,
       });
-      toast.success('Preprocessing job dimulai!');
+      toast.success('Preprocessing job berhasil dimulai!');
       fetchRuns();
       if (!pollingRef.current) {
-        pollingRef.current = setInterval(fetchRuns, 2000);
+        pollingRef.current = setInterval(fetchRuns, 2500);
       }
     } catch (err) {
       toast.error(err.response?.data?.detail || 'Gagal memulai preprocessing');
@@ -77,112 +76,184 @@ export default function PreprocessingPage() {
     <>
       <PageTitle
         heading="Preprocessing Data"
-        subheading="Bersihkan dan normalisasi data mahasiswa"
-        icon="pe-7s-settings icon-gradient bg-mean-fruit"
+        subheading="Tahap pembersihan data hilang (imputasi) dan normalisasi fitur mahasiswa"
+        eyebrow="Model &amp; Analisis · SPK Beasiswa"
       />
-      <div className="row">
-        <div className="col-md-4">
-          <Card>
-            <CardBody>
-              <h5 className="card-title">Konfigurasi Preprocessing</h5>
+
+      <div className="row g-3 g-xxl-4">
+        {/* Left Column: Form */}
+        <div className="col-lg-4">
+          <section className="panel h-100">
+            <div className="panel-head">
+              <div>
+                <h2 className="panel-title">Konfigurasi Preprocessing</h2>
+                <p className="panel-sub">Pilih parameter normalisasi data</p>
+              </div>
+            </div>
+            <div className="panel-body">
               <form onSubmit={handleRun}>
-                <FormGroup>
-                  <Label>Dataset Batch *</Label>
-                  <Input
-                    type="select"
+                <div className="mb-3">
+                  <label className="form-label" htmlFor="datasetSelect">
+                    Dataset Batch *
+                  </label>
+                  <select
+                    id="datasetSelect"
+                    className="form-select"
                     value={selectedDataset}
                     onChange={(e) => setSelectedDataset(e.target.value)}
                     required
                   >
                     <option value="">-- Pilih Dataset --</option>
                     {datasets.map((d) => (
-                      <option key={d.id} value={d.id}>{d.name}</option>
+                      <option key={d.id} value={d.id}>
+                        {d.name} ({d.record_count ?? 0} data)
+                      </option>
                     ))}
-                  </Input>
-                </FormGroup>
-                <FormGroup>
-                  <Label>Penanganan Missing Value</Label>
-                  <Input
-                    type="select"
-                    value={config.missing_strategy}
-                    onChange={(e) => setConfig({ ...config, missing_strategy: e.target.value })}
-                  >
-                    <option value="median">Median</option>
-                    <option value="mean">Mean</option>
-                    <option value="drop">Drop Row</option>
-                  </Input>
-                </FormGroup>
-                <FormGroup>
-                  <Label>Metode Normalisasi</Label>
-                  <Input
-                    type="select"
-                    value={config.normalization}
-                    onChange={(e) => setConfig({ ...config, normalization: e.target.value })}
-                  >
-                    <option value="minmax">Min-Max</option>
-                    <option value="standard">Standard (Z-Score)</option>
-                  </Input>
-                </FormGroup>
-                <Button type="submit" color="primary" className="w-100" disabled={running}>
-                  {running ? (
-                    <><span className="spinner-border spinner-border-sm me-2" />Memproses...</>
-                  ) : (
-                    <><i className="pe-7s-play3 me-2" />Jalankan Preprocessing</>
-                  )}
-                </Button>
-              </form>
-            </CardBody>
-          </Card>
-        </div>
-        <div className="col-md-8">
-          <Card>
-            <CardBody>
-              <h5 className="card-title">Riwayat Preprocessing</h5>
-              {loading && runs.length === 0 ? (
-                <div className="text-center py-4"><div className="spinner-border text-primary" /></div>
-              ) : runs.length === 0 ? (
-                <div className="alert alert-info">Belum ada preprocessing run.</div>
-              ) : (
-                <div className="table-responsive">
-                  <table className="table table-hover align-middle">
-                    <thead>
-                      <tr>
-                        <th>#</th>
-                        <th>Dataset</th>
-                        <th>Strategi</th>
-                        <th>Normalisasi</th>
-                        <th>Input Rows</th>
-                        <th>Output Rows</th>
-                        <th>Status</th>
-                        <th>Waktu</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {runs.map((r, idx) => (
-                        <tr key={r.id}>
-                          <td>{idx + 1}</td>
-                          <td>{r.dataset_name || r.dataset_id}</td>
-                          <td>{r.missing_strategy}</td>
-                          <td>{r.normalization}</td>
-                          <td>{r.input_rows ?? '-'}</td>
-                          <td>{r.output_rows ?? '-'}</td>
-                          <td>
-                            <Badge color={STATUS_COLOR[r.status] || 'secondary'}>
-                              {r.status}
-                              {(r.status === 'running' || r.status === 'queued') && (
-                                <span className="spinner-border spinner-border-sm ms-2" style={{ width: '0.75rem', height: '0.75rem' }} />
-                              )}
-                            </Badge>
-                          </td>
-                          <td>{r.created_at ? new Date(r.created_at).toLocaleString('id-ID') : '-'}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                  </select>
                 </div>
-              )}
-            </CardBody>
-          </Card>
+
+                <div className="mb-3">
+                  <label className="form-label" htmlFor="missingStrategy">
+                    Strategi Nilai Hilang (Missing Value)
+                  </label>
+                  <select
+                    id="missingStrategy"
+                    className="form-select"
+                    value={config.missing_strategy}
+                    onChange={(e) =>
+                      setConfig({ ...config, missing_strategy: e.target.value })
+                    }
+                  >
+                    <option value="median">Median (Rekomendasi numerik)</option>
+                    <option value="mean">Mean (Rata-rata)</option>
+                    <option value="mode">Modus (Nilai terbanyak)</option>
+                    <option value="drop">Drop (Hapus baris)</option>
+                  </select>
+                </div>
+
+                <div className="mb-4">
+                  <label className="form-label" htmlFor="normMethod">
+                    Metode Normalisasi Fitur
+                  </label>
+                  <select
+                    id="normMethod"
+                    className="form-select"
+                    value={config.normalization}
+                    onChange={(e) =>
+                      setConfig({ ...config, normalization: e.target.value })
+                    }
+                  >
+                    <option value="minmax">Min-Max Scaler [0, 1]</option>
+                    <option value="standard">Standard Scaler (Z-Score)</option>
+                  </select>
+                  <div className="form-text">
+                    Min-Max disarankan untuk keseragaman skala 6 variabel SPK.
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  className="btn btn-primary w-100"
+                  disabled={running}
+                >
+                  {running ? (
+                    <>
+                      <span className="spinner-border spinner-border-sm me-2" role="status" />
+                      Memproses...
+                    </>
+                  ) : (
+                    'Jalankan Preprocessing'
+                  )}
+                </button>
+              </form>
+            </div>
+          </section>
+        </div>
+
+        {/* Right Column: Runs Table */}
+        <div className="col-lg-8">
+          <section className="panel h-100">
+            <div className="panel-head">
+              <div>
+                <h2 className="panel-title">Riwayat Preprocessing Runs</h2>
+                <p className="panel-sub">Log eksekusi normalisasi dataset yang telah dilakukan</p>
+              </div>
+              <button
+                type="button"
+                className="btn btn-sm btn-outline-secondary"
+                onClick={fetchRuns}
+                disabled={loading}
+              >
+                Refresh
+              </button>
+            </div>
+
+            {runs.length === 0 ? (
+              <div className="p-4 text-center">
+                <p className="text-muted mb-0">Belum ada riwayat proses preprocessing.</p>
+              </div>
+            ) : (
+              <div className="table-wrap">
+                <table className="table-data table-stack">
+                  <thead>
+                    <tr>
+                      <th scope="col">Run ID</th>
+                      <th scope="col">Dataset</th>
+                      <th scope="col" className="text-end">
+                        Baris Masuk
+                      </th>
+                      <th scope="col" className="text-end">
+                        Baris Keluar
+                      </th>
+                      <th scope="col">Normalisasi</th>
+                      <th scope="col">Status</th>
+                      <th scope="col">Waktu</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {runs.map((r) => (
+                      <tr key={r.id}>
+                        <td className="num fw-bold">#{r.id}</td>
+                        <td className="cell-main">
+                          {r.dataset_name || `Dataset #${r.dataset_id}`}
+                        </td>
+                        <td className="num text-end">{r.input_rows ?? '-'}</td>
+                        <td className="num text-end">{r.output_rows ?? '-'}</td>
+                        <td>
+                          <span className="badge bg-secondary-subtle text-secondary border">
+                            {r.normalization_method || r.normalization || 'minmax'}
+                          </span>
+                        </td>
+                        <td>
+                          <span
+                            className={`status status-${
+                              r.status === 'completed'
+                                ? 'success'
+                                : r.status === 'running'
+                                  ? 'warning'
+                                  : r.status === 'failed'
+                                    ? 'danger'
+                                    : 'neutral'
+                            }`}
+                          >
+                            {r.status}
+                          </span>
+                        </td>
+                        <td className="num">
+                          {r.created_at
+                            ? new Date(r.created_at).toLocaleTimeString('id-ID', {
+                                hour: '2-digit',
+                                minute: '2-digit',
+                              })
+                            : '-'}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </section>
         </div>
       </div>
     </>

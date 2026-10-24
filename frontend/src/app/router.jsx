@@ -15,7 +15,7 @@ const ReportsPage = lazy(() => import('../features/reports/ReportsPage'));
 const UsersPage = lazy(() => import('../features/users/UsersPage'));
 
 const lazyRoute = (Component) => (
-  <Suspense fallback={<SuspenseFallback type="ball-pulse-rise" />}>
+  <Suspense fallback={<SuspenseFallback message="Memuat halaman..." />}>
     <Component />
   </Suspense>
 );
@@ -26,6 +26,7 @@ export default function AppRoutes() {
       <Route path="/dashboard" element={lazyRoute(DashboardPage)} />
       <Route path="/datasets" element={lazyRoute(DatasetListPage)} />
       <Route path="/datasets/import" element={lazyRoute(ImportPage)} />
+      <Route path="/datasets/:id/import" element={lazyRoute(ImportPage)} />
       <Route path="/datasets/:id" element={lazyRoute(DatasetDetailPage)} />
       <Route path="/records" element={lazyRoute(DatasetDetailPage)} />
       <Route path="/preprocessing" element={lazyRoute(PreprocessingPage)} />

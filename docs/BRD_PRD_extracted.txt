@@ -1,0 +1,893 @@
+BUSINESS REQUIREMENTS DOCUMENT(BRD) + PRODUCT REQUIREMENTS DOCUMENT (PRD)
+Sistem Pendukung Keputusan Prediksi Kelayakan Beasiswa
+React + Vite | Python FastAPI | MySQL
+Dokumen rancangan awal — Versi 1.0Tanggal: 24 Oktober 2026
+Kontrol Dokumen
+Atribut
+Keterangan
+Nama sistem
+Sistem Pendukung Keputusan Prediksi Kelayakan Beasiswa
+Jenis dokumen
+Gabungan BRD dan PRD
+Versi
+1.0 — rancangan awal
+Status dataset
+Belum tersedia; rancangan mendukung data historis atau data sintetis untuk prototipe
+Metode inti
+KDD/preprocessing, K-Means Clustering, Davies-Bouldin Index (DBI), Backpropagation
+Frontend
+React + Vite
+Backend
+Python + FastAPI
+Database
+MySQL
+Status keputusan
+Rekomendasi analitis; bukan keputusan resmi penerimaan beasiswa
+Catatan tentang dasar dokumen
+Dokumen ini mengacu pada proposal penelitian yang disediakan, terutama penggunaan enam variabel (IPK, penghasilan orang tua, jumlah tanggungan keluarga, prestasi akademik, prestasi nonakademik, dan kehadiran), K-Means dengan DBI, serta Backpropagation yang menggunakan label hasil clustering. Detail implementasi web, kebutuhan nonfungsional, struktur direktori, rancangan tabel, dan use case merupakan rancangan teknis yang diusulkan untuk mewujudkan penelitian menjadi aplikasi.
+Penting: karena target Backpropagation adalah label K-Means, metrik klasifikasi mengukur seberapa baik jaringan meniru label cluster. Itu tidak otomatis membuktikan kelayakan beasiswa yang sebenarnya. Interpretasi cluster menjadi kategori seperti prioritas tinggi/sedang/rendah harus disepakati dan divalidasi oleh pihak kampus. Jika kelak tersedia keputusan resmi historis, hasil resmi perlu dianalisis sebagai sumber validasi terpisah.
+Daftar Isi
+1. Ringkasan Eksekutif
+2. BRD — Kebutuhan Bisnis
+3. Ruang Lingkup dan Batasan
+4. Aktor dan Use Case
+5. Alur Proses Aplikasi
+6. Variabel dan Aturan Data
+7. Metode dan Alur Algoritma
+8. PRD — Kebutuhan Produk
+9. Arsitektur dan Struktur Direktori
+10. Rancangan Database MySQL
+11. Rancangan API
+12. Kebutuhan Nonfungsional dan Keamanan
+13. Kriteria Penerimaan
+14. Tahapan Implementasi
+15. Risiko dan Keputusan yang Masih Dibutuhkan
+1. Ringkasan Eksekutif
+Aplikasi ini merupakan aplikasi web untuk membantu pengelolaan dataset mahasiswa dan menjalankan analisis data guna mengelompokkan karakteristik pendaftar beasiswa. Sistem menggunakan K-Means Clustering untuk membentuk cluster dan DBI untuk membandingkan kualitas cluster. Label cluster selanjutnya digunakan sebagai target pelatihan Backpropagation sehingga model dapat mengklasifikasikan data baru ke dalam pola cluster yang telah dipelajari.
+Aplikasi tidak boleh menyebut hasil model sebagai keputusan resmi penerima beasiswa. Hasil harus ditampilkan sebagai cluster atau rekomendasi berbasis pola data, dengan penjelasan bahwa keputusan akhir tetap memerlukan verifikasi kriteria beasiswa dan otorisasi petugas.
+2. BRD — Kebutuhan Bisnis
+2.1 Latar belakang
+Proses analisis calon penerima beasiswa membutuhkan pengolahan data akademik dan sosial-ekonomi yang terstruktur. Aplikasi ini dirancang untuk mengurangi pengolahan manual, menyimpan jejak eksperimen, menampilkan hasil clustering dan evaluasi model, serta membantu analisis calon mahasiswa baru.
+2.2 Tujuan bisnis
+Menyediakan satu tempat untuk mengimpor, memvalidasi, dan mengelola dataset mahasiswa.
+Membuat proses preprocessing dapat ditinjau dan diulang secara terkontrol.
+Menyediakan eksperimen K-Means dengan beberapa nilai K dan perbandingan nilai DBI.
+Melatih model Backpropagation dari label cluster yang dihasilkan K-Means.
+Menyajikan evaluasi model dan prediksi secara transparan, dengan keterbatasan metode yang jelas.
+Menyediakan laporan dan jejak audit atas dataset, konfigurasi, versi model, serta hasil prediksi.
+2.3 Pemangku kepentingan
+Pemangku kepentingan
+Kebutuhan
+Admin sistem
+Mengelola akun, akses, konfigurasi aplikasi, dan riwayat aktivitas.
+Operator/analis
+Mengimpor data, menjalankan preprocessing dan eksperimen, membaca hasil.
+Pimpinan/penelaah
+Melihat ringkasan, laporan, dan hasil analisis untuk bahan pertimbangan.
+Mahasiswa/calon pendaftar
+Pada versi awal tidak harus memiliki akun; datanya dimasukkan oleh operator.
+Pembimbing/peneliti
+Memeriksa metode, konfigurasi eksperimen, metrik, dan reproduktibilitas.
+2.4 Indikator keberhasilan produk
+Indikator
+Kriteria awal
+Impor dataset
+File valid dapat dipratinjau, divalidasi, dan ditolak dengan pesan kesalahan yang jelas.
+Traceability
+Setiap hasil preprocessing, clustering, training, dan prediksi terkait ke dataset/model asal.
+K-Means
+Nilai K kandidat dan DBI dapat dibandingkan serta hasil terpilih dapat ditinjau.
+Backpropagation
+Model menyimpan konfigurasi, pembagian data, metrik, dan artefak versi model.
+Prediksi
+Input divalidasi; hasil menampilkan cluster prediksi, model yang digunakan, dan peringatan interpretasi.
+Keamanan
+Password di-hash; API terlindungi; rahasia koneksi tidak disimpan di source code.
+3. Ruang Lingkup dan Batasan
+3.1 Termasuk dalam versi awal (MVP)
+Login dan kontrol peran admin/operator.
+Dashboard ringkasan dataset, eksperimen, model, dan prediksi.
+CRUD data mahasiswa serta impor CSV/Excel dengan pratinjau.
+Validasi dan preprocessing data dengan catatan transformasi.
+Eksperimen K-Means, evaluasi DBI, visualisasi cluster, dan penyimpanan hasil.
+Training Backpropagation berbasis label cluster, evaluasi metrik, dan penyimpanan versi model.
+Prediksi data baru menggunakan preprocessing dan model yang konsisten.
+Laporan hasil serta ekspor CSV; PDF dapat ditambahkan setelah kebutuhan laporan disepakati.
+3.2 Di luar ruang lingkup awal
+Integrasi langsung dengan SIAKAD atau sistem administrasi kampus.
+Pengambilan keputusan penerimaan beasiswa secara otomatis tanpa verifikasi manusia.
+Pengajuan beasiswa mandiri oleh mahasiswa dan workflow persetujuan bertingkat.
+Pembayaran, pencairan dana, atau pengelolaan anggaran beasiswa.
+Klaim akurasi terhadap kelayakan resmi sebelum tersedia label atau evaluasi eksternal yang sah.
+4. Aktor dan Use Case
+ID
+Use case
+Aktor utama
+Hasil
+UC-01
+Login/logout
+Admin, Operator
+Sesi pengguna terautentikasi.
+UC-02
+Kelola akun dan peran
+Admin
+Akun dan hak akses terkelola.
+UC-03
+Buat batch dataset
+Admin, Operator
+Batch dataset tercatat.
+UC-04
+Impor CSV/Excel
+Admin, Operator
+Data dipratinjau dan hasil validasi ditampilkan.
+UC-05
+Kelola data mahasiswa
+Admin, Operator
+Data dapat dilihat, ditambah, diperbaiki, atau diarsipkan.
+UC-06
+Jalankan preprocessing
+Admin, Operator
+Data siap analisis beserta konfigurasi transformasi.
+UC-07
+Jalankan K-Means
+Admin, Operator
+Cluster kandidat dan nilai DBI tersimpan.
+UC-08
+Pilih hasil clustering
+Admin, Operator
+Satu eksperimen ditandai sebagai acuan label.
+UC-09
+Latih Backpropagation
+Admin, Operator
+Versi model dan metrik pelatihan tersimpan.
+UC-10
+Evaluasi model
+Admin, Operator, Penelaah
+Confusion matrix dan metrik ditampilkan.
+UC-11
+Prediksi data baru
+Admin, Operator
+Cluster prediksi dan informasi model ditampilkan.
+UC-12
+Lihat/ekspor laporan
+Admin, Operator, Penelaah
+Laporan hasil dapat diunduh.
+UC-13
+Lihat riwayat eksperimen
+Admin, Operator, Penelaah
+Eksperimen dapat dibandingkan dan ditelusuri.
+4.1 Alur utama use case: impor hingga prediksi
+Operator login dan membuat batch dataset.
+Operator mengunggah file atau memasukkan data secara manual.
+Sistem memeriksa nama kolom, format angka, rentang nilai, baris duplikat, dan nilai kosong.
+Operator meninjau laporan validasi dan memperbaiki/menolak baris yang bermasalah.
+Operator menjalankan preprocessing dan menyimpan konfigurasi transformasi.
+Operator menjalankan beberapa eksperimen K-Means dengan kandidat nilai K yang ditentukan.
+Sistem menghitung DBI untuk setiap kandidat; nilai lebih rendah dipilih di antara kandidat yang valid.
+Sistem menyimpan label cluster untuk setiap record dalam eksperimen terpilih.
+Operator melatih Backpropagation menggunakan input enam variabel dan label cluster sebagai target.
+Sistem menguji model pada data uji dan menampilkan confusion matrix serta metrik.
+Operator menetapkan versi model yang berstatus siap digunakan.
+Operator memasukkan data baru; sistem menerapkan transformasi yang sama dan menghasilkan cluster prediksi.
+Hasil, versi model, waktu, dan pengguna dicatat untuk audit.
+5. Alur Proses Aplikasi
+5.1 Alur bisnis tingkat tinggi
+Login
+  |
+Dashboard
+  |
+Kelola Dataset / Impor CSV-Excel
+  |
+Validasi Data ---- data tidak valid ---> Tampilkan kesalahan dan perbaiki
+  |
+Preprocessing (cleaning, encoding bila perlu, normalisasi)
+  |
+Eksperimen K-Means: kandidat K -> hitung DBI -> pilih hasil yang valid
+  |
+Simpan label cluster dan ringkasan karakteristik tiap cluster
+  |
+Latih Backpropagation (X = enam variabel, y = label cluster)
+  |
+Evaluasi pada data uji -> simpan versi model
+  |
+Prediksi data baru -> tampilkan cluster prediksi dan disclaimer
+  |
+Laporan / riwayat eksperimen
+5.2 Status proses yang disarankan
+Objek
+Status
+Dataset batch
+draft, imported, validated, rejected
+Preprocessing run
+queued, running, completed, failed
+Clustering run
+queued, running, completed, failed
+Model version
+training, ready, failed, archived
+Pekerjaan yang lama (preprocessing, clustering, training) sebaiknya berjalan sebagai job terpisah. API membuat job, mengembalikan ID, dan frontend melakukan polling status; proses berat tidak boleh mengunci request HTTP dalam waktu lama.
+6. Variabel dan Aturan Data
+Variabel
+Nama kolom
+Tipe awal
+Aturan/keputusan yang perlu ditetapkan
+Indeks Prestasi Kumulatif
+ipk
+DECIMAL(4,2)
+Validasi rentang sesuai sistem akademik kampus; contoh lazim 0–4, tetapi konfirmasi skala sumber.
+Penghasilan orang tua
+parent_income
+DECIMAL(15,2)
+Satuan rupiah per bulan harus dikonfirmasi; nilai negatif tidak valid.
+Jumlah tanggungan keluarga
+family_dependents
+SMALLINT UNSIGNED
+Bilangan bulat; definisi siapa yang dihitung sebagai tanggungan harus konsisten.
+Prestasi akademik
+academic_achievement_score
+DECIMAL(8,3)
+Perlu kamus data/aturan konversi dari catatan prestasi ke angka.
+Prestasi nonakademik
+nonacademic_achievement_score
+DECIMAL(8,3)
+Perlu skala dan aturan konversi yang konsisten.
+Tingkat kehadiran
+attendance_percentage
+DECIMAL(5,2)
+Persentase 0–100; definisi periode kehadiran harus konsisten.
+6.1 Metadata dan identitas
+Gunakan student_code sebagai identifier bisnis jika tersedia dan diizinkan. Nama mahasiswa bersifat opsional untuk proses analitik; dataset penelitian dapat menggunakan kode pseudonim. Jangan memakai NIM atau nama sebagai input algoritma. Tetapkan kebijakan akses, retensi, dan penghapusan data.
+6.2 Kamus data prestasi — belum final
+Proposal menetapkan prestasi akademik dan nonakademik sebagai variabel, tetapi skala numerik operasional belum ditetapkan dalam rancangan ini. Sebelum training, kampus/peneliti harus menyepakati aturan, misalnya berdasarkan tingkat capaian, jenis prestasi, atau skor berbobot. Aturan tersebut harus terdokumentasi dan digunakan konsisten pada dataset pelatihan serta input prediksi.
+6.3 Dataset belum tersedia
+Prioritas pertama: meminta data historis pendaftar beasiswa yang telah diizinkan untuk penelitian.
+Jika data asli belum tersedia, gunakan dataset sintetis untuk membangun UI, validasi, dan pipeline teknis.
+Dataset sintetis harus ditandai jelas dan tidak boleh dipakai untuk menyimpulkan performa nyata di kampus.
+Sebelum model dipakai, cek jumlah baris, distribusi variabel, nilai kosong, outlier, dan variasi setiap fitur.
+7. Metode dan Alur Algoritma
+7.1 Kerangka KDD
+Tahap
+Aktivitas aplikasi
+Output
+Selection
+Memilih kolom dan record yang relevan; mengecualikan identifier dari fitur.
+Dataset terpilih.
+Cleaning
+Memeriksa nilai kosong, duplikasi, tipe salah, nilai di luar rentang, dan inkonsistensi.
+Dataset valid atau daftar masalah.
+Transformation
+Encoding kategori bila ada dan normalisasi fitur numerik.
+Matriks fitur siap algoritma dan transformasi tersimpan.
+Data mining
+K-Means untuk clustering; Backpropagation untuk klasifikasi label cluster.
+Label cluster dan model klasifikasi.
+Evaluation
+DBI untuk cluster; confusion matrix, accuracy, precision, recall, F1 untuk klasifikasi.
+Ringkasan evaluasi.
+Presentation
+Dashboard, grafik, tabel, dan laporan.
+Informasi untuk penelaahan manusia.
+7.2 K-Means Clustering
+Pilih enam fitur yang sudah divalidasi dan dinormalisasi.
+Tentukan daftar kandidat jumlah cluster K berdasarkan ukuran dan karakteristik dataset; daftar K tidak ditetapkan permanen dalam dokumen ini.
+Jalankan K-Means untuk tiap kandidat dengan seed yang dicatat agar eksperimen dapat diulang.
+Simpan centroid, parameter, label tiap record, dan metrik DBI.
+Bandingkan DBI pada kandidat yang valid. Nilai DBI lebih rendah menunjukkan pemisahan cluster yang relatif lebih baik dalam konteks metrik tersebut.
+Pilih eksperimen berdasarkan DBI dan pemeriksaan substantif cluster; DBI saja tidak membuktikan label cluster setara dengan kelayakan beasiswa.
+Analisis profil cluster untuk membantu memberi interpretasi. Jangan memberi nama 'layak/tidak layak' secara otomatis tanpa validasi domain.
+7.3 Backpropagation
+Input X: enam fitur yang sama dengan proses clustering, menggunakan transformasi yang sama.
+Target y: cluster_label dari eksperimen K-Means yang dipilih.
+Pisahkan data menjadi data latih dan data uji. Pemisahan dilakukan dengan prosedur yang terdokumentasi; bila memungkinkan pertahankan proporsi kelas.
+Latih jaringan saraf dengan konfigurasi yang dicatat: jumlah hidden layer/neuron, learning rate, epoch, batch size, seed, dan kriteria penghentian.
+Gunakan data uji yang tidak dipakai untuk melatih model maupun memilih konfigurasi final.
+Simpan artefak model dan objek preprocessing/scaler sebagai satu versi yang kompatibel.
+Evaluasi hasil prediksi terhadap label cluster pada data uji.
+7.4 Evaluasi
+Metrik
+Makna
+Catatan interpretasi
+DBI
+Membandingkan kekompakan cluster dan pemisahan antarkelompok.
+Dipakai untuk membandingkan kandidat K; lebih rendah relatif lebih baik.
+Confusion matrix
+Menampilkan prediksi versus label cluster acuan.
+Nama kelas adalah cluster, bukan label resmi beasiswa.
+Accuracy
+Proporsi prediksi label cluster yang benar.
+Dapat menyesatkan bila distribusi kelas tidak seimbang.
+Precision
+Ketepatan prediksi pada setiap kelas.
+Laporkan per kelas dan/atau macro average.
+Recall
+Kemampuan menemukan record pada setiap kelas acuan.
+Laporkan per kelas dan/atau macro average.
+F1-score
+Rata-rata harmonik precision dan recall.
+Jelaskan metode averaging yang digunakan.
+Hindari data leakage: normalisasi harus di-fit pada data latih, lalu diterapkan ke data uji; jangan memilih model final berdasarkan performa pada data uji. Karena label berasal dari K-Means, metrik tersebut mengukur kemampuan meniru cluster, bukan akurasi terhadap keputusan resmi kampus.
+7.5 Pseudocode alur algoritma
+INPUT: dataset mahasiswa dengan enam fitur
+ 
+1. Validasi skema dan rentang data
+2. Bersihkan data sesuai aturan terdokumentasi
+3. Pisahkan data/record untuk proses eksperimen sesuai rancangan penelitian
+4. Fit transformasi preprocessing pada data yang sesuai
+5. FOR setiap kandidat K:
+       jalankan K-Means dengan seed tercatat
+       hitung DBI
+       simpan konfigurasi, centroid, label, dan DBI
+6. Pilih kandidat berdasarkan DBI dan tinjauan profil cluster
+7. Bentuk target y = label cluster dari eksperimen terpilih
+8. Bagi data untuk training dan testing dengan prosedur yang terdokumentasi
+9. Latih Backpropagation menggunakan X dan y pada data latih
+10. Evaluasi prediksi data uji terhadap y uji
+11. Simpan model, preprocessing, konfigurasi, dan metrik sebagai versi
+12. Untuk input baru:
+       validasi input
+       transformasikan menggunakan preprocessing versi model
+       prediksi cluster menggunakan model versi terpilih
+       tampilkan hasil dengan disclaimer interpretasi
+8. PRD — Kebutuhan Produk
+8.1 Navigasi/menu
+Menu
+Isi utama
+Prioritas
+Dashboard
+Kartu ringkasan, status dataset, eksperimen terakhir, model aktif, grafik ringkasan.
+MVP
+Data Mahasiswa
+Daftar, pencarian, filter, tambah/edit, detail, arsip.
+MVP
+Impor Dataset
+Upload CSV/XLSX, mapping kolom, pratinjau, validasi, hasil impor.
+MVP
+Preprocessing
+Pilih batch, konfigurasi cleaning/normalisasi, status job, ringkasan hasil.
+MVP
+K-Means
+Kandidat K, seed, DBI, profil cluster, distribusi label, pilih eksperimen.
+MVP
+Backpropagation
+Konfigurasi training, progress, metrik, riwayat versi model.
+MVP
+Evaluasi
+Confusion matrix, accuracy, precision, recall, F1-score dan detail per kelas.
+MVP
+Prediksi
+Form enam fitur, hasil cluster, model yang dipakai, riwayat prediksi.
+MVP
+Laporan
+Ringkasan dataset, eksperimen, evaluasi, hasil prediksi, ekspor CSV.
+MVP
+Pengguna & Audit
+Akun, peran, aktivitas penting.
+MVP
+8.2 Kebutuhan fungsional
+ID
+Kebutuhan
+Prioritas
+FR-01
+Sistem menyediakan login dan logout dengan kontrol akses berbasis peran.
+Must
+FR-02
+Pengguna berwenang dapat membuat batch dataset dan mengimpor CSV/XLSX.
+Must
+FR-03
+Sistem memvalidasi struktur kolom, tipe data, rentang, dan baris bermasalah.
+Must
+FR-04
+Sistem menyimpan data sumber dan tidak menimpa data mentah ketika preprocessing dijalankan.
+Must
+FR-05
+Sistem mencatat konfigurasi dan hasil preprocessing.
+Must
+FR-06
+Sistem menjalankan K-Means untuk kandidat K dan menyimpan DBI serta label.
+Must
+FR-07
+Sistem memungkinkan penelaah melihat distribusi dan karakteristik cluster.
+Must
+FR-08
+Sistem melatih Backpropagation dengan target label cluster yang dipilih.
+Must
+FR-09
+Sistem menyimpan konfigurasi, metrik, dan artefak versi model.
+Must
+FR-10
+Sistem memvalidasi input prediksi dan menggunakan transformasi model yang sesuai.
+Must
+FR-11
+Sistem menampilkan hasil sebagai cluster prediksi dan mencantumkan model yang dipakai.
+Must
+FR-12
+Sistem menyediakan ekspor hasil dan riwayat eksperimen.
+Should
+FR-13
+Sistem mencatat aktivitas penting untuk audit.
+Should
+8.3 Rancangan halaman
+Halaman
+Komponen UI yang disarankan
+Login
+Email, password, validasi, pesan gagal yang aman.
+Dashboard
+Kartu jumlah record, batch aktif, eksperimen terakhir, model aktif, grafik distribusi.
+Data Mahasiswa
+Tabel dengan pagination/server-side filtering, tombol impor dan tambah data.
+Impor
+Dropzone, pemetaan kolom, preview, ringkasan valid/invalid, konfirmasi simpan.
+Preprocessing
+Konfigurasi, ringkasan nilai kosong/outlier, progress, status hasil.
+K-Means
+Tabel kandidat K dan DBI, grafik perbandingan, distribusi cluster, ringkasan centroid.
+Training
+Form parameter, progress job, log ringkas, metrik dan versi model.
+Evaluasi
+Confusion matrix, metrik per kelas, catatan bahwa target adalah label cluster.
+Prediksi
+Form enam fitur, hasil cluster, model/versi, timestamp, disclaimer.
+Laporan
+Filter batch/run/model, tabel hasil, tombol ekspor.
+8.4 Aturan UX
+Tampilkan status proses: antre, berjalan, berhasil, atau gagal.
+Jangan tampilkan tombol prediksi jika belum ada model berstatus ready.
+Jika dataset belum ada, dashboard menampilkan langkah awal: buat batch atau gunakan template.
+Setiap metrik memiliki tooltip/penjelasan singkat.
+Cluster ditampilkan sebagai Cluster 0/1/2 dan baru diberi interpretasi setelah disetujui penelaah.
+Data tabel menggunakan pagination dan filter di backend untuk menghindari memuat seluruh dataset sekaligus.
+9. Arsitektur dan Struktur Direktori
+9.1 Arsitektur
+Browser
+  React + Vite
+      | HTTPS / REST JSON
+      v
+Python FastAPI
+  API routes -> validation/schema -> service layer -> algorithm modules
+      | SQLAlchemy
+      v
+MySQL
+ 
+FastAPI worker/job runner:
+  import -> preprocessing -> K-Means/DBI -> Backpropagation -> evaluation
+  model artifacts and preprocessing artifacts stored on server filesystem
+  MySQL stores metadata, statuses, metrics, references, and prediction records
+Untuk MVP satu server dapat menjalankan FastAPI dan worker terpisah. Pada deployment yang lebih besar, gunakan antrean pekerjaan (misalnya Celery/RQ) dan Redis atau broker yang sesuai. Pemilihan broker adalah keputusan implementasi, bukan kebutuhan metode penelitian.
+9.2 Struktur direktori yang diusulkan
+beasiswa-spk/
+├── README.md
+├── .gitignore
+├── docs/
+│   ├── BRD_PRD.md
+│   ├── API_SPEC.md
+│   ├── DATA_DICTIONARY.md
+│   └── ALGORITHM_METHOD.md
+├── frontend/
+│   ├── package.json
+│   ├── vite.config.js
+│   ├── .env.example
+│   └── src/
+│       ├── main.jsx
+│       ├── App.jsx
+│       ├── app/
+│       │   ├── router.jsx
+│       │   └── providers.jsx
+│       ├── assets/
+│       ├── components/
+│       │   ├── layout/
+│       │   ├── ui/
+│       │   ├── charts/
+│       │   └── tables/
+│       ├── features/
+│       │   ├── auth/
+│       │   ├── dashboard/
+│       │   ├── datasets/
+│       │   ├── preprocessing/
+│       │   ├── clustering/
+│       │   ├── training/
+│       │   ├── evaluation/
+│       │   ├── predictions/
+│       │   └── reports/
+│       ├── services/
+│       │   ├── apiClient.js
+│       │   └── endpoints.js
+│       ├── hooks/
+│       ├── utils/
+│       └── styles/
+├── backend/
+│   ├── pyproject.toml
+│   ├── requirements.txt
+│   ├── .env.example
+│   ├── alembic.ini
+│   ├── alembic/
+│   │   └── versions/
+│   ├── app/
+│   │   ├── main.py
+│   │   ├── core/
+│   │   │   ├── config.py
+│   │   │   ├── security.py
+│   │   │   └── logging.py
+│   │   ├── db/
+│   │   │   ├── session.py
+│   │   │   └── base.py
+│   │   ├── models/
+│   │   ├── schemas/
+│   │   ├── repositories/
+│   │   ├── api/
+│   │   │   └── v1/
+│   │   │       ├── router.py
+│   │   │       └── endpoints/
+│   │   ├── services/
+│   │   ├── ml/
+│   │   │   ├── data_validation.py
+│   │   │   ├── preprocessing.py
+│   │   │   ├── clustering.py
+│   │   │   ├── backpropagation.py
+│   │   │   ├── evaluation.py
+│   │   │   └── inference.py
+│   │   ├── jobs/
+│   │   └── utils/
+│   ├── artifacts/
+│   │   └── .gitkeep
+│   └── uploads/
+│       └── .gitkeep
+├── database/
+│   ├── schema.sql
+│   ├── seed_dev.sql
+│   └── sample_dataset_template.csv
+└── deployment/
+    ├── Dockerfile.frontend
+    ├── Dockerfile.backend
+    └── compose.yaml
+Jangan commit file .env, password, dataset berisi data pribadi, file upload pengguna, atau artefak model yang mengandung informasi sensitif ke repository. Simpan hanya .env.example tanpa rahasia.
+10. Rancangan Database MySQL
+Database yang diusulkan: beasiswa_spk. Gunakan InnoDB, utf8mb4, foreign key, timestamp audit, migration tool (Alembic), dan prinsip data mentah tidak ditimpa oleh hasil preprocessing.
+10.1 Entitas/tabel
+Tabel
+Kolom inti
+Relasi/kegunaan
+users
+id, name, email, password_hash, role, is_active, created_at
+Akun admin/operator.
+dataset_batches
+id, batch_name, source_filename, source_type, total_rows, status, created_by
+Satu batch impor; 1:N ke student_records.
+student_records
+id, dataset_batch_id, student_code, student_name, ipk, parent_income, family_dependents, academic_achievement_score, nonacademic_achievement_score, attendance_percentage, data_status
+Data sumber mahasiswa; enam fitur analitik.
+preprocessing_runs
+id, dataset_batch_id, method_version, config, status, artifact_path, timestamps
+Satu batch dapat memiliki beberapa run preprocessing.
+clustering_runs
+id, preprocessing_run_id, k_value, dbi_score, random_seed, config, status, is_selected, artifact_path
+Satu preprocessing dapat memiliki banyak eksperimen K-Means.
+cluster_assignments
+id, clustering_run_id, student_record_id, cluster_label, distance_to_centroid
+Label setiap record pada satu run clustering.
+model_versions
+id, model_name, model_version, target_clustering_run_id, algorithm, training_config, metrics, artifact_path, status
+Versi model Backpropagation yang belajar dari satu run clustering.
+predictions
+id, model_version_id, enam fitur, predicted_cluster, confidence_score, created_by, created_at
+Riwayat prediksi satu data baru.
+audit_logs (disarankan)
+id, user_id, action, entity_type, entity_id, details_json, created_at
+Jejak perubahan dan aktivitas penting.
+10.2 Relasi utama
+users 1 ---- N dataset_batches
+dataset_batches 1 ---- N student_records
+dataset_batches 1 ---- N preprocessing_runs
+preprocessing_runs 1 ---- N clustering_runs
+clustering_runs 1 ---- N cluster_assignments
+clustering_runs 1 ---- N model_versions
+model_versions 1 ---- N predictions
+users 1 ---- N predictions
+users 1 ---- N audit_logs
+10.3 SQL DDL inti (rancangan)
+CREATE DATABASE IF NOT EXISTS beasiswa_spk
+  CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE beasiswa_spk;
+ 
+CREATE TABLE users (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(120) NOT NULL,
+  email VARCHAR(190) NOT NULL UNIQUE,
+  password_hash VARCHAR(255) NOT NULL,
+  role ENUM('admin','operator','reviewer') NOT NULL DEFAULT 'operator',
+  is_active BOOLEAN NOT NULL DEFAULT TRUE,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
+ 
+CREATE TABLE dataset_batches (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  batch_name VARCHAR(150) NOT NULL,
+  source_filename VARCHAR(255),
+  source_type ENUM('excel','csv','manual','synthetic') NOT NULL DEFAULT 'csv',
+  dataset_description TEXT,
+  total_rows INT UNSIGNED NOT NULL DEFAULT 0,
+  status ENUM('draft','imported','validated','rejected') NOT NULL DEFAULT 'draft',
+  created_by BIGINT UNSIGNED NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT fk_batch_user FOREIGN KEY (created_by)
+    REFERENCES users(id) ON DELETE SET NULL
+) ENGINE=InnoDB;
+ 
+CREATE TABLE student_records (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  dataset_batch_id BIGINT UNSIGNED NOT NULL,
+  student_code VARCHAR(60) NULL,
+  student_name VARCHAR(150) NULL,
+  ipk DECIMAL(4,2) NULL,
+  parent_income DECIMAL(15,2) NULL,
+  family_dependents SMALLINT UNSIGNED NULL,
+  academic_achievement_score DECIMAL(8,3) NULL,
+  nonacademic_achievement_score DECIMAL(8,3) NULL,
+  attendance_percentage DECIMAL(5,2) NULL,
+  data_status ENUM('raw','validated','invalid') NOT NULL DEFAULT 'raw',
+  validation_notes TEXT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT fk_record_batch FOREIGN KEY (dataset_batch_id)
+    REFERENCES dataset_batches(id) ON DELETE CASCADE,
+  INDEX idx_record_batch (dataset_batch_id),
+  INDEX idx_record_code (student_code)
+) ENGINE=InnoDB;
+ 
+CREATE TABLE preprocessing_runs (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  dataset_batch_id BIGINT UNSIGNED NOT NULL,
+  method_version VARCHAR(50) NOT NULL,
+  config JSON NULL,
+  status ENUM('queued','running','completed','failed') NOT NULL DEFAULT 'queued',
+  input_rows INT UNSIGNED NOT NULL DEFAULT 0,
+  output_rows INT UNSIGNED NOT NULL DEFAULT 0,
+  artifact_path VARCHAR(500) NULL,
+  error_message TEXT NULL,
+  created_by BIGINT UNSIGNED NULL,
+  started_at DATETIME NULL,
+  completed_at DATETIME NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (dataset_batch_id) REFERENCES dataset_batches(id),
+  FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL
+) ENGINE=InnoDB;
+ 
+CREATE TABLE clustering_runs (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  preprocessing_run_id BIGINT UNSIGNED NOT NULL,
+  algorithm VARCHAR(50) NOT NULL DEFAULT 'KMeans',
+  k_value INT UNSIGNED NOT NULL,
+  dbi_score DECIMAL(12,8) NULL,
+  random_seed INT NULL,
+  config JSON NULL,
+  status ENUM('queued','running','completed','failed') NOT NULL DEFAULT 'queued',
+  is_selected BOOLEAN NOT NULL DEFAULT FALSE,
+  artifact_path VARCHAR(500) NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (preprocessing_run_id) REFERENCES preprocessing_runs(id),
+  INDEX idx_cluster_preprocess (preprocessing_run_id)
+) ENGINE=InnoDB;
+ 
+CREATE TABLE cluster_assignments (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  clustering_run_id BIGINT UNSIGNED NOT NULL,
+  student_record_id BIGINT UNSIGNED NOT NULL,
+  cluster_label INT NOT NULL,
+  distance_to_centroid DECIMAL(14,8) NULL,
+  FOREIGN KEY (clustering_run_id) REFERENCES clustering_runs(id) ON DELETE CASCADE,
+  FOREIGN KEY (student_record_id) REFERENCES student_records(id) ON DELETE CASCADE,
+  UNIQUE KEY uq_cluster_record (clustering_run_id, student_record_id)
+) ENGINE=InnoDB;
+ 
+CREATE TABLE model_versions (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  model_name VARCHAR(150) NOT NULL,
+  model_version VARCHAR(50) NOT NULL,
+  target_clustering_run_id BIGINT UNSIGNED NOT NULL,
+  algorithm VARCHAR(50) NOT NULL DEFAULT 'Backpropagation',
+  training_config JSON NULL,
+  metrics JSON NULL,
+  artifact_path VARCHAR(500) NULL,
+  status ENUM('training','ready','failed','archived') NOT NULL DEFAULT 'training',
+  created_by BIGINT UNSIGNED NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (target_clustering_run_id) REFERENCES clustering_runs(id),
+  FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL,
+  UNIQUE KEY uq_model_version (model_name, model_version)
+) ENGINE=InnoDB;
+ 
+CREATE TABLE predictions (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  model_version_id BIGINT UNSIGNED NOT NULL,
+  ipk DECIMAL(4,2) NOT NULL,
+  parent_income DECIMAL(15,2) NOT NULL,
+  family_dependents SMALLINT UNSIGNED NOT NULL,
+  academic_achievement_score DECIMAL(8,3) NOT NULL,
+  nonacademic_achievement_score DECIMAL(8,3) NOT NULL,
+  attendance_percentage DECIMAL(5,2) NOT NULL,
+  predicted_cluster INT NOT NULL,
+  confidence_score DECIMAL(8,7) NULL,
+  notes TEXT NULL,
+  created_by BIGINT UNSIGNED NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (model_version_id) REFERENCES model_versions(id),
+  FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL,
+  INDEX idx_prediction_created (created_at)
+) ENGINE=InnoDB;
+ 
+CREATE TABLE audit_logs (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  user_id BIGINT UNSIGNED NULL,
+  action VARCHAR(100) NOT NULL,
+  entity_type VARCHAR(100) NOT NULL,
+  entity_id VARCHAR(100) NULL,
+  details_json JSON NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL,
+  INDEX idx_audit_created (created_at),
+  INDEX idx_audit_entity (entity_type, entity_id)
+) ENGINE=InnoDB;
+DDL ini merupakan rancangan awal yang perlu diuji melalui migration dan disesuaikan dengan versi MySQL yang digunakan. Nilai kategori prestasi dan kebijakan data null perlu difinalisasi sebelum produksi. Jika data preprocessing ingin disimpan per record dalam bentuk tabular, tambahkan tabel khusus preprocessed_records yang berelasi ke preprocessing_runs dan student_records; artefak scaler tetap harus disimpan bersama versi model.
+11. Rancangan API
+Method
+Endpoint
+Tujuan
+POST
+/api/v1/auth/login
+Autentikasi.
+GET
+/api/v1/dashboard/summary
+Ringkasan dashboard.
+GET/POST
+/api/v1/datasets
+Daftar dan membuat batch dataset.
+POST
+/api/v1/datasets/{id}/import
+Impor CSV/Excel ke batch.
+GET
+/api/v1/datasets/{id}/validation
+Melihat hasil validasi.
+GET/POST/PATCH
+/api/v1/records
+Melihat dan mengelola record.
+POST
+/api/v1/preprocessing/runs
+Membuat job preprocessing.
+GET
+/api/v1/preprocessing/runs/{id}
+Status/hasil preprocessing.
+POST
+/api/v1/clustering/runs
+Membuat job K-Means untuk kandidat K.
+GET
+/api/v1/clustering/runs/{id}
+Hasil DBI, label, profil cluster.
+POST
+/api/v1/models/train
+Memulai job Backpropagation.
+GET
+/api/v1/models/{id}
+Status, konfigurasi, metrik model.
+POST
+/api/v1/predictions
+Prediksi data baru.
+GET
+/api/v1/reports/experiments
+Ekspor/ambil laporan eksperimen.
+Semua endpoint yang mengubah data harus memerlukan autentikasi dan validasi payload. Endpoint list menggunakan pagination; file upload dibatasi ukuran/jenis; error response tidak membocorkan stack trace.
+12. Kebutuhan Nonfungsional dan Keamanan
+Kategori
+Persyaratan
+Keamanan
+Password menggunakan hash yang kuat; gunakan HTTPS di deployment; rahasia berada di environment variables.
+Otorisasi
+Role admin/operator/reviewer membatasi operasi sesuai kebutuhan.
+Privasi
+Minimalkan data identitas; gunakan pseudonim untuk analisis; batasi akses dataset.
+Audit
+Catat impor, perubahan data, run algoritma, training, pergantian model aktif, dan ekspor.
+Keandalan
+Status job persisten; kegagalan dicatat; job dapat ditinjau dan dijalankan ulang.
+Reproducibility
+Simpan seed, versi library, konfigurasi, preprocessing artifact, data batch, dan versi kode bila memungkinkan.
+Kinerja
+Paginasi server-side; proses ML berjalan di job worker; batas ukuran upload dan timeout terencana.
+Maintainability
+Pemisahan route, schema, service, repository, dan modul ML; gunakan migration database.
+Backup
+Backup database dan direktori artefak secara teratur; uji pemulihan.
+Observability
+Logging terstruktur tanpa mencatat password atau data pribadi yang tidak perlu.
+13. Kriteria Penerimaan
+Pengguna yang belum login tidak dapat mengakses halaman dan endpoint yang dilindungi.
+Impor dataset menampilkan preview, jumlah baris valid/tidak valid, dan alasan validasi.
+Data mentah tetap tersedia setelah preprocessing.
+Eksperimen K-Means menyimpan nilai K, seed, DBI, label record, dan status.
+Sistem dapat membandingkan DBI kandidat dan menandai eksperimen terpilih.
+Training Backpropagation mengacu pada clustering run tertentu dan menyimpan konfigurasi serta metrik.
+Data uji tidak digunakan untuk fit scaler atau pelatihan model.
+Prediksi hanya bisa dijalankan dengan model berstatus ready.
+Prediksi menggunakan preprocessing yang sama dengan model terkait.
+Laporan menunjukkan identitas batch, run, dan versi model.
+UI menjelaskan bahwa label cluster bukan keputusan resmi kelayakan beasiswa.
+14. Tahapan Implementasi
+Tahap
+Pekerjaan
+Deliverable
+Fase 1 — Fondasi
+Repository, konfigurasi environment, FastAPI, React/Vite, MySQL, migration, autentikasi.
+Aplikasi berjalan dan koneksi database tervalidasi.
+Fase 2 — Data
+CRUD, batch, impor CSV/XLSX, template dataset, validasi, data dictionary.
+Modul dataset siap menerima data.
+Fase 3 — Preprocessing
+Cleaning, aturan skala prestasi, normalisasi, penyimpanan konfigurasi dan artefak.
+Pipeline preprocessing dapat diulang.
+Fase 4 — K-Means
+Kandidat K, seed, DBI, profil cluster, label assignments.
+Eksperimen clustering tersimpan.
+Fase 5 — Backpropagation
+Pembagian train/test, training, metrik, versi model, artefak.
+Model dapat diuji dan dipakai inferensi.
+Fase 6 — UI analitik
+Dashboard, grafik, halaman cluster, evaluasi, prediksi.
+Alur algoritma terhubung dengan frontend.
+Fase 7 — Laporan & hardening
+Ekspor, audit, keamanan, backup, dokumentasi deployment.
+MVP siap ditinjau pengguna.
+14.1 Urutan prioritas praktis
+Mulai dari fondasi dan modul dataset. Sambil menunggu data resmi, buat file CSV template dan data sintetis yang ditandai sebagai data uji aplikasi. Jangan menetapkan hasil penelitian atau angka akurasi sebagai hasil final sampai dataset yang layak tersedia dan pipeline dievaluasi.
+15. Risiko dan Keputusan yang Masih Dibutuhkan
+Risiko/keputusan
+Dampak
+Tindakan
+Dataset belum tersedia
+Model belum dapat diuji secara bermakna.
+Minta data historis yang diizinkan; data sintetis hanya untuk pengembangan.
+Skala prestasi belum ditentukan
+Nilai fitur tidak konsisten.
+Buat data dictionary dan aturan konversi yang disetujui peneliti/kampus.
+Makna cluster belum tervalidasi
+Cluster dapat salah ditafsirkan sebagai kelayakan.
+Tinjau profil centroid/cluster bersama pihak kampus; gunakan istilah cluster/prioritas sementara.
+Label target hanya dari K-Means
+Metrik Backpropagation tidak mewakili kebenaran keputusan resmi.
+Laporkan metrik sebagai kesesuaian label cluster; validasi eksternal bila tersedia.
+Kelas cluster tidak seimbang
+Accuracy dapat memberi gambaran berlebihan.
+Laporkan metrik per kelas, macro-F1, confusion matrix, dan distribusi kelas.
+Data pribadi mahasiswa
+Risiko privasi dan akses tidak sah.
+Pseudonimisasi, akses berbasis peran, retensi terbatas, backup aman.
+Artefak model tidak cocok dengan preprocessing
+Prediksi tidak konsisten.
+Versioning model dan preprocessing sebagai satu paket.
+15.1 Keputusan sebelum implementasi final
+Konfirmasi skala IPK dan satuan penghasilan orang tua dari sumber data.
+Tentukan cara mengubah prestasi akademik/nonakademik menjadi skor numerik.
+Tentukan definisi periode dan perhitungan persentase kehadiran.
+Tentukan ukuran minimum dataset dan rentang kandidat K berdasarkan kondisi data aktual.
+Sepakati framework ANN yang akan dipakai (misalnya scikit-learn MLP atau PyTorch) serta konfigurasi eksperimen.
+Tentukan siapa yang berhak meninjau dan menginterpretasi profil cluster.
+Pastikan data historis boleh dipakai untuk penelitian dan aplikasi.
+Lampiran A — Template CSV yang diharapkan
+student_code,student_name,ipk,parent_income,family_dependents,academic_achievement_score,nonacademic_achievement_score,attendance_percentage
+SAMPLE001,Contoh Mahasiswa,3.45,2500000,3,2,1,95.50
+Baris di atas hanya contoh format, bukan data penelitian nyata dan bukan rekomendasi skor prestasi. Skor prestasi harus mengikuti kamus data yang disepakati. Untuk file penelitian, gunakan identitas pseudonim jika nama/NIM tidak diperlukan oleh algoritma.
+Lampiran B — Istilah
+Istilah
+Definisi ringkas
+BRD
+Business Requirements Document: tujuan, pemangku kepentingan, ruang lingkup, dan kebutuhan bisnis.
+PRD
+Product Requirements Document: fitur produk, perilaku UI/API, dan kriteria penerimaan.
+KDD
+Kerangka proses penemuan pengetahuan dari data.
+K-Means
+Algoritma clustering yang mengelompokkan data berdasarkan jarak terhadap centroid.
+DBI
+Davies-Bouldin Index, metrik untuk membandingkan kekompakan cluster dan pemisahannya.
+Backpropagation
+Algoritma pelatihan jaringan saraf yang menghitung gradien untuk memperbarui bobot.
+Data leakage
+Kebocoran informasi dari data uji ke proses pelatihan/pemilihan model.
+Artifact
+Berkas model atau transformasi preprocessing yang disimpan agar dapat digunakan kembali.
+Akhir dokumen

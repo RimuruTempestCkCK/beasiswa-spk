@@ -69,5 +69,5 @@ def archive_model(
     current_user=Depends(check_role("admin")),
 ):
     service = TrainingService(db)
-    model = service.archive(model_id)
+    model = service.archive_model(model_id)
     return {"message": f"Model {model_id} archived", "model": model}
