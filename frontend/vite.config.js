@@ -1,6 +1,6 @@
 import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
-import { visualizer } from 'rollup-plugin-visualizer';
+// visualizer disabled
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -116,7 +116,7 @@ export default defineConfig(({ mode }) => {
     plugins: [
       cjsInteropPlugin(cjsInteropPackages),
       react(),
-      analyze &&
+      false &&
         visualizer({
           filename: 'build/stats.html',
           open: true,

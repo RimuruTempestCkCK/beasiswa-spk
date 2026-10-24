@@ -1,8 +1,7 @@
-import { Fragment } from 'react';
+import { Fragment, useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { Routes, Route } from 'react-router';
 import cx from 'classnames';
-import { useResizeDetector } from 'react-resize-detector';
 
 import AppMain from './Layout/AppMain';
 import AppHeader from './Layout/AppHeader';
@@ -23,7 +22,13 @@ export default function App() {
   const enablePageTabsAlt = useSelector((s) => s.ThemeOptions.enablePageTabsAlt);
 
   const token = useSelector((s) => s.auth?.token) || localStorage.getItem('access_token');
-  const { width, ref } = useResizeDetector();
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+
+  useEffect(() => {
+    const handleResize = () => setWindowWidth(window.innerWidth);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   if (!token) {
     return (
@@ -39,15 +44,15 @@ export default function App() {
         Skip to main content
       </a>
       <ThemeOptions />
-      <div ref={ref}>
+      <div>
         <div
           className={cx(
             'app-container app-theme-' + colorScheme,
             { 'fixed-header': enableFixedHeader },
-            { 'fixed-sidebar': enableFixedSidebar || width < 992 },
+            { 'fixed-sidebar': enableFixedSidebar || windowWidth < 992 },
             { 'fixed-footer': enableFixedFooter },
-            { 'closed-sidebar': enableClosedSidebar || width < 992 },
-            { 'closed-sidebar-mobile': width < 992 },
+            { 'closed-sidebar': enableClosedSidebar || windowWidth < 992 },
+            { 'closed-sidebar-mobile': windowWidth < 992 },
             { 'sidebar-mobile-open': enableMobileMenu },
             { 'body-tabs-shadow-btn': enablePageTabsAlt }
           )}
