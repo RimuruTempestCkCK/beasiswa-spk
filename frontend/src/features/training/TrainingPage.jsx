@@ -1,82 +1,87 @@
-import { useEffect, useState, useRef, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 import apiClient from '../../services/apiClient';
 import { API } from '../../services/endpoints';
 import PageTitle from '../../Layout/AppMain/PageTitle';
+import Modal from '../../components/Modal';
 
 export default function TrainingPage() {
   const [clusteringRuns, setClusteringRuns] = useState([]);
   const [models, setModels] = useState([]);
   const [selectedClustering, setSelectedClustering] = useState('');
   const [config, setConfig] = useState({
-    hidden_layers: '64,32',
-    learning_rate: 0.001,
-    max_epochs: 100,
-    test_size: 0.2,
-    random_seed: 42,
+    hidden_layers: '64, 32',
+    learning_rate: '0.001',
+    max_iter: '500',
     activation: 'relu',
+    test_size: '0.2',
+    random_state: '42',
   });
   const [training, setTraining] = useState(false);
-  const pollingRef = useRef(null);
-
-  const fetchModels = useCallback(() => {
-    apiClient
-      .get(API.MODELS.LIST)
-      .then((res) => {
-        const items = res.data.items || res.data || [];
-        setModels(items);
-        const hasRunning = items.some(
-          (m) => m.status === 'training' || m.status === 'queued'
-        );
-        if (hasRunning && !pollingRef.current) {
-          pollingRef.current = setInterval(fetchModels, 2500);
-        } else if (!hasRunning && pollingRef.current) {
-          clearInterval(pollingRef.current);
-          pollingRef.current = null;
-        }
-      })
-      .catch(() => {});
-  }, []);
+  const [selectedModel, setSelectedModel] = useState(null);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
 
   useEffect(() => {
-    apiClient
-      .get(API.CLUSTERING.RUNS, { params: { is_selected: true } })
-      .then((res) => {
-        const items = res.data.items || res.data || [];
-        setClusteringRuns(items);
-        if (items.length > 0) setSelectedClustering(items[0].id);
-      })
-      .catch(() => {});
+    fetchClusteringRuns();
     fetchModels();
-  }, [fetchModels]);
-
-  useEffect(() => {
-    return () => {
-      if (pollingRef.current) clearInterval(pollingRef.current);
-    };
   }, []);
+
+  const fetchClusteringRuns = async () => {
+    try {
+      const res = await apiClient.get(API.CLUSTERING.RUNS, {
+        params: { status: 'completed' },
+      });
+      const items = res.data.items || res.data || [];
+      setClusteringRuns(items);
+      const sel = items.find((r) => r.is_selected);
+      if (sel) {
+        setSelectedClustering(sel.id);
+      } else if (items.length > 0) {
+        setSelectedClustering(items[0].id);
+      }
+    } catch {
+      toast.error('Gagal memuat daftar clustering run');
+    }
+  };
+
+  const fetchModels = async () => {
+    try {
+      const res = await apiClient.get(API.MODELS.LIST);
+      setModels(res.data.items || res.data || []);
+    } catch {
+      toast.error('Gagal memuat daftar model');
+    }
+  };
 
   const handleTrain = async (e) => {
     e.preventDefault();
-    if (!selectedClustering)
-      return toast.warning('Pilih clustering run terpilih sebagai target label');
+    if (!selectedClustering) {
+      toast.warning('Pilih clustering run acuan terlebih dahulu');
+      return;
+    }
     setTraining(true);
+
+    const layers = config.hidden_layers
+      .split(',')
+      .map((v) => parseInt(v.trim()))
+      .filter((v) => !isNaN(v) && v > 0);
+
+    const payload = {
+      model_name: `MLP (${layers.join('-')})`,
+      model_version: `v${models.length + 1}.0`,
+      clustering_run_id: parseInt(selectedClustering),
+      hidden_layer_sizes: layers.length > 0 ? layers : [64, 32],
+      learning_rate_init: parseFloat(config.learning_rate) || 0.001,
+      max_iter: parseInt(config.max_iter) || 500,
+      activation: config.activation || 'relu',
+      test_size: parseFloat(config.test_size) || 0.2,
+      random_state: parseInt(config.random_state) || 42,
+    };
+
     try {
-      await apiClient.post(API.MODELS.TRAIN, {
-        clustering_run_id: parseInt(selectedClustering),
-        hidden_layers: config.hidden_layers
-          .split(',')
-          .map((v) => parseInt(v.trim()))
-          .filter(Boolean),
-        learning_rate: parseFloat(config.learning_rate),
-        max_epochs: parseInt(config.max_epochs),
-        test_size: parseFloat(config.test_size),
-        random_seed: parseInt(config.random_seed),
-        activation: config.activation,
-      });
-      toast.success('Proses pelatihan Backpropagation dimulai!');
+      await apiClient.post(API.MODELS.TRAIN, payload);
+      toast.success('Pelatihan model Backpropagation berhasil diselesaikan!');
       fetchModels();
-      if (!pollingRef.current) pollingRef.current = setInterval(fetchModels, 2500);
     } catch (err) {
       toast.error(err.response?.data?.detail || 'Gagal memulai pelatihan model');
     } finally {
@@ -104,6 +109,11 @@ export default function TrainingPage() {
     }
   };
 
+  const handleOpenDetail = (model) => {
+    setSelectedModel(model);
+    setIsDetailModalOpen(true);
+  };
+
   return (
     <>
       <PageTitle
@@ -114,7 +124,7 @@ export default function TrainingPage() {
 
       <div className="row g-3 g-xxl-4 mb-4">
         {/* Left Form */}
-        <div className="col-lg-4">
+        <div className="col-lg-5">
           <section className="panel h-100">
             <div className="panel-head">
               <div>
@@ -160,11 +170,11 @@ export default function TrainingPage() {
                     required
                   />
                   <div className="form-text">
-                    Format: 64,32 menghasilkan 2 lapisan tersembunyi.
+                    Jumlah neuron tiap lapisan tersembunyi (contoh: 64, 32).
                   </div>
                 </div>
 
-                <div className="row g-2 mb-3">
+                <div className="row g-3 mb-3">
                   <div className="col-6">
                     <label className="form-label" htmlFor="learningRate">
                       Learning Rate
@@ -173,70 +183,61 @@ export default function TrainingPage() {
                       id="learningRate"
                       type="number"
                       step="0.0001"
-                      min="0.00001"
                       className="form-control"
                       value={config.learning_rate}
                       onChange={(e) =>
-                        setConfig({
-                          ...config,
-                          learning_rate: parseFloat(e.target.value),
-                        })
+                        setConfig({ ...config, learning_rate: e.target.value })
                       }
                       required
                     />
                   </div>
                   <div className="col-6">
-                    <label className="form-label" htmlFor="maxEpochs">
+                    <label className="form-label" htmlFor="maxIter">
                       Maksimal Epoch
                     </label>
                     <input
-                      id="maxEpochs"
+                      id="maxIter"
                       type="number"
-                      min="10"
-                      max="2000"
                       className="form-control"
-                      value={config.max_epochs}
+                      value={config.max_iter}
                       onChange={(e) =>
-                        setConfig({
-                          ...config,
-                          max_epochs: parseInt(e.target.value),
-                        })
+                        setConfig({ ...config, max_iter: e.target.value })
                       }
                       required
                     />
                   </div>
                 </div>
 
-                <div className="row g-2 mb-4">
+                <div className="row g-3 mb-4">
                   <div className="col-6">
-                    <label className="form-label" htmlFor="activationFunc">
+                    <label className="form-label" htmlFor="activationSelect">
                       Fungsi Aktivasi
                     </label>
                     <select
-                      id="activationFunc"
+                      id="activationSelect"
                       className="form-select"
                       value={config.activation}
                       onChange={(e) =>
                         setConfig({ ...config, activation: e.target.value })
                       }
                     >
-                      <option value="relu">ReLU (Rekomendasi)</option>
+                      <option value="relu">ReLU</option>
                       <option value="logistic">Sigmoid (Logistic)</option>
-                      <option value="tanh">Tanh (Hiperbolik)</option>
+                      <option value="tanh">Tanh</option>
                     </select>
                   </div>
                   <div className="col-6">
-                    <label className="form-label" htmlFor="testSize">
-                      Porsi Data Uji
+                    <label className="form-label" htmlFor="splitSelect">
+                      Pembagian Data
                     </label>
                     <select
-                      id="testSize"
+                      id="splitSelect"
                       className="form-select"
                       value={config.test_size}
                       onChange={(e) =>
                         setConfig({
                           ...config,
-                          test_size: parseFloat(e.target.value),
+                          test_size: e.target.value,
                         })
                       }
                     >
@@ -267,12 +268,12 @@ export default function TrainingPage() {
         </div>
 
         {/* Right Table */}
-        <div className="col-lg-8">
+        <div className="col-lg-7">
           <section className="panel h-100">
             <div className="panel-head">
               <div>
                 <h2 className="panel-title">Daftar Versi Model</h2>
-                <p className="panel-sub">Artefak model Backpropagation dan status kesiapan</p>
+                <p className="panel-sub">Model Backpropagation dan status aktif</p>
               </div>
               <button
                 type="button"
@@ -293,8 +294,8 @@ export default function TrainingPage() {
                   <thead>
                     <tr>
                       <th scope="col">Versi</th>
-                      <th scope="col">Nama / Arsitektur</th>
-                      <th scope="col" className="text-end">Akurasi Uji</th>
+                      <th scope="col">Nama / Lapisan</th>
+                      <th scope="col" className="text-end">Akurasi</th>
                       <th scope="col">Status</th>
                       <th scope="col" className="text-end">Aksi</th>
                     </tr>
@@ -305,13 +306,10 @@ export default function TrainingPage() {
                         <td className="num fw-bold">v{m.model_version || m.version || m.id}</td>
                         <td className="cell-main">
                           <span className="fw-semibold">{m.model_name || `Model #${m.id}`}</span>
-                          <span className="cell-sub">
-                            Lapisan: {m.hidden_layers ? (Array.isArray(m.hidden_layers) ? m.hidden_layers.join('-') : m.hidden_layers) : '-'} · Aktivasi: {m.activation || 'relu'}
-                          </span>
                         </td>
                         <td className="num text-end">
                           {m.accuracy !== undefined && m.accuracy !== null
-                            ? `${(Number(m.accuracy) * 100).toFixed(2)}%`
+                            ? `${(Number(m.accuracy) * 100).toFixed(1)}%`
                             : '-'}
                         </td>
                         <td>
@@ -331,6 +329,13 @@ export default function TrainingPage() {
                         </td>
                         <td className="text-end">
                           <div className="d-inline-flex gap-2">
+                            <button
+                              type="button"
+                              className="btn btn-sm btn-outline-primary"
+                              onClick={() => handleOpenDetail(m)}
+                            >
+                              Detail (Pop-Up)
+                            </button>
                             {m.status !== 'ready' && m.status !== 'training' && (
                               <button
                                 type="button"
@@ -360,6 +365,85 @@ export default function TrainingPage() {
           </section>
         </div>
       </div>
+
+      {/* POPUP MODAL: Detail Parameter Model */}
+      <Modal
+        isOpen={isDetailModalOpen}
+        onClose={() => setIsDetailModalOpen(false)}
+        size="md"
+        title={`Konfigurasi & Detail Model v${selectedModel?.model_version || selectedModel?.version || ''}`}
+        subtitle={`ID Model #${selectedModel?.id || ''} · Dibuat: ${selectedModel?.created_at ? new Date(selectedModel.created_at).toLocaleString('id-ID') : '-'}`}
+        footer={
+          <button
+            type="button"
+            className="btn btn-secondary"
+            onClick={() => setIsDetailModalOpen(false)}
+          >
+            Tutup
+          </button>
+        }
+      >
+        {selectedModel && (
+          <div>
+            <div className="d-flex justify-content-between align-items-center p-3 mb-3 bg-light rounded border">
+              <div>
+                <span className="text-muted small d-block">Status Model</span>
+                <span className={`fw-bold text-${selectedModel.status === 'ready' ? 'success' : 'secondary'}`}>
+                  {selectedModel.status.toUpperCase()}
+                </span>
+              </div>
+              <div className="text-end">
+                <span className="text-muted small d-block">Akurasi Pengujian</span>
+                <span className="fs-5 fw-bold text-primary font-monospace">
+                  {selectedModel.accuracy ? `${(Number(selectedModel.accuracy) * 100).toFixed(2)}%` : '-'}
+                </span>
+              </div>
+            </div>
+
+            <h6 className="fw-bold text-primary mb-2">Hyperparameter &amp; Konfigurasi:</h6>
+            <ul className="list-group list-group-flush border rounded mb-3 small">
+              <li className="list-group-item d-flex justify-content-between align-items-center">
+                <span>Nama Model</span>
+                <span className="fw-semibold">{selectedModel.model_name || `Model #${selectedModel.id}`}</span>
+              </li>
+              <li className="list-group-item d-flex justify-content-between align-items-center">
+                <span>Target Klaster Run Acuan</span>
+                <span className="badge bg-secondary font-monospace">Run #{selectedModel.target_clustering_run_id || selectedModel.clustering_run_id}</span>
+              </li>
+              <li className="list-group-item d-flex justify-content-between align-items-center">
+                <span>Algoritma</span>
+                <span className="fw-semibold">{selectedModel.algorithm || 'Backpropagation (MLP)'}</span>
+              </li>
+              <li className="list-group-item d-flex justify-content-between align-items-center">
+                <span>Arsitektur Lapisan Tersembunyi</span>
+                <span className="font-monospace">
+                  {selectedModel.hidden_layers
+                    ? (Array.isArray(selectedModel.hidden_layers) ? selectedModel.hidden_layers.join(' - ') : selectedModel.hidden_layers)
+                    : (selectedModel.training_config?.hidden_layer_sizes?.join(' - ') || '64 - 32')}
+                </span>
+              </li>
+              <li className="list-group-item d-flex justify-content-between align-items-center">
+                <span>Fungsi Aktivasi</span>
+                <span className="font-monospace">{selectedModel.activation || selectedModel.training_config?.activation || 'relu'}</span>
+              </li>
+              <li className="list-group-item d-flex justify-content-between align-items-center">
+                <span>Learning Rate Init</span>
+                <span className="font-monospace">{selectedModel.training_config?.learning_rate_init || '0.001'}</span>
+              </li>
+              <li className="list-group-item d-flex justify-content-between align-items-center">
+                <span>Maksimal Epoch</span>
+                <span className="font-monospace">{selectedModel.training_config?.max_iter || '500'}</span>
+              </li>
+              <li className="list-group-item d-flex justify-content-between align-items-center">
+                <span>Path Artefak Model</span>
+                <span className="font-monospace text-truncate text-muted" style={{ maxWidth: 220 }}>
+                  {selectedModel.artifact_path || '-'}
+                </span>
+              </li>
+            </ul>
+          </div>
+        )}
+      </Modal>
     </>
   );
 }

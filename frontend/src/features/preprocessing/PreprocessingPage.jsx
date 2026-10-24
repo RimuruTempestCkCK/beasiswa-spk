@@ -3,6 +3,7 @@ import { toast } from 'react-toastify';
 import apiClient from '../../services/apiClient';
 import { API } from '../../services/endpoints';
 import PageTitle from '../../Layout/AppMain/PageTitle';
+import Modal from '../../components/Modal';
 
 export default function PreprocessingPage() {
   const [datasets, setDatasets] = useState([]);
@@ -14,6 +15,8 @@ export default function PreprocessingPage() {
     normalization: 'minmax',
   });
   const [running, setRunning] = useState(false);
+  const [selectedRun, setSelectedRun] = useState(null);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const pollingRef = useRef(null);
 
   useEffect(() => {
@@ -72,6 +75,11 @@ export default function PreprocessingPage() {
     }
   };
 
+  const handleOpenDetail = (run) => {
+    setSelectedRun(run);
+    setIsDetailModalOpen(true);
+  };
+
   return (
     <>
       <PageTitle
@@ -103,10 +111,10 @@ export default function PreprocessingPage() {
                     onChange={(e) => setSelectedDataset(e.target.value)}
                     required
                   >
-                    <option value="">-- Pilih Dataset --</option>
+                    <option value="">-- Pilih Dataset Batch --</option>
                     {datasets.map((d) => (
                       <option key={d.id} value={d.id}>
-                        {d.name} ({d.record_count ?? 0} data)
+                        {d.batch_name || d.name} ({d.total_rows || d.record_count || 0} data)
                       </option>
                     ))}
                   </select>
@@ -114,7 +122,7 @@ export default function PreprocessingPage() {
 
                 <div className="mb-3">
                   <label className="form-label" htmlFor="missingStrategy">
-                    Strategi Nilai Hilang (Missing Value)
+                    Strategi Penanganan Missing Values
                   </label>
                   <select
                     id="missingStrategy"
@@ -124,11 +132,13 @@ export default function PreprocessingPage() {
                       setConfig({ ...config, missing_strategy: e.target.value })
                     }
                   >
-                    <option value="median">Median (Rekomendasi numerik)</option>
-                    <option value="mean">Mean (Rata-rata)</option>
-                    <option value="mode">Modus (Nilai terbanyak)</option>
-                    <option value="drop">Drop (Hapus baris)</option>
+                    <option value="median">Imputasi Nilai Median (Rekomendasi Akademik)</option>
+                    <option value="mean">Imputasi Nilai Rata-rata (Mean)</option>
+                    <option value="drop">Abaikan Baris Missing (Drop)</option>
                   </select>
+                  <div className="form-text">
+                    Median tahan terhadap nilai ekstrem (outlier) sosio-ekonomi.
+                  </div>
                 </div>
 
                 <div className="mb-4">
@@ -143,26 +153,26 @@ export default function PreprocessingPage() {
                       setConfig({ ...config, normalization: e.target.value })
                     }
                   >
-                    <option value="minmax">Min-Max Scaler [0, 1]</option>
-                    <option value="standard">Standard Scaler (Z-Score)</option>
+                    <option value="minmax">MinMaxScaler [0, 1] (Wajib K-Means)</option>
+                    <option value="zscore">Z-Score Standardization</option>
                   </select>
                   <div className="form-text">
-                    Min-Max disarankan untuk keseragaman skala 6 variabel SPK.
+                    Menyamakan rentang 6 indikator (IPK, Penghasilan, Tanggungan, Prestasi, Kehadiran).
                   </div>
                 </div>
 
                 <button
                   type="submit"
                   className="btn btn-primary w-100"
-                  disabled={running}
+                  disabled={running || datasets.length === 0}
                 >
                   {running ? (
                     <>
                       <span className="spinner-border spinner-border-sm me-2" role="status" />
-                      Memproses...
+                      Memproses Preprocessing...
                     </>
                   ) : (
-                    'Jalankan Preprocessing'
+                    'Mulai Preprocessing Dataset'
                   )}
                 </button>
               </form>
@@ -176,7 +186,7 @@ export default function PreprocessingPage() {
             <div className="panel-head">
               <div>
                 <h2 className="panel-title">Riwayat Preprocessing Runs</h2>
-                <p className="panel-sub">Log eksekusi normalisasi dataset yang telah dilakukan</p>
+                <p className="panel-sub">Log normalisasi dataset (klik detail untuk melihat pop-up parameter)</p>
               </div>
               <button
                 type="button"
@@ -205,9 +215,8 @@ export default function PreprocessingPage() {
                       <th scope="col" className="text-end">
                         Baris Keluar
                       </th>
-                      <th scope="col">Normalisasi</th>
                       <th scope="col">Status</th>
-                      <th scope="col">Waktu</th>
+                      <th scope="col" className="text-end">Aksi</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -219,11 +228,6 @@ export default function PreprocessingPage() {
                         </td>
                         <td className="num text-end">{r.input_rows ?? '-'}</td>
                         <td className="num text-end">{r.output_rows ?? '-'}</td>
-                        <td>
-                          <span className="badge bg-secondary-subtle text-secondary border">
-                            {r.normalization_method || r.normalization || 'minmax'}
-                          </span>
-                        </td>
                         <td>
                           <span
                             className={`status status-${
@@ -239,13 +243,14 @@ export default function PreprocessingPage() {
                             {r.status}
                           </span>
                         </td>
-                        <td className="num">
-                          {r.created_at
-                            ? new Date(r.created_at).toLocaleTimeString('id-ID', {
-                                hour: '2-digit',
-                                minute: '2-digit',
-                              })
-                            : '-'}
+                        <td className="text-end">
+                          <button
+                            type="button"
+                            className="btn btn-sm btn-outline-primary"
+                            onClick={() => handleOpenDetail(r)}
+                          >
+                            Detail (Pop-Up)
+                          </button>
                         </td>
                       </tr>
                     ))}
@@ -256,6 +261,73 @@ export default function PreprocessingPage() {
           </section>
         </div>
       </div>
+
+      {/* POPUP MODAL: Detail Preprocessing Run */}
+      <Modal
+        isOpen={isDetailModalOpen}
+        onClose={() => setIsDetailModalOpen(false)}
+        size="md"
+        title={`Detail Preprocessing Run #${selectedRun?.id || ''}`}
+        subtitle={`Dataset: ${selectedRun?.dataset_name || `ID #${selectedRun?.dataset_id || ''}`}`}
+        footer={
+          <button
+            type="button"
+            className="btn btn-secondary"
+            onClick={() => setIsDetailModalOpen(false)}
+          >
+            Tutup
+          </button>
+        }
+      >
+        {selectedRun && (
+          <div>
+            <div className="d-flex justify-content-between align-items-center p-3 mb-3 bg-light rounded border">
+              <div>
+                <span className="text-muted small d-block">Status Pekerjaan</span>
+                <span className={`fw-bold text-${selectedRun.status === 'completed' ? 'success' : 'secondary'}`}>
+                  {selectedRun.status.toUpperCase()}
+                </span>
+              </div>
+              <div className="text-end">
+                <span className="text-muted small d-block">Data Bersih Siap Klaster</span>
+                <span className="fs-5 fw-bold text-primary font-monospace">
+                  {selectedRun.output_rows ?? 0} Record
+                </span>
+              </div>
+            </div>
+
+            <h6 className="fw-bold text-primary mb-2">Parameter &amp; Statistik Preprocessing:</h6>
+            <ul className="list-group list-group-flush border rounded mb-3 small">
+              <li className="list-group-item d-flex justify-content-between align-items-center">
+                <span>Metode Normalisasi</span>
+                <span className="badge bg-primary font-monospace">{selectedRun.normalization_method || selectedRun.normalization || 'minmax'}</span>
+              </li>
+              <li className="list-group-item d-flex justify-content-between align-items-center">
+                <span>Strategi Imputasi Missing</span>
+                <span className="fw-semibold">{selectedRun.missing_strategy || 'median'}</span>
+              </li>
+              <li className="list-group-item d-flex justify-content-between align-items-center">
+                <span>Total Baris Masuk (Input)</span>
+                <span className="font-monospace">{selectedRun.input_rows ?? '-'} Baris</span>
+              </li>
+              <li className="list-group-item d-flex justify-content-between align-items-center">
+                <span>Baris Dihapus / Outlier</span>
+                <span className="font-monospace text-danger">{(selectedRun.input_rows || 0) - (selectedRun.output_rows || 0)} Baris</span>
+              </li>
+              <li className="list-group-item d-flex justify-content-between align-items-center">
+                <span>Waktu Pemrosesan</span>
+                <span>{selectedRun.created_at ? new Date(selectedRun.created_at).toLocaleString('id-ID') : '-'}</span>
+              </li>
+              <li className="list-group-item d-flex justify-content-between align-items-center">
+                <span>Path Artefak Scaler</span>
+                <span className="font-monospace text-truncate text-muted" style={{ maxWidth: 220 }}>
+                  {selectedRun.artifact_path || '-'}
+                </span>
+              </li>
+            </ul>
+          </div>
+        )}
+      </Modal>
     </>
   );
 }
