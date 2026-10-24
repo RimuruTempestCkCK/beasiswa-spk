@@ -15,9 +15,9 @@ class Settings(BaseSettings):
     DATABASE_URL: str = "mysql+pymysql://root:password@localhost:3306/beasiswa_spk"
 
     # JWT
-    SECRET_KEY: str = "changeme-use-a-long-random-string-in-production"
+    SECRET_KEY: str = "beasiswa-spk-super-secret-key-2026-production-ready"
     ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 1440
 
     # File storage
     ARTIFACTS_DIR: str = "./artifacts"
