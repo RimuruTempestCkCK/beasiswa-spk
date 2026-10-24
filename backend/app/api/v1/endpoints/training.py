@@ -4,13 +4,13 @@ from sqlalchemy.orm import Session
 from app.db.session import get_db
 from app.core.security import get_current_user, check_role
 from app.services.training_service import TrainingService
-from app.schemas.training import TrainingCreateRequest, ModelVersionResponse
+from app.schemas.training import TrainingCreateRequest, ModelVersionResponse, ModelVersionListResponse
 from app.jobs.job_runner import enqueue_job
 
 router = APIRouter(tags=["Model Training & Evaluation"])
 
 
-@router.get("")
+@router.get("", response_model=ModelVersionListResponse)
 def list_models(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),

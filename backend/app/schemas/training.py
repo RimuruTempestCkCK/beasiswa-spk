@@ -100,5 +100,12 @@ class ModelVersionOut(BaseModel):
     model_config = {"from_attributes": True}
 
 
+class ModelVersionListResponse(BaseModel):
+    total: int
+    page: int
+    page_size: int
+    items: List[ModelVersionOut]
+
+
 TrainingCreateRequest = ModelTrainRequest
 ModelVersionResponse = ModelVersionOut

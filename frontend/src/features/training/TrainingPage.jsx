@@ -303,7 +303,9 @@ export default function TrainingPage() {
                         <td className="num text-end">
                           {m.accuracy !== undefined && m.accuracy !== null
                             ? `${(Number(m.accuracy) * 100).toFixed(1)}%`
-                            : '-'}
+                            : m.metrics?.accuracy !== undefined && m.metrics?.accuracy !== null
+                              ? `${(Number(m.metrics.accuracy) * 100).toFixed(1)}%`
+                              : '-'}
                         </td>
                         <td>
                           <span
