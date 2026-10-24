@@ -253,15 +253,15 @@ main:focus { outline: 0; }
 
 @media (min-width: 992px) {
   /* The sidebar is a grid column that runs the full page height; its contents stick to the viewport. */
-  .app { display: grid; grid-template-columns: var(--sidebar-w) minmax(0, 1fr); }
+  .app { display: grid; grid-template-columns: var(--sidebar-w) minmax(0, 1fr); min-height: 100vh; }
   .sidebar { position: relative; z-index: 1035; background-image: linear-gradient(var(--rg-sb-bottom), var(--rg-sb-bottom)); }
-  .sidebar-inner { position: sticky; top: 0; height: 100vh; }
+  .sidebar-inner { position: sticky; top: 0; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
   .sidebar-collapsed .app { grid-template-columns: var(--sidebar-w-collapsed) minmax(0, 1fr); }
   .sidebar-anim .app { transition: grid-template-columns .2s ease; }
   .sidebar-collapsed .sidebar-head { padding: 12px 0 8px; justify-content: center; }
   .sidebar-collapsed .brand-text,
   .sidebar-collapsed .sidebar-foot { display: none; }
-  .sidebar-collapsed .sidebar-nav { overflow: visible; padding: 4px 12px; }
+  .sidebar-collapsed .sidebar-nav { overflow-y: auto; padding: 4px 12px; }
   .sidebar-collapsed .nav-heading { height: 1px; margin: 14px 8px; overflow: hidden; color: transparent; background: rgba(255, 255, 255, .12); }
   .sidebar-collapsed .nav-item-link { justify-content: center; padding: 11px; }
   .sidebar-collapsed .nav-label {
@@ -274,32 +274,11 @@ main:focus { outline: 0; }
   .sidebar-collapsed .nav-item-link:focus-visible .nav-label { opacity: 1; transform: translate(0, -50%); }
 }
 
-.app-footer {
-  display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 16px;
-  padding: 16px; border-top: 1px solid var(--rg-line);
-  font-size: .8125rem; color: var(--rg-muted);
-}
-.app-footer p { margin: 0; }
-.app-footer a { color: var(--rg-ink-2); font-weight: 600; }
-
-@media (min-width: 768px) {
-  .app-content { padding: 24px 24px 32px; }
-  .app-footer { padding: 16px 24px; }
-}
-@media (min-width: 1400px) {
-  :root { --rg-gap: 24px; }
-  .app-content { padding: 28px 32px 36px; }
-  .app-footer { padding: 18px 32px; }
-}
-
-/* ------------------------------------------------------------------------
-   6. Topbar & menus
-   ------------------------------------------------------------------------ */
 .topbar {
   position: sticky; top: 0; z-index: 1020;
-  display: flex; align-items: center; gap: 6px;
+  display: flex; align-items: center; justify-content: space-between; gap: 6px;
   height: var(--topbar-h); padding: 0 12px;
-  background: color-mix(in srgb, var(--rg-surface) 88%, transparent);
+  background: color-mix(in srgb, var(--rg-surface) 92%, transparent);
   -webkit-backdrop-filter: saturate(1.4) blur(10px);
   backdrop-filter: saturate(1.4) blur(10px);
   border-bottom: 1px solid var(--rg-line);
