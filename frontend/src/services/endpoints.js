@@ -50,6 +50,7 @@ export const API = {
   REPORTS: {
     EXPERIMENTS: '/api/v1/reports/experiments',
     EXPORT_PREDICTIONS: '/api/v1/reports/export/predictions',
+    EXPORT_RANKINGS: '/api/v1/reports/export/rankings',
   },
   USERS: {
     LIST: '/api/v1/users',
