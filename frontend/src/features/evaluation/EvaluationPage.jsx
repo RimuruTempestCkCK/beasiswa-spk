@@ -68,105 +68,87 @@ export default function EvaluationPage() {
         }
       />
 
-      {/* Critical metrics disclaimer banner */}
-      <div
-        className="alert alert-warning d-flex align-items-center gap-3 mb-4"
-        role="alert"
-      >
-        <svg
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          style={{ width: 24, height: 24, flexShrink: 0 }}
-          aria-hidden="true"
-        >
-          <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
-          <line x1="12" y1="9" x2="12" y2="13" />
-          <line x1="12" y1="17" x2="12.01" y2="17" />
-        </svg>
-        <div>
-          <strong>Penting &amp; Disclaimer Evaluasi:</strong> Target pelatihan Backpropagation adalah label cluster K-Means, sehingga metrik evaluasi mengukur seberapa presisi jaringan saraf meniru dan mengklasifikasikan pola data sesuai cluster acuan.
+      {/* Header Info / Disclaimer Compact */}
+      <div className="d-flex align-items-center justify-content-between p-2 px-3 mb-3 bg-warning-subtle border border-warning rounded small text-dark">
+        <div className="d-flex align-items-center gap-2">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            style={{ width: 16, height: 16, flexShrink: 0 }}
+            className="text-warning-emphasis"
+          >
+            <circle cx="12" cy="12" r="10" />
+            <line x1="12" y1="8" x2="12" y2="12" />
+            <line x1="12" y1="16" x2="12.01" y2="16" />
+          </svg>
+          <span>
+            <strong>Catatan Evaluasi:</strong> Target Backpropagation adalah label cluster K-Means acuan (mengukur presisi pemetaan pola 6 indikator beasiswa).
+          </span>
         </div>
+        <span className="badge bg-success-subtle text-success border border-success px-2 py-1 ms-2 text-nowrap">
+          Leakage-Free Verified
+        </span>
       </div>
 
-      {/* Model Selector Card & Parameter Overview */}
-      <div className="row g-3 g-xxl-4 mb-4">
-        <div className="col-lg-6">
-          <section className="panel h-100">
-            <div className="panel-head">
-              <div>
-                <h2 className="panel-title">Pilih Model yang Dievaluasi</h2>
-                <p className="panel-sub">Pilih versi model terlatih untuk memuat metrik pengujian</p>
-              </div>
-            </div>
-            <div className="panel-body">
-              <label className="form-label fw-bold" htmlFor="modelSelect">
-                Versi Model Terdaftar *
+      {/* Model Selector & Metadata in a Single Compact Card */}
+      <section className="panel mb-3">
+        <div className="panel-body p-3">
+          <div className="row g-3 align-items-center">
+            <div className="col-lg-4 col-md-5">
+              <label className="form-label small fw-bold text-muted mb-1" htmlFor="modelSelect">
+                Pilih Versi Model Terlatih
               </label>
               <select
                 id="modelSelect"
-                className="form-select mb-3"
+                className="form-select form-select-sm"
                 value={selectedModelId}
                 onChange={(e) => setSelectedModelId(e.target.value)}
               >
                 {models.map((m) => (
                   <option key={m.id} value={m.id}>
-                    {m.model_name || `Model #${m.id}`} (v{m.model_version || m.version}) - Status: {m.status.toUpperCase()}
+                    {m.model_name || `Model #${m.id}`} (v{m.model_version || m.version}) — {m.status.toUpperCase()}
                   </option>
                 ))}
               </select>
-              <div className="d-flex align-items-center justify-content-between p-3 bg-light rounded border small">
-                <span>Status Kesiapan:</span>
-                <span className={`badge bg-${modelDetail?.status === 'ready' ? 'success' : 'secondary'} fs-7`}>
-                  {(modelDetail?.status || 'UNKNOWN').toUpperCase()}
-                </span>
-              </div>
             </div>
-          </section>
-        </div>
 
-        <div className="col-lg-6">
-          <section className="panel h-100">
-            <div className="panel-head">
-              <div>
-                <h2 className="panel-title">Metadata Pelatihan Model</h2>
-                <p className="panel-sub">Konfigurasi dataset pengujian dan target klaster</p>
+            <div className="col-lg-8 col-md-7">
+              <div className="d-flex flex-wrap align-items-center justify-content-md-end gap-2 pt-md-3">
+                <div className="d-inline-flex align-items-center gap-2 bg-light border px-2 py-1 rounded small">
+                  <span className="text-muted">Status:</span>
+                  <span className={`badge bg-${modelDetail?.status === 'ready' ? 'success' : 'secondary'} text-uppercase`}>
+                    {modelDetail?.status || 'UNKNOWN'}
+                  </span>
+                </div>
+                <div className="d-inline-flex align-items-center gap-2 bg-light border px-2 py-1 rounded small font-monospace">
+                  <span className="text-muted">Klaster Acuan:</span>
+                  <span className="fw-semibold">Run #{modelDetail?.target_clustering_run_id || modelDetail?.clustering_run_id || '-'}</span>
+                </div>
+                <div className="d-inline-flex align-items-center gap-2 bg-light border px-2 py-1 rounded small font-monospace">
+                  <span className="text-muted">Split Data:</span>
+                  <span className="fw-semibold">
+                    {((modelDetail?.training_config?.test_size || 0.2) * 100).toFixed(0)}% Uji / {((1 - (modelDetail?.training_config?.test_size || 0.2)) * 100).toFixed(0)}% Latih
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  className="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1 ms-lg-2"
+                  onClick={() => setIsModalOpen(true)}
+                  disabled={!modelDetail}
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 14, height: 14 }}>
+                    <rect x="3" y="3" width="18" height="18" rx="2" />
+                    <path d="M3 9h18M9 21V9" />
+                  </svg>
+                  <span>Lihat Confusion Matrix</span>
+                </button>
               </div>
             </div>
-            <div className="panel-body">
-              {modelDetail ? (
-                <ul className="list-group list-group-flush border rounded small mb-0">
-                  <li className="list-group-item d-flex justify-content-between align-items-center">
-                    <span className="text-muted">Target Klaster Acuan</span>
-                    <span className="badge bg-secondary font-monospace">Run #{modelDetail.target_clustering_run_id || modelDetail.clustering_run_id || '-'}</span>
-                  </li>
-                  <li className="list-group-item d-flex justify-content-between align-items-center">
-                    <span className="text-muted">Pembagian Data Pengujian (Test)</span>
-                    <span className="fw-bold font-monospace">
-                      {((modelDetail.training_config?.test_size || 0.2) * 100).toFixed(0)}% Data Uji / {((1 - (modelDetail.training_config?.test_size || 0.2)) * 100).toFixed(0)}% Latih
-                    </span>
-                  </li>
-                  <li className="list-group-item d-flex justify-content-between align-items-center">
-                    <span className="text-muted">Status Data Leakage</span>
-                    <span className="badge bg-success-subtle text-success border border-success">
-                      Bebas Kebocoran Data (Verified)
-                    </span>
-                  </li>
-                  <li className="list-group-item d-flex justify-content-between align-items-center">
-                    <span className="text-muted">Waktu Evaluasi</span>
-                    <span>{modelDetail.created_at ? new Date(modelDetail.created_at).toLocaleString('id-ID') : '-'}</span>
-                  </li>
-                </ul>
-              ) : (
-                <p className="text-muted mb-0 py-3 text-center">Pilih model untuk melihat metadata.</p>
-              )}
-            </div>
-          </section>
+          </div>
         </div>
-      </div>
+      </section>
 
       {loading ? (
         <div className="text-center py-5">
@@ -176,8 +158,8 @@ export default function EvaluationPage() {
       ) : (
         <>
           {/* Summary KPI Tiles */}
-          <section className="kpis mb-4" aria-label="Ringkasan Performa Model">
-            <div className="kpi">
+          <section className="kpis mb-3" aria-label="Ringkasan Performa Model">
+            <div className="kpi py-2">
               <div className="kpi-top">
                 <span className="kpi-icon tone-teal">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -193,7 +175,7 @@ export default function EvaluationPage() {
               <p className="kpi-note">Proporsi klasifikasi benar</p>
             </div>
 
-            <div className="kpi">
+            <div className="kpi py-2">
               <div className="kpi-top">
                 <span className="kpi-icon tone-amber">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -209,7 +191,7 @@ export default function EvaluationPage() {
               <p className="kpi-note">Rata-rata ketepatan prediksi</p>
             </div>
 
-            <div className="kpi">
+            <div className="kpi py-2">
               <div className="kpi-top">
                 <span className="kpi-icon tone-green">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -224,7 +206,7 @@ export default function EvaluationPage() {
               <p className="kpi-note">Rata-rata sensitivitas temuan</p>
             </div>
 
-            <div className="kpi">
+            <div className="kpi py-2">
               <div className="kpi-top">
                 <span className="kpi-icon tone-slate">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -236,28 +218,7 @@ export default function EvaluationPage() {
               <p className="kpi-value">
                 {metrics.f1_macro !== undefined ? `${(Number(metrics.f1_macro) * 100).toFixed(2)}%` : '-'}
               </p>
-              <p className="kpi-note">Keseimbangan presisi dan recall</p>
-            </div>
-          </section>
-
-          {/* Quick Action Panel */}
-          <section className="panel mb-4">
-            <div className="panel-body d-flex flex-column flex-md-row justify-content-between align-items-center gap-3 p-4">
-              <div>
-                <h3 className="h6 fw-bold mb-1">
-                  Matriks Konfusi &amp; Rincian Kelas untuk Model v{modelDetail?.model_version || modelDetail?.version || ''}
-                </h3>
-                <p className="text-muted small mb-0">
-                  Tinjau perbandingan distribusi prediksi aktual vs estimasi serta skor presisi, recall, dan F1-score tiap klaster.
-                </p>
-              </div>
-              <button
-                type="button"
-                className="btn btn-outline-primary px-4 text-nowrap"
-                onClick={() => setIsModalOpen(true)}
-              >
-                Lihat Rincian Lengkap (Pop-Up)
-              </button>
+              <p className="kpi-note">Keseimbangan presisi &amp; recall</p>
             </div>
           </section>
         </>
