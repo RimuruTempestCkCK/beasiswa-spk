@@ -266,7 +266,7 @@ export default function Sidebar({ mobileOpen, onCloseMobile }) {
                     <circle cx="9" cy="7" r="4" />
                     <path d="M22 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8" />
                   </svg>
-                  <span className="nav-label">Pengguna & Audit</span>
+                  <span className="nav-label">Manajemen Pengguna</span>
                 </NavLink>
               </li>
             </ul>

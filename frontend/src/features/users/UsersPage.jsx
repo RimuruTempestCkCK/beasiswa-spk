@@ -7,10 +7,8 @@ import Modal from '../../components/Modal';
 
 export default function UsersPage() {
   const [users, setUsers] = useState([]);
-  const [auditLogs, setAuditLogs] = useState([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
-  const [selectedLog, setSelectedLog] = useState(null);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -26,17 +24,9 @@ export default function UsersPage() {
       .catch(() => {});
   }, []);
 
-  const fetchAuditLogs = useCallback(() => {
-    apiClient
-      .get(API.AUDIT_LOGS)
-      .then((res) => setAuditLogs(res.data.items || res.data || []))
-      .catch(() => {});
-  }, []);
-
   useEffect(() => {
     fetchUsers();
-    fetchAuditLogs();
-  }, [fetchUsers, fetchAuditLogs]);
+  }, [fetchUsers]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -58,8 +48,8 @@ export default function UsersPage() {
   return (
     <>
       <PageTitle
-        heading="Pengguna &amp; Jejak Audit"
-        subheading="Manajemen hak akses staf pengelola beasiswa dan pemantauan aktivitas audit sistem"
+        heading="Manajemen Pengguna Sistem"
+        subheading="Kelola akun dan hak akses staf pengelola seleksi beasiswa"
         eyebrow="Administrasi · SPK Beasiswa"
         actions={
           <button
@@ -85,140 +75,70 @@ export default function UsersPage() {
         }
       />
 
-      <div className="row g-3 g-xxl-4 mb-4">
-        {/* Users Table */}
-        <div className="col-lg-6">
-          <section className="panel h-100">
-            <div className="panel-head">
-              <div>
-                <h2 className="panel-title">Daftar Pengguna Sistem</h2>
-                <p className="panel-sub">Staf dan pengelola seleksi beasiswa</p>
-              </div>
-            </div>
-            <div className="table-wrap">
-              <table className="table-data table-compact">
-                <thead>
-                  <tr>
-                    <th scope="col">Nama / Email</th>
-                    <th scope="col">Peran</th>
-                    <th scope="col">Status</th>
-                    <th scope="col" className="text-end">Aksi</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {users.map((u) => (
-                    <tr key={u.id}>
-                      <td className="cell-main">
-                        <span className="fw-semibold">{u.name}</span>
-                        <span className="cell-sub">{u.email}</span>
-                      </td>
-                      <td>
-                        <span className="badge bg-secondary-subtle text-secondary border">
-                          {u.role}
-                        </span>
-                      </td>
-                      <td>
-                        <span
-                          className={`status status-${
-                            u.is_active ? 'success' : 'neutral'
-                          }`}
-                        >
-                          {u.is_active ? 'Aktif' : 'Nonaktif'}
-                        </span>
-                      </td>
-                      <td className="text-end">
-                        <button
-                          type="button"
-                          className="btn btn-sm btn-outline-primary"
-                          onClick={() => setSelectedUser(u)}
-                        >
-                          Detail (Pop-Up)
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                  {users.length === 0 && (
-                    <tr>
-                      <td colSpan={4} className="text-center text-muted py-4">
-                        Belum ada pengguna terdaftar.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </section>
+      {/* Users Table Panel */}
+      <section className="panel mb-4">
+        <div className="panel-head">
+          <div>
+            <h2 className="panel-title">Daftar Pengguna Terdaftar</h2>
+            <p className="panel-sub">Daftar staf, operator, penelaah, dan administrator sistem</p>
+          </div>
         </div>
-
-        {/* Audit Logs Table */}
-        <div className="col-lg-6">
-          <section className="panel h-100">
-            <div className="panel-head">
-              <div>
-                <h2 className="panel-title">Jejak Aktivitas (Audit Logs)</h2>
-                <p className="panel-sub">Catatan riwayat perubahan dan operasi sistem</p>
-              </div>
-            </div>
-            <div className="table-wrap">
-              <table className="table-data table-compact">
-                <thead>
-                  <tr>
-                    <th scope="col">Waktu</th>
-                    <th scope="col">Aktivitas</th>
-                    <th scope="col">Status</th>
-                    <th scope="col" className="text-end">Aksi</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {auditLogs.map((log) => (
-                    <tr key={log.id}>
-                      <td className="num">
-                        {log.created_at
-                          ? new Date(log.created_at).toLocaleTimeString('id-ID', {
-                              hour: '2-digit',
-                              minute: '2-digit',
-                            })
-                          : '-'}
-                      </td>
-                      <td className="cell-main">
-                        <span className="fw-semibold">{log.action || log.event}</span>
-                        {log.entity && <span className="cell-sub">{log.entity}</span>}
-                      </td>
-                      <td>
-                        <span
-                          className={`status status-${
-                            log.status === 'success' || !log.status
-                              ? 'success'
-                              : 'danger'
-                          }`}
-                        >
-                          {log.status || 'success'}
-                        </span>
-                      </td>
-                      <td className="text-end">
-                        <button
-                          type="button"
-                          className="btn btn-sm btn-outline-secondary"
-                          onClick={() => setSelectedLog(log)}
-                        >
-                          Lihat Log
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                  {auditLogs.length === 0 && (
-                    <tr>
-                      <td colSpan={4} className="text-center text-muted py-4">
-                        Belum ada rekaman audit log.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </section>
+        <div className="table-wrap">
+          <table className="table-data table-stack">
+            <thead>
+              <tr>
+                <th scope="col">ID</th>
+                <th scope="col">Nama Pengguna</th>
+                <th scope="col">Email Login</th>
+                <th scope="col">Peran / Role</th>
+                <th scope="col">Status Akun</th>
+                <th scope="col" className="text-end">Aksi</th>
+              </tr>
+            </thead>
+            <tbody>
+              {users.map((u) => (
+                <tr key={u.id}>
+                  <td className="num fw-bold">#{u.id}</td>
+                  <td className="cell-main">
+                    <span className="fw-semibold">{u.name}</span>
+                  </td>
+                  <td className="font-monospace text-muted">{u.email}</td>
+                  <td>
+                    <span className={`badge bg-${u.role === 'admin' ? 'primary' : u.role === 'reviewer' ? 'info' : 'secondary'}-subtle text-${u.role === 'admin' ? 'primary' : u.role === 'reviewer' ? 'info' : 'secondary'} border`}>
+                      {u.role ? u.role.toUpperCase() : 'OPERATOR'}
+                    </span>
+                  </td>
+                  <td>
+                    <span
+                      className={`status status-${
+                        u.is_active ? 'success' : 'neutral'
+                      }`}
+                    >
+                      {u.is_active ? 'Aktif' : 'Nonaktif'}
+                    </span>
+                  </td>
+                  <td className="text-end">
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-outline-primary"
+                      onClick={() => setSelectedUser(u)}
+                    >
+                      Detail (Pop-Up)
+                    </button>
+                  </td>
+                </tr>
+              ))}
+              {users.length === 0 && (
+                <tr>
+                  <td colSpan={6} className="text-center text-muted py-5">
+                    Belum ada pengguna terdaftar.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
-      </div>
+      </section>
 
       {/* POPUP MODAL: Tambah Pengguna */}
       <Modal
@@ -333,7 +253,7 @@ export default function UsersPage() {
                 <span className="fw-bold text-success">{selectedUser.is_active ? 'AKTIF' : 'NONAKTIF'}</span>
               </div>
               <div className="text-end">
-                <span className="text-muted small d-block">Peran</span>
+                <span className="text-muted small d-block">Peran Hak Akses</span>
                 <span className="badge bg-primary fs-6">{selectedUser.role.toUpperCase()}</span>
               </div>
             </div>
@@ -347,61 +267,10 @@ export default function UsersPage() {
                 <span className="font-monospace">{selectedUser.email}</span>
               </li>
               <li className="list-group-item d-flex justify-content-between align-items-center">
-                <span>Waktu Dibuat</span>
+                <span>Waktu Terdaftar</span>
                 <span>{selectedUser.created_at ? new Date(selectedUser.created_at).toLocaleString('id-ID') : '-'}</span>
               </li>
             </ul>
-          </div>
-        )}
-      </Modal>
-
-      {/* POPUP MODAL: Detail Audit Log */}
-      <Modal
-        isOpen={!!selectedLog}
-        onClose={() => setSelectedLog(null)}
-        size="md"
-        title={`Detail Audit Log #${selectedLog?.id || ''}`}
-        subtitle={`Aksi: ${selectedLog?.action || selectedLog?.event || '-'}`}
-        footer={
-          <button
-            type="button"
-            className="btn btn-secondary"
-            onClick={() => setSelectedLog(null)}
-          >
-            Tutup
-          </button>
-        }
-      >
-        {selectedLog && (
-          <div>
-            <ul className="list-group list-group-flush border rounded small mb-3">
-              <li className="list-group-item d-flex justify-content-between align-items-center">
-                <span>Operasi / Action</span>
-                <span className="fw-bold font-monospace">{selectedLog.action || selectedLog.event}</span>
-              </li>
-              <li className="list-group-item d-flex justify-content-between align-items-center">
-                <span>Entity Terkait</span>
-                <span>{selectedLog.entity || '-'} (ID: {selectedLog.entity_id || '-'})</span>
-              </li>
-              <li className="list-group-item d-flex justify-content-between align-items-center">
-                <span>User Pelaksana</span>
-                <span>ID User #{selectedLog.user_id || 'Sistem'}</span>
-              </li>
-              <li className="list-group-item d-flex justify-content-between align-items-center">
-                <span>Waktu Kejadian</span>
-                <span>{selectedLog.created_at ? new Date(selectedLog.created_at).toLocaleString('id-ID') : '-'}</span>
-              </li>
-            </ul>
-            {selectedLog.details && (
-              <div className="p-3 bg-light rounded border small">
-                <strong>Payload / Detail:</strong>
-                <pre className="mb-0 mt-1" style={{ whiteSpace: 'pre-wrap' }}>
-                  {typeof selectedLog.details === 'object'
-                    ? JSON.stringify(selectedLog.details, null, 2)
-                    : selectedLog.details}
-                </pre>
-              </div>
-            )}
           </div>
         )}
       </Modal>
