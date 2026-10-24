@@ -1,0 +1,54 @@
+# .gitignore - Sistem SPK Prediksi Kelayakan Beasiswa
+
+# ===========================
+# PENTING: Jangan commit secrets
+# ===========================
+.env
+.env.local
+.env.production
+.env.*.local
+
+# Database dumps dengan data sensitif
+*.sql.bak
+*_dump.sql
+
+# ===========================
+# Backend Python
+# ===========================
+backend/__pycache__/
+backend/**/__pycache__/
+backend/*.pyc
+backend/**/*.pyc
+backend/.venv/
+backend/venv/
+backend/.pytest_cache/
+backend/.mypy_cache/
+
+# Model artifacts (bisa besar, simpan di storage terpisah)
+backend/artifacts/*
+!backend/artifacts/.gitkeep
+
+# Upload files
+backend/uploads/*
+!backend/uploads/.gitkeep
+
+# ===========================
+# Frontend Node.js
+# ===========================
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+frontend/coverage/
+
+# ===========================
+# General
+# ===========================
+architectui-react-theme-free/
+*.log
+*.tmp
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
