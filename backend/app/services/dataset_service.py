@@ -40,7 +40,13 @@ class DatasetService:
         if not ok:
             raise HTTPException(status_code=404, detail="Dataset batch not found")
 
-    def import_file(self, batch_id: int, file: UploadFile, created_by: Optional[int]) -> dict:
+    def import_file(
+        self,
+        batch_id: int,
+        file: UploadFile,
+        created_by: Optional[int],
+        preview_only: bool = False,
+    ) -> dict:
         batch = self.get_batch(batch_id)
         filename = file.filename or "upload"
         ext = os.path.splitext(filename)[1].lower()
@@ -62,11 +68,28 @@ class DatasetService:
                 df = pd.read_csv(save_path)
                 source_type = "csv"
         except Exception as e:
+            if os.path.exists(save_path):
+                os.remove(save_path)
             raise HTTPException(status_code=400, detail=f"Cannot parse file: {str(e)}")
+
+        # Normalize column names (handle Indonesian & lowercase)
+        col_map = {
+            "nim": "student_code",
+            "nama": "student_name",
+            "penghasilan_ortu": "parent_income",
+            "jumlah_tanggungan": "family_dependents",
+            "skor_prestasi_akademik": "academic_achievement_score",
+            "skor_prestasi_nonakademik": "nonacademic_achievement_score",
+            "persentase_kehadiran": "attendance_percentage",
+        }
+        df.columns = [c.strip().lower() for c in df.columns]
+        df.rename(columns={c: col_map[c] for c in df.columns if c in col_map}, inplace=True)
 
         # Check required columns
         missing = [c for c in REQUIRED_FEATURES if c not in df.columns]
         if missing:
+            if os.path.exists(save_path):
+                os.remove(save_path)
             raise HTTPException(
                 status_code=400,
                 detail=f"File missing required columns: {missing}",
@@ -75,6 +98,23 @@ class DatasetService:
         # Validate
         valid_rows, invalid_rows, issues = validate_dataframe(df)
         preview = df.head(10).where(pd.notnull(df), None).to_dict(orient="records")
+
+        if preview_only:
+            if os.path.exists(save_path):
+                os.remove(save_path)
+            return {
+                "total_rows": len(df),
+                "valid_rows": valid_rows,
+                "invalid_rows": invalid_rows,
+                "preview": preview,
+                "issues": issues[:50],
+                "validation": {
+                    "total_rows": len(df),
+                    "valid_rows": valid_rows,
+                    "invalid_rows": invalid_rows,
+                    "errors": issues[:50],
+                },
+            }
 
         # Insert records
         records_to_insert = []
@@ -107,7 +147,13 @@ class DatasetService:
             "valid_rows": valid_rows,
             "invalid_rows": invalid_rows,
             "preview": preview,
-            "issues": issues[:50],  # cap at 50 issues for response
+            "issues": issues[:50],
+            "validation": {
+                "total_rows": len(df),
+                "valid_rows": valid_rows,
+                "invalid_rows": invalid_rows,
+                "errors": issues[:50],
+            },
         }
 
     def get_validation(self, batch_id: int) -> dict:
@@ -122,13 +168,20 @@ class DatasetService:
             {
                 "id": r.id,
                 "student_code": r.student_code,
+                "nim": r.student_code,
                 "student_name": r.student_name,
+                "nama": r.student_name,
                 "ipk": float(r.ipk) if r.ipk is not None else None,
                 "parent_income": float(r.parent_income) if r.parent_income is not None else None,
+                "penghasilan_ortu": float(r.parent_income) if r.parent_income is not None else None,
                 "family_dependents": r.family_dependents,
+                "jumlah_tanggungan": r.family_dependents,
                 "academic_achievement_score": float(r.academic_achievement_score) if r.academic_achievement_score is not None else None,
+                "skor_prestasi_akademik": float(r.academic_achievement_score) if r.academic_achievement_score is not None else None,
                 "nonacademic_achievement_score": float(r.nonacademic_achievement_score) if r.nonacademic_achievement_score is not None else None,
+                "skor_prestasi_nonakademik": float(r.nonacademic_achievement_score) if r.nonacademic_achievement_score is not None else None,
                 "attendance_percentage": float(r.attendance_percentage) if r.attendance_percentage is not None else None,
+                "persentase_kehadiran": float(r.attendance_percentage) if r.attendance_percentage is not None else None,
                 "data_status": r.data_status,
             }
             for r in records

@@ -7,7 +7,7 @@ from app.services.training_service import TrainingService
 from app.schemas.training import TrainingCreateRequest, ModelVersionResponse
 from app.jobs.job_runner import enqueue_job
 
-router = APIRouter(prefix="/models", tags=["Model Training & Evaluation"])
+router = APIRouter(tags=["Model Training & Evaluation"])
 
 
 @router.get("")
@@ -21,6 +21,7 @@ def list_models(
     return service.list_models(page=page, page_size=page_size)
 
 
+@router.post("", response_model=ModelVersionResponse)
 @router.post("/train", response_model=ModelVersionResponse)
 def train_model(
     payload: TrainingCreateRequest,
@@ -30,7 +31,7 @@ def train_model(
 ):
     service = TrainingService(db)
     model = service.create_training(
-        model_name=payload.model_name,
+        model_name=payload.model_name or "Backpropagation MLP",
         model_version=payload.model_version,
         clustering_run_id=payload.clustering_run_id,
         config=payload.config,
@@ -51,6 +52,7 @@ def get_model(
     return service.get_model(model_id)
 
 
+@router.post("/{model_id}/ready")
 @router.post("/{model_id}/set-ready")
 def set_model_ready(
     model_id: int,

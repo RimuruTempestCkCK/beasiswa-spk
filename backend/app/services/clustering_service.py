@@ -155,7 +155,22 @@ class ClusteringService:
 
     def get_assignments(self, run_id: int) -> List[Any]:
         self.get_run(run_id)
-        return self.repo.get_assignments_for_run(run_id)
+        details = self.repo.get_assignments_with_details(run_id)
+        if details:
+            return details
+        raw = self.repo.get_assignments_for_run(run_id)
+        return [
+            {
+                "id": a.id,
+                "clustering_run_id": a.clustering_run_id,
+                "student_record_id": a.student_record_id,
+                "cluster_label": a.cluster_label,
+                "cluster": a.cluster_label,
+                "distance_to_centroid": float(a.distance_to_centroid) if a.distance_to_centroid is not None else None,
+                "distance": float(a.distance_to_centroid) if a.distance_to_centroid is not None else None,
+            }
+            for a in raw
+        ]
 
     def get_cluster_profile(self, run_id: int) -> List[dict]:
         run = self.get_run(run_id)

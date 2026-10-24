@@ -42,7 +42,7 @@ class TrainingService:
         model_name: str,
         model_version: str,
         clustering_run_id: int,
-        config: Optional[Dict[str, Any]],
+        config: Optional[Any],
         created_by: Optional[int],
     ):
         # Validate clustering run
@@ -52,12 +52,14 @@ class TrainingService:
         if clustering_run.status != "completed":
             raise HTTPException(status_code=400, detail="Clustering run is not completed")
 
+        cfg = config.dict() if hasattr(config, "dict") else (config or {})
+
         model = self.model_repo.create(
             model_name=model_name,
             model_version=model_version,
             target_clustering_run_id=clustering_run_id,
             algorithm="Backpropagation",
-            training_config=config or {},
+            training_config=cfg,
             status=ModelStatus.training.value,
             created_by=created_by,
         )
@@ -120,7 +122,7 @@ class TrainingService:
 
             self.model_repo.update(
                 model_id,
-                status=ModelStatus.training.value,  # stays training until set-ready
+                status=ModelStatus.ready.value,
                 metrics=metrics,
                 artifact_path=artifact_path,
             )

@@ -104,6 +104,7 @@ def delete_user(
 
 
 @router.get("/audit-logs")
+@router.get("/users/audit-logs")
 def list_audit_logs(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),

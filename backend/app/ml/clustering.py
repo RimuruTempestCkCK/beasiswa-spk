@@ -74,14 +74,21 @@ def compute_cluster_profiles(
     for label in unique_labels:
         mask = labels_arr == label
         cluster_data = X_normalized[mask]
+        feat_means = {
+            feat: float(cluster_data[:, i].mean())
+            for i, feat in enumerate(feature_names)
+        }
         profile = {
             "cluster_label": int(label),
             "count": int(mask.sum()),
             "centroid": centroids[label] if label < len(centroids) else [],
-            "feature_means": {
-                feat: float(cluster_data[:, i].mean())
-                for i, feat in enumerate(feature_names)
-            },
+            "feature_means": feat_means,
+            "mean_ipk": feat_means.get("ipk"),
+            "mean_income": feat_means.get("parent_income"),
+            "mean_dependents": feat_means.get("family_dependents"),
+            "mean_academic": feat_means.get("academic_achievement_score"),
+            "mean_nonacademic": feat_means.get("nonacademic_achievement_score"),
+            "mean_attendance": feat_means.get("attendance_percentage"),
         }
         profiles.append(profile)
     return profiles

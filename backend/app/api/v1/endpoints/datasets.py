@@ -28,9 +28,9 @@ def create_batch(
 ):
     service = DatasetService(db)
     return service.create_batch(
-        batch_name=payload.batch_name,
+        batch_name=payload.batch_name or payload.name,
         source_type=payload.source_type,
-        description=payload.dataset_description,
+        description=payload.dataset_description or payload.description,
         created_by=current_user.id,
     )
 
@@ -60,11 +60,17 @@ def delete_batch(
 def import_dataset(
     batch_id: int,
     file: UploadFile = File(...),
+    preview_only: bool = Query(False),
     db: Session = Depends(get_db),
     current_user=Depends(check_role("admin", "operator")),
 ):
     service = DatasetService(db)
-    return service.import_file(batch_id=batch_id, file=file, created_by=current_user.id)
+    return service.import_file(
+        batch_id=batch_id,
+        file=file,
+        created_by=current_user.id,
+        preview_only=preview_only,
+    )
 
 
 @router.get("/{batch_id}/preview")

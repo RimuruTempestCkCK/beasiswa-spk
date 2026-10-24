@@ -57,3 +57,28 @@ class ClusteringRepository:
             .filter(ClusterAssignment.clustering_run_id == clustering_run_id)
             .all()
         )
+
+    def get_assignments_with_details(self, clustering_run_id: int) -> List[dict]:
+        from app.models.dataset import StudentRecord
+        rows = (
+            self.db.query(ClusterAssignment, StudentRecord)
+            .join(StudentRecord, ClusterAssignment.student_record_id == StudentRecord.id)
+            .filter(ClusterAssignment.clustering_run_id == clustering_run_id)
+            .all()
+        )
+        return [
+            {
+                "id": a.id,
+                "clustering_run_id": a.clustering_run_id,
+                "student_record_id": a.student_record_id,
+                "cluster_label": a.cluster_label,
+                "cluster": a.cluster_label,
+                "distance_to_centroid": float(a.distance_to_centroid) if a.distance_to_centroid is not None else None,
+                "distance": float(a.distance_to_centroid) if a.distance_to_centroid is not None else None,
+                "nim": r.student_code,
+                "nama": r.student_name,
+                "student_code": r.student_code,
+                "student_name": r.student_name,
+            }
+            for a, r in rows
+        ]

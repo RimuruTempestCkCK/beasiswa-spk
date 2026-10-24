@@ -18,6 +18,7 @@ def evaluate_model(
     Returns dict with all evaluation metrics.
     """
     y_pred = model.predict(X_test)
+    y_test_arr = np.array(y_test)
     unique_classes = sorted(set(y_test.tolist()))
 
     per_class = {}
@@ -26,6 +27,7 @@ def evaluate_model(
             "precision": float(precision_score(y_test, y_pred, labels=[cls], average="macro", zero_division=0)),
             "recall": float(recall_score(y_test, y_pred, labels=[cls], average="macro", zero_division=0)),
             "f1": float(f1_score(y_test, y_pred, labels=[cls], average="macro", zero_division=0)),
+            "support": int((y_test_arr == cls).sum()),
         }
 
     return {

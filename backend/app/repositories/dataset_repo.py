@@ -58,12 +58,19 @@ class DatasetRepository:
         data_status: Optional[str] = None,
         skip: int = 0,
         limit: int = 20,
+        search: Optional[str] = None,
     ) -> Tuple[int, List[StudentRecord]]:
         q = self.db.query(StudentRecord)
         if dataset_batch_id is not None:
             q = q.filter(StudentRecord.dataset_batch_id == dataset_batch_id)
         if data_status is not None:
             q = q.filter(StudentRecord.data_status == data_status)
+        if search:
+            search_pattern = f"%{search}%"
+            q = q.filter(
+                (StudentRecord.student_code.ilike(search_pattern)) |
+                (StudentRecord.student_name.ilike(search_pattern))
+            )
         total = q.count()
         items = q.order_by(StudentRecord.id).offset(skip).limit(limit).all()
         return total, items

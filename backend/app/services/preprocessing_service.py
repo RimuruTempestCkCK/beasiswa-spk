@@ -10,6 +10,7 @@ from app.core.config import settings
 from app.repositories.preprocessing_repo import PreprocessingRepository
 from app.repositories.dataset_repo import DatasetRepository
 from app.models.preprocessing import RunStatus
+from app.models.dataset import DatasetBatch
 from app.ml.preprocessing import preprocess_train, save_preprocessing_artifact
 from app.ml.data_validation import REQUIRED_FEATURES
 
@@ -23,12 +24,28 @@ class PreprocessingService:
     def list_runs(self, page: int = 1, page_size: int = 20) -> dict:
         skip = (page - 1) * page_size
         total, items = self.repo.list_runs(skip=skip, limit=page_size)
+        batches = {b.id: b.batch_name for b in self.db.query(DatasetBatch).all()}
+        for r in items:
+            setattr(r, "dataset_name", batches.get(r.dataset_batch_id, f"Dataset #{r.dataset_batch_id}"))
+            setattr(r, "dataset_id", r.dataset_batch_id)
+            cfg = r.config or {}
+            norm = cfg.get("normalization", "minmax")
+            setattr(r, "normalization", norm)
+            setattr(r, "normalization_method", norm)
         return {"total": total, "page": page, "page_size": page_size, "items": items}
 
     def get_run(self, run_id: int):
         run = self.repo.get_by_id(run_id)
         if not run:
             raise HTTPException(status_code=404, detail="Preprocessing run not found")
+        batch = self.dataset_repo.get_batch_by_id(run.dataset_batch_id)
+        if batch:
+            setattr(run, "dataset_name", batch.batch_name)
+        setattr(run, "dataset_id", run.dataset_batch_id)
+        cfg = run.config or {}
+        norm = cfg.get("normalization", "minmax")
+        setattr(run, "normalization", norm)
+        setattr(run, "normalization_method", norm)
         return run
 
     def create_run(

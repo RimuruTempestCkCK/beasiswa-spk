@@ -27,12 +27,19 @@ def get_dashboard_summary(db: Session = Depends(get_db), current_user=Depends(ge
             "total_clustering_experiments": total_clustering_runs,
             "active_ready_models": active_models_count,
         },
+        "total_datasets": total_batches,
+        "total_records": total_records,
+        "total_clustering_runs": total_clustering_runs,
+        "active_models": active_models_count,
         "latest_batches": [
             {
                 "id": b.id,
                 "batch_name": b.batch_name,
+                "name": b.batch_name,
                 "source_type": b.source_type,
                 "total_rows": b.total_rows,
+                "record_count": b.total_rows,
+                "description": b.dataset_description,
                 "status": b.status,
                 "created_at": b.created_at,
             }
@@ -42,9 +49,12 @@ def get_dashboard_summary(db: Session = Depends(get_db), current_user=Depends(ge
             {
                 "id": m.id,
                 "model_name": m.model_name,
+                "name": m.model_name,
                 "model_version": m.model_version,
+                "version": m.model_version,
                 "status": m.status,
                 "algorithm": m.algorithm,
+                "accuracy": m.metrics.get("accuracy") if m.metrics else None,
                 "created_at": m.created_at,
             }
             for m in latest_models
