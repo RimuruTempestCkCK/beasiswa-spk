@@ -1,9 +1,13 @@
 import { NavLink } from 'react-router';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { logout } from '../features/auth/authSlice';
 
 export default function Sidebar({ mobileOpen, onCloseMobile }) {
   const dispatch = useDispatch();
+  const user = useSelector((s) => s.auth?.user);
+  const userRole = user?.role || 'operator';
+  const isAdmin = userRole === 'admin';
+  const isReviewer = userRole === 'reviewer';
 
   const handleLogout = () => {
     dispatch(logout());
@@ -248,28 +252,33 @@ export default function Sidebar({ mobileOpen, onCloseMobile }) {
               </li>
             </ul>
 
-            <p className="nav-heading">Administrasi</p>
-            <ul className="nav-list">
-              <li>
-                <NavLink to="/users" className={navClass} onClick={onCloseMobile}>
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    aria-hidden="true"
-                    focusable="false"
-                  >
-                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-                    <circle cx="9" cy="7" r="4" />
-                    <path d="M22 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8" />
-                  </svg>
-                  <span className="nav-label">Manajemen Pengguna</span>
-                </NavLink>
-              </li>
-            </ul>
+            {/* Navigasi Administrasi: Khusus Administrator */}
+            {isAdmin && (
+              <>
+                <p className="nav-heading">Administrasi</p>
+                <ul className="nav-list">
+                  <li>
+                    <NavLink to="/users" className={navClass} onClick={onCloseMobile}>
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        aria-hidden="true"
+                        focusable="false"
+                      >
+                        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                        <circle cx="9" cy="7" r="4" />
+                        <path d="M22 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8" />
+                      </svg>
+                      <span className="nav-label">Manajemen Pengguna</span>
+                    </NavLink>
+                  </li>
+                </ul>
+              </>
+            )}
 
             <p className="nav-heading">Akun</p>
             <ul className="nav-list">
