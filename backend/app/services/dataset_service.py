@@ -24,7 +24,24 @@ class DatasetService:
     def list_batches(self, page: int = 1, page_size: int = 20) -> dict:
         skip = (page - 1) * page_size
         total, items = self.repo.list_batches(skip=skip, limit=page_size)
-        return {"total": total, "page": page, "page_size": page_size, "items": items}
+        serialized_items = [
+            {
+                "id": b.id,
+                "batch_name": b.batch_name,
+                "name": b.batch_name,
+                "source_type": b.source_type,
+                "source_filename": b.source_filename,
+                "dataset_description": b.dataset_description,
+                "description": b.dataset_description,
+                "total_rows": b.total_rows,
+                "record_count": b.total_rows,
+                "status": b.status,
+                "created_by": b.created_by,
+                "created_at": b.created_at,
+            }
+            for b in items
+        ]
+        return {"total": total, "page": page, "page_size": page_size, "items": serialized_items}
 
     def create_batch(self, batch_name: str, source_type: str, description: Optional[str], created_by: Optional[int]):
         return self.repo.create_batch(batch_name, source_type, description, created_by)

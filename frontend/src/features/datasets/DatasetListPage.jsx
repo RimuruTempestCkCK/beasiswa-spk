@@ -137,11 +137,11 @@ export default function DatasetListPage() {
                           style={{ cursor: 'pointer' }}
                           onClick={() => navigate(`/datasets/${d.id}`)}
                         >
-                          {d.name}
+                          {d.batch_name || d.name}
                         </span>
                       </td>
-                      <td>{d.description || <span className="text-muted">-</span>}</td>
-                      <td className="num text-end">{d.record_count ?? 0}</td>
+                      <td>{d.dataset_description || d.description || <span className="text-muted">-</span>}</td>
+                      <td className="num text-end">{(d.total_rows ?? d.record_count ?? 0).toLocaleString('id-ID')}</td>
                       <td>
                         <span
                           className={`status status-${
