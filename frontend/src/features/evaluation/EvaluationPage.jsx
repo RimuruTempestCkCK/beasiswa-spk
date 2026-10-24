@@ -157,68 +157,42 @@ export default function EvaluationPage() {
         </div>
       ) : (
         <>
-          {/* Summary KPI Tiles */}
-          <section className="kpis mb-3" aria-label="Ringkasan Performa Model">
-            <div className="kpi py-2">
-              <div className="kpi-top">
-                <span className="kpi-icon tone-teal">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <circle cx="12" cy="12" r="10" />
-                    <polyline points="12 6 12 12 16 14" />
-                  </svg>
-                </span>
-                <p className="kpi-label">Akurasi Pengujian</p>
-              </div>
-              <p className="kpi-value">
-                {metrics.accuracy !== undefined ? `${(Number(metrics.accuracy) * 100).toFixed(2)}%` : '-'}
-              </p>
-              <p className="kpi-note">Proporsi klasifikasi benar</p>
-            </div>
+          {/* Compact Inline Metrics Bar */}
+          <section className="panel mb-3">
+            <div className="panel-body p-3">
+              <div className="row g-2 text-center align-items-center">
+                <div className="col-6 col-md-3 border-end-md">
+                  <div className="text-muted small mb-1">Akurasi Pengujian</div>
+                  <div className="fs-4 fw-bold text-teal font-monospace lh-1">
+                    {metrics.accuracy !== undefined ? `${(Number(metrics.accuracy) * 100).toFixed(2)}%` : '-'}
+                  </div>
+                  <div className="text-muted" style={{ fontSize: '0.72rem' }}>Klasifikasi Benar</div>
+                </div>
 
-            <div className="kpi py-2">
-              <div className="kpi-top">
-                <span className="kpi-icon tone-amber">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-                    <polyline points="22 4 12 14.01 9 11.01" />
-                  </svg>
-                </span>
-                <p className="kpi-label">Macro Precision</p>
-              </div>
-              <p className="kpi-value">
-                {metrics.precision_macro !== undefined ? `${(Number(metrics.precision_macro) * 100).toFixed(2)}%` : '-'}
-              </p>
-              <p className="kpi-note">Rata-rata ketepatan prediksi</p>
-            </div>
+                <div className="col-6 col-md-3 border-end-md">
+                  <div className="text-muted small mb-1">Macro Precision</div>
+                  <div className="fs-4 fw-bold text-amber font-monospace lh-1">
+                    {metrics.precision_macro !== undefined ? `${(Number(metrics.precision_macro) * 100).toFixed(2)}%` : '-'}
+                  </div>
+                  <div className="text-muted" style={{ fontSize: '0.72rem' }}>Ketepatan Prediksi</div>
+                </div>
 
-            <div className="kpi py-2">
-              <div className="kpi-top">
-                <span className="kpi-icon tone-green">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <polyline points="20 6 9 17 4 12" />
-                  </svg>
-                </span>
-                <p className="kpi-label">Macro Recall</p>
-              </div>
-              <p className="kpi-value">
-                {metrics.recall_macro !== undefined ? `${(Number(metrics.recall_macro) * 100).toFixed(2)}%` : '-'}
-              </p>
-              <p className="kpi-note">Rata-rata sensitivitas temuan</p>
-            </div>
+                <div className="col-6 col-md-3 border-end-md">
+                  <div className="text-muted small mb-1">Macro Recall</div>
+                  <div className="fs-4 fw-bold text-success font-monospace lh-1">
+                    {metrics.recall_macro !== undefined ? `${(Number(metrics.recall_macro) * 100).toFixed(2)}%` : '-'}
+                  </div>
+                  <div className="text-muted" style={{ fontSize: '0.72rem' }}>Sensitivitas Temuan</div>
+                </div>
 
-            <div className="kpi py-2">
-              <div className="kpi-top">
-                <span className="kpi-icon tone-slate">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-                  </svg>
-                </span>
-                <p className="kpi-label">Macro F1-Score</p>
+                <div className="col-6 col-md-3">
+                  <div className="text-muted small mb-1">Macro F1-Score</div>
+                  <div className="fs-4 fw-bold text-secondary font-monospace lh-1">
+                    {metrics.f1_macro !== undefined ? `${(Number(metrics.f1_macro) * 100).toFixed(2)}%` : '-'}
+                  </div>
+                  <div className="text-muted" style={{ fontSize: '0.72rem' }}>Presisi vs Recall</div>
+                </div>
               </div>
-              <p className="kpi-value">
-                {metrics.f1_macro !== undefined ? `${(Number(metrics.f1_macro) * 100).toFixed(2)}%` : '-'}
-              </p>
-              <p className="kpi-note">Keseimbangan presisi &amp; recall</p>
             </div>
           </section>
         </>
