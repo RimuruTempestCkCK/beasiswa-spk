@@ -22,7 +22,7 @@ class PredictionService:
 
     def predict(
         self,
-        model_version_id: int,
+        model_version_id: Optional[int],
         ipk: float,
         parent_income: float,
         family_dependents: int,
@@ -32,10 +32,17 @@ class PredictionService:
         notes: Optional[str],
         created_by: Optional[int],
     ):
-        # Validate model
-        model = self.model_repo.get_by_id(model_version_id)
+        # Resolve target model: use provided ID or resolve active model deterministically
+        if model_version_id:
+            model = self.model_repo.get_by_id(model_version_id)
+        else:
+            model = self.model_repo.get_active_model()
+
         if not model:
-            raise HTTPException(status_code=404, detail="Model version not found")
+            raise HTTPException(
+                status_code=404,
+                detail="Model version not found or no active model currently available in 'ready' status"
+            )
         if model.status != ModelStatus.ready.value:
             raise HTTPException(status_code=400, detail="Model is not in 'ready' status")
         if not model.artifact_path:
@@ -53,7 +60,7 @@ class PredictionService:
         predicted_cluster, confidence_score = predict_single(model.artifact_path, features)
 
         prediction = self.prediction_repo.create(
-            model_version_id=model_version_id,
+            model_version_id=model.id,
             ipk=ipk,
             parent_income=parent_income,
             family_dependents=family_dependents,

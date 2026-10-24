@@ -4,7 +4,7 @@ from datetime import datetime
 
 
 class PredictionRequest(BaseModel):
-    model_version_id: int
+    model_version_id: Optional[int] = None
     ipk: float
     parent_income: float
     family_dependents: int
@@ -44,7 +44,7 @@ class PredictionRequest(BaseModel):
 
 class PredictionOut(BaseModel):
     id: int
-    model_version_id: int
+    model_version_id: Optional[int] = None
     ipk: float
     parent_income: float
     family_dependents: int

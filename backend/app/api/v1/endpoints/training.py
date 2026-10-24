@@ -42,6 +42,15 @@ def train_model(
     return model
 
 
+@router.get("/active", response_model=ModelVersionResponse)
+def get_active_model(
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    service = TrainingService(db)
+    return service.get_active_model()
+
+
 @router.get("/{model_id}", response_model=ModelVersionResponse)
 def get_model(
     model_id: int,

@@ -43,5 +43,40 @@ class ModelRepository:
         return (
             self.db.query(ModelVersion)
             .filter(ModelVersion.status == ModelStatus.ready)
+            .order_by(ModelVersion.created_at.desc(), ModelVersion.id.desc())
             .all()
         )
+
+    def get_active_model(self) -> Optional[ModelVersion]:
+        """
+        Return the single active model (status='ready'), deterministically by latest created_at.
+        """
+        return (
+            self.db.query(ModelVersion)
+            .filter(ModelVersion.status == ModelStatus.ready)
+            .order_by(ModelVersion.created_at.desc(), ModelVersion.id.desc())
+            .first()
+        )
+
+    def set_single_ready(self, model_id: int, **kwargs) -> Optional[ModelVersion]:
+        """
+        Atomically set one model as ready, and archive previous ready models.
+        """
+        target = self.get_by_id(model_id)
+        if not target:
+            return None
+
+        # Archive other ready models
+        self.db.query(ModelVersion).filter(
+            ModelVersion.status == ModelStatus.ready,
+            ModelVersion.id != model_id
+        ).update({"status": ModelStatus.archived.value}, synchronize_session=False)
+
+        target.status = ModelStatus.ready.value
+        for key, value in kwargs.items():
+            if hasattr(target, key):
+                setattr(target, key, value)
+
+        self.db.commit()
+        self.db.refresh(target)
+        return target

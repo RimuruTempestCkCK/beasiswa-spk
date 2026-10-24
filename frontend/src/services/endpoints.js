@@ -36,6 +36,7 @@ export const API = {
   MODELS: {
     TRAIN: '/api/v1/models/train',
     LIST: '/api/v1/models',
+    ACTIVE: '/api/v1/models/active',
     DETAIL: (id) => `/api/v1/models/${id}`,
     SET_READY: (id) => `/api/v1/models/${id}/set-ready`,
     ARCHIVE: (id) => `/api/v1/models/${id}/archive`,

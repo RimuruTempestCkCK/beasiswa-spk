@@ -21,17 +21,24 @@ export default function PredictionsPage() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    // Resolve single active ready model deterministically from backend
     apiClient
-      .get(API.MODELS.LIST)
+      .get(API.MODELS.ACTIVE)
       .then((res) => {
-        const items = res.data.items || res.data || [];
-        const readyModels = items.filter((m) => m.status === 'ready');
-        setModels(readyModels);
-        if (readyModels.length > 0) {
-          setSelectedModelId(readyModels[0].id);
+        if (res.data && res.data.id) {
+          setModels([res.data]);
+          setSelectedModelId(res.data.id);
         }
       })
-      .catch(() => {});
+      .catch(() => {
+        // Fallback list of ready models if specific active route is empty
+        apiClient.get(API.MODELS.LIST).then((res) => {
+          const items = res.data.items || res.data || [];
+          const readyModels = items.filter((m) => m.status === 'ready');
+          setModels(readyModels);
+          if (readyModels.length > 0) setSelectedModelId(readyModels[0].id);
+        });
+      });
     fetchHistory();
   }, []);
 

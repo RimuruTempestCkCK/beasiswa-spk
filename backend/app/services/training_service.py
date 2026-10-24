@@ -85,7 +85,7 @@ class TrainingService:
             scaler = prep_artifact["scaler"]
             medians = prep_artifact["medians"]
 
-            # Get records
+            # Get records and raw dataframe
             records = self.dataset_repo.get_records_for_batch(prep_run.dataset_batch_id)
             data = []
             for r in records:
@@ -97,35 +97,71 @@ class TrainingService:
                     "nonacademic_achievement_score": float(r.nonacademic_achievement_score) if r.nonacademic_achievement_score is not None else None,
                     "attendance_percentage": float(r.attendance_percentage) if r.attendance_percentage is not None else None,
                 })
-            df = pd.DataFrame(data)
-            X = preprocess_transform(df, scaler, medians)
+            df_raw = pd.DataFrame(data)
 
             # Get cluster assignments as labels
             assignments = self.clustering_repo.get_assignments_for_run(clustering_run.id)
             record_id_to_label = {a.student_record_id: a.cluster_label for a in assignments}
             record_ids = [r.id for r in records]
-            y = [record_id_to_label.get(rid, 0) for rid in record_ids]
+            y = np.array([record_id_to_label.get(rid, 0) for rid in record_ids])
 
-            # Train
+            # Split RAW data into Train and Test before fitting scaler to eliminate Data Leakage
             config = model.training_config or {}
-            trained_model, X_train, X_test, y_train, y_test = train_model(X, y, config)
+            test_size = config.get("test_size", 0.2)
+            random_state = config.get("random_state", 42)
 
-            # Evaluate
+            from sklearn.model_selection import train_test_split
+            unique_classes = np.unique(y)
+            stratify = y if len(unique_classes) > 1 and len(y) * test_size >= len(unique_classes) else None
+
+            train_idx, test_idx = train_test_split(
+                np.arange(len(df_raw)),
+                test_size=test_size,
+                random_state=random_state,
+                stratify=stratify,
+            )
+
+            df_train = df_raw.iloc[train_idx].reset_index(drop=True)
+            df_test = df_raw.iloc[test_idx].reset_index(drop=True)
+            y_train = y[train_idx]
+            y_test = y[test_idx]
+
+            # Fit preprocessing ONLY on training data
+            from app.ml.preprocessing import preprocess_train, preprocess_transform
+            X_train, train_scaler, train_medians = preprocess_train(df_train)
+
+            # Transform test data using training statistics (NO fitting on test data)
+            X_test = preprocess_transform(df_test, train_scaler, train_medians)
+
+            # Train MLP on strictly training set
+            from sklearn.neural_network import MLPClassifier
+            hidden_layers = tuple(config.get("hidden_layer_sizes", [64, 32]))
+            trained_model = MLPClassifier(
+                hidden_layer_sizes=hidden_layers,
+                learning_rate_init=config.get("learning_rate_init", 0.001),
+                max_iter=config.get("max_iter", 500),
+                random_state=random_state,
+                activation=config.get("activation", "relu"),
+                early_stopping=True,
+                validation_fraction=0.1,
+                n_iter_no_change=20,
+            )
+            trained_model.fit(X_train, y_train)
+
+            # Evaluate on test set
             metrics = evaluate_model(trained_model, X_test, y_test)
             metrics["n_train_samples"] = len(X_train)
+            metrics["n_test_samples"] = len(X_test)
+            metrics["leakage_free_validation"] = True
 
-            # Save artifact
+            # Save artifact (model + scaler and medians fitted strictly on train data)
             artifact_dir = settings.get_artifacts_dir()
             artifact_filename = f"model_{model_id}_{uuid.uuid4().hex[:8]}.joblib"
             artifact_path = os.path.join(artifact_dir, artifact_filename)
-            save_model_artifact(artifact_path, trained_model, scaler, medians, config)
+            save_model_artifact(artifact_path, trained_model, train_scaler, train_medians, config)
 
-            self.model_repo.update(
-                model_id,
-                status=ModelStatus.ready.value,
-                metrics=metrics,
-                artifact_path=artifact_path,
-            )
+            # Atomic single active model activation: set new ready model as single ready/active model
+            self.model_repo.set_single_ready(model_id, metrics=metrics, artifact_path=artifact_path)
 
         except Exception as e:
             self.model_repo.update(
@@ -138,8 +174,17 @@ class TrainingService:
         model = self.get_model(model_id)
         if not model.artifact_path:
             raise HTTPException(status_code=400, detail="Model has no artifact, cannot set ready")
-        return self.model_repo.update(model_id, status=ModelStatus.ready.value)
+        return self.model_repo.set_single_ready(model_id)
 
     def archive_model(self, model_id: int) -> Any:
         self.get_model(model_id)
         return self.model_repo.update(model_id, status=ModelStatus.archived.value)
+
+    def get_active_model(self) -> ModelVersion:
+        active = self.model_repo.get_active_model()
+        if not active:
+            raise HTTPException(
+                status_code=404,
+                detail="Belum ada model aktif berstatus 'ready'. Silakan latih atau aktifkan model terlebih dahulu.",
+            )
+        return active
