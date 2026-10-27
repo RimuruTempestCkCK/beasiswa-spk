@@ -44,6 +44,7 @@ export const API = {
   },
   PREDICTIONS: {
     CREATE: '/api/v1/predictions',
+    BATCH: '/api/v1/predictions/batch',
     LIST: '/api/v1/predictions',
     DELETE: (id) => `/api/v1/predictions/${id}`,
   },

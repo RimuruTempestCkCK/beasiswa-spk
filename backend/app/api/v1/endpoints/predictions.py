@@ -1,4 +1,5 @@
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, UploadFile, File, Form
+from typing import Optional
 from sqlalchemy.orm import Session
 from app.db.session import get_db
 from app.core.security import get_current_user, check_role
@@ -37,6 +38,21 @@ def create_prediction(
         nonacademic_achievement_score=payload.nonacademic_achievement_score,
         attendance_percentage=payload.attendance_percentage,
         notes=payload.notes,
+        created_by=current_user.id,
+    )
+
+
+@router.post("/batch")
+def create_batch_prediction(
+    file: UploadFile = File(...),
+    model_version_id: Optional[int] = Form(None),
+    db: Session = Depends(get_db),
+    current_user=Depends(check_role("admin", "operator")),
+):
+    service = PredictionService(db)
+    return service.predict_batch_csv(
+        file=file,
+        model_version_id=model_version_id,
         created_by=current_user.id,
     )
 

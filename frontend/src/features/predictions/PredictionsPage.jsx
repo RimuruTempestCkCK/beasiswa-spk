@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { toast } from 'react-toastify';
 import apiClient from '../../services/apiClient';
 import { API } from '../../services/endpoints';
@@ -8,6 +8,9 @@ import Modal from '../../components/Modal';
 export default function PredictionsPage() {
   const [models, setModels] = useState([]);
   const [selectedModelId, setSelectedModelId] = useState('');
+  const [mode, setMode] = useState('single'); // 'single' | 'batch'
+  
+  // Single form data
   const [formData, setFormData] = useState({
     student_name: '',
     student_code: '',
@@ -19,6 +22,12 @@ export default function PredictionsPage() {
     attendance_percentage: '',
     notes: '',
   });
+
+  // Batch CSV file
+  const [batchFile, setBatchFile] = useState(null);
+  const [batchResults, setBatchResults] = useState(null);
+  const fileInputRef = useRef(null);
+
   const [result, setResult] = useState(null);
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -30,7 +39,6 @@ export default function PredictionsPage() {
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
 
   useEffect(() => {
-    // Resolve single active ready model deterministically from backend
     apiClient
       .get(API.MODELS.ACTIVE)
       .then((res) => {
@@ -40,7 +48,6 @@ export default function PredictionsPage() {
         }
       })
       .catch(() => {
-        // Fallback list of ready models if specific active route is empty
         apiClient.get(API.MODELS.LIST).then((res) => {
           const items = res.data.items || res.data || [];
           const readyModels = items.filter((m) => m.status === 'ready');
@@ -64,7 +71,7 @@ export default function PredictionsPage() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSingleSubmit = (e) => {
     e.preventDefault();
     if (!selectedModelId) {
       toast.warning('Pilih model berstatus ready terlebih dahulu!');
@@ -100,6 +107,61 @@ export default function PredictionsPage() {
       .finally(() => setLoading(false));
   };
 
+  const handleBatchSubmit = (e) => {
+    e.preventDefault();
+    if (!batchFile) {
+      toast.warning('Silakan pilih berkas CSV / Excel terlebih dahulu!');
+      return;
+    }
+    if (!selectedModelId) {
+      toast.warning('Pilih model berstatus ready terlebih dahulu!');
+      return;
+    }
+
+    setLoading(true);
+    setBatchResults(null);
+
+    const data = new FormData();
+    data.append('file', batchFile);
+    data.append('model_version_id', selectedModelId);
+
+    apiClient
+      .post(API.PREDICTIONS.BATCH, data, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      })
+      .then((res) => {
+        setBatchResults(res.data.items || []);
+        toast.success(`Berhasil memproses prediksi untuk ${res.data.total_processed} mahasiswa!`);
+        fetchHistory();
+        if (fileInputRef.current) fileInputRef.current.value = '';
+        setBatchFile(null);
+      })
+      .catch((err) => {
+        toast.error(err.response?.data?.detail || 'Gagal memproses prediksi berkas CSV');
+      })
+      .finally(() => setLoading(false));
+  };
+
+  const handleDownloadSampleCSV = () => {
+    const csvContent =
+      'nim,nama,ipk,penghasilan_ortu,jumlah_tanggungan,skor_prestasi_akademik,skor_prestasi_nonakademik,persentase_kehadiran,catatan\n' +
+      'MHS2024101,Rizky Fauzan,3.85,1200000,4,3.5,3.0,96,Pengajuan Beasiswa Mandiri\n' +
+      'MHS2024102,Dewi Anggraini,3.40,2500000,3,2.0,1.5,88,Kandidat Cadangan Kuota\n' +
+      'MHS2024103,Bagas Pratama,2.45,6500000,1,0.5,0.0,70,Data Pembanding Tidak Mampu\n';
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', 'template_prediksi_banyak.csv');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handlePrint = () => {
+    window.print();
+  };
+
   const handleOpenHistoryDetail = (item) => {
     setSelectedHistoryItem(item);
     setIsHistoryModalOpen(true);
@@ -115,109 +177,340 @@ export default function PredictionsPage() {
     setDeleting(true);
     try {
       await apiClient.delete(API.PREDICTIONS.DELETE(deleteTarget.id));
-      toast.success(`Riwayat inferensi #${deleteTarget.id} berhasil dihapus`);
+      toast.success(`Riwayat #${deleteTarget.id} berhasil dihapus`);
       setIsDeleteModalOpen(false);
       setDeleteTarget(null);
       fetchHistory();
     } catch (err) {
-      toast.error(err.response?.data?.detail || 'Gagal menghapus riwayat inferensi');
+      toast.error(err.response?.data?.detail || 'Gagal menghapus riwayat');
     } finally {
       setDeleting(false);
     }
   };
 
+  const getStatusBadge = (cluster) => {
+    const c = Number(cluster);
+    if (c === 2) return <span className="badge bg-success-subtle text-success border border-success fw-bold">Sangat Layak (C2)</span>;
+    if (c === 1) return <span className="badge bg-info-subtle text-info border border-info">Layak (C1)</span>;
+    if (c === 3) return <span className="badge bg-warning-subtle text-warning border border-warning">Dipertimbangkan (C3)</span>;
+    return <span className="badge bg-danger-subtle text-danger border border-danger">Tidak Layak (C0)</span>;
+  };
+
   return (
     <>
-      <PageTitle
-        heading="Prediksi Kelayakan Beasiswa"
-        subheading="Inferensi klasifikasi data mahasiswa baru ke dalam klaster rekomendasi menggunakan model Backpropagation aktif"
-        eyebrow="Prediksi &amp; Laporan · SPK Beasiswa"
-      />
+      <div className="d-print-none">
+        <PageTitle
+          heading="Prediksi Kelayakan Beasiswa"
+          subheading="Uji kelayakan calon penerima beasiswa secara individu maupun banyak melalui unggah CSV"
+          eyebrow="SPK Beasiswa"
+          actions={
+            <div className="d-flex gap-2">
+              <button
+                type="button"
+                className="btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-1"
+                onClick={handlePrint}
+                title="Cetak atau simpan halaman ini sebagai PDF"
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 15, height: 15 }}>
+                  <polyline points="6 9 6 2 18 2 18 9" />
+                  <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
+                  <rect x="6" y="14" width="12" height="8" />
+                </svg>
+                <span>Cetak / PDF</span>
+              </button>
+            </div>
+          }
+        />
 
-      {/* Analytical decision disclaimer banner */}
-      <div
-        className="alert alert-info d-flex align-items-center gap-3 mb-4"
-        role="alert"
-      >
-        <svg
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          style={{ width: 24, height: 24, flexShrink: 0 }}
-          aria-hidden="true"
-        >
-          <circle cx="12" cy="12" r="10" />
-          <line x1="12" y1="8" x2="12" y2="12" />
-          <line x1="12" y1="16" x2="12.01" y2="16" />
-        </svg>
-        <div>
-          <strong>Disclaimer Rekomendasi Keputusan:</strong> Hasil inferensi ini mengklasifikasikan data pendaftar ke dalam <strong>Pola Klaster Hasil Data Mining</strong> sebagai instrumen pendukung keputusan.
+        {models.length === 0 && (
+          <div className="alert alert-warning mb-4" role="alert">
+            Belum ada model Backpropagation berstatus <strong>ready</strong>. Silakan latih dan aktifkan model di menu <strong>Training Model</strong> terlebih dahulu.
+          </div>
+        )}
+
+        {/* Tab Mode: Prediksi Satuan vs Prediksi Banyak (CSV) */}
+        <div className="mb-4">
+          <ul className="nav nav-pills gap-2">
+            <li className="nav-item">
+              <button
+                type="button"
+                className={`btn btn-sm ${mode === 'single' ? 'btn-primary' : 'btn-outline-secondary'}`}
+                onClick={() => setMode('single')}
+              >
+                Input Perorangan (Satuan)
+              </button>
+            </li>
+            <li className="nav-item">
+              <button
+                type="button"
+                className={`btn btn-sm ${mode === 'batch' ? 'btn-primary' : 'btn-outline-secondary'}`}
+                onClick={() => setMode('batch')}
+              >
+                Unggah Berkas Banyak (Upload CSV)
+              </button>
+            </li>
+          </ul>
         </div>
       </div>
 
-      {models.length === 0 && (
-        <div className="alert alert-warning mb-4" role="alert">
-          Belum ada model Backpropagation berstatus <strong>ready</strong>. Masuk ke menu <strong>Training Model</strong> dan aktifkan model sebelum melakukan prediksi.
+      {/* HEADER CETAK RESMI */}
+      <div className="d-none d-print-block mb-4 text-center border-bottom pb-3">
+        <h3 className="fw-bold text-uppercase mb-1">Hasil Evaluasi Kelayakan Calon Penerima Beasiswa</h3>
+        <p className="small text-muted mb-0">Dicetak pada: {new Date().toLocaleString('id-ID')}</p>
+      </div>
+
+      {/* MODE 1: SATUAN */}
+      {mode === 'single' && (
+        <div className="row g-4 mb-4 d-print-none">
+          <div className="col-12 col-lg-7">
+            <section className="panel h-100">
+              <div className="panel-head">
+                <div>
+                  <h2 className="panel-title">Form Input Mahasiswa</h2>
+                  <p className="panel-sub">Lengkapi identitas dan 6 indikator penilaian</p>
+                </div>
+              </div>
+              <div className="p-3">
+                <form onSubmit={handleSingleSubmit}>
+                  <div className="row g-3 mb-3 p-2 bg-light rounded border">
+                    <div className="col-md-7">
+                      <label className="form-label fw-bold" htmlFor="student_name">
+                        Nama Mahasiswa
+                      </label>
+                      <input
+                        id="student_name"
+                        name="student_name"
+                        type="text"
+                        className="form-control"
+                        value={formData.student_name}
+                        onChange={handleChange}
+                        placeholder="Contoh: Ahmad Fauzi"
+                      />
+                    </div>
+                    <div className="col-md-5">
+                      <label className="form-label fw-bold" htmlFor="student_code">
+                        NIM / No. Pendaftaran
+                      </label>
+                      <input
+                        id="student_code"
+                        name="student_code"
+                        type="text"
+                        className="form-control"
+                        value={formData.student_code}
+                        onChange={handleChange}
+                        placeholder="Contoh: MHS2024001"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="mb-3">
+                    <label className="form-label" htmlFor="model_version_id">
+                      Model Acuan *
+                    </label>
+                    <select
+                      id="model_version_id"
+                      name="model_version_id"
+                      className="form-select"
+                      value={selectedModelId}
+                      onChange={(e) => setSelectedModelId(e.target.value)}
+                      required
+                    >
+                      <option value="">-- Pilih Model --</option>
+                      {models.map((m) => (
+                        <option key={m.id} value={m.id}>
+                          {m.model_name || `Model v${m.id}`} ({m.metrics?.accuracy ? `Akurasi ${(m.metrics.accuracy * 100).toFixed(1)}%` : 'Ready'})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="row g-3 mb-3">
+                    <div className="col-md-6">
+                      <label className="form-label" htmlFor="ipk">IPK (0.00 - 4.00) *</label>
+                      <input
+                        id="ipk"
+                        name="ipk"
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        max="4"
+                        className="form-control"
+                        value={formData.ipk}
+                        onChange={handleChange}
+                        required
+                        placeholder="3.75"
+                      />
+                    </div>
+                    <div className="col-md-6">
+                      <label className="form-label" htmlFor="parent_income">Penghasilan Ortu (Rp) *</label>
+                      <input
+                        id="parent_income"
+                        name="parent_income"
+                        type="number"
+                        min="0"
+                        className="form-control"
+                        value={formData.parent_income}
+                        onChange={handleChange}
+                        required
+                        placeholder="1500000"
+                      />
+                    </div>
+                    <div className="col-md-6">
+                      <label className="form-label" htmlFor="family_dependents">Jumlah Tanggungan *</label>
+                      <input
+                        id="family_dependents"
+                        name="family_dependents"
+                        type="number"
+                        min="0"
+                        className="form-control"
+                        value={formData.family_dependents}
+                        onChange={handleChange}
+                        required
+                        placeholder="3"
+                      />
+                    </div>
+                    <div className="col-md-6">
+                      <label className="form-label" htmlFor="academic_achievement_score">Prestasi Akademik (0 - 4) *</label>
+                      <input
+                        id="academic_achievement_score"
+                        name="academic_achievement_score"
+                        type="number"
+                        step="0.1"
+                        min="0"
+                        max="4"
+                        className="form-control"
+                        value={formData.academic_achievement_score}
+                        onChange={handleChange}
+                        required
+                        placeholder="3.0"
+                      />
+                    </div>
+                    <div className="col-md-6">
+                      <label className="form-label" htmlFor="nonacademic_achievement_score">Prestasi Non-Akademik (0 - 4) *</label>
+                      <input
+                        id="nonacademic_achievement_score"
+                        name="nonacademic_achievement_score"
+                        type="number"
+                        step="0.1"
+                        min="0"
+                        max="4"
+                        className="form-control"
+                        value={formData.nonacademic_achievement_score}
+                        onChange={handleChange}
+                        required
+                        placeholder="2.0"
+                      />
+                    </div>
+                    <div className="col-md-6">
+                      <label className="form-label" htmlFor="attendance_percentage">Kehadiran (%) *</label>
+                      <input
+                        id="attendance_percentage"
+                        name="attendance_percentage"
+                        type="number"
+                        step="0.1"
+                        min="0"
+                        max="100"
+                        className="form-control"
+                        value={formData.attendance_percentage}
+                        onChange={handleChange}
+                        required
+                        placeholder="95"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="mb-4">
+                    <label className="form-label" htmlFor="notes">Catatan (Opsional)</label>
+                    <input
+                      id="notes"
+                      name="notes"
+                      type="text"
+                      className="form-control"
+                      value={formData.notes}
+                      onChange={handleChange}
+                      placeholder="Keterangan singkat"
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    className="btn btn-primary w-100 py-2 d-flex align-items-center justify-content-center gap-2"
+                    disabled={loading || !selectedModelId}
+                  >
+                    {loading ? (
+                      <div className="spinner-border spinner-border-sm" role="status" />
+                    ) : (
+                      <span>Jalankan Prediksi</span>
+                    )}
+                  </button>
+                </form>
+              </div>
+            </section>
+          </div>
+
+          <div className="col-12 col-lg-5">
+            <section className="panel h-100">
+              <div className="panel-head">
+                <div>
+                  <h2 className="panel-title">Hasil Keputusan Terakhir</h2>
+                  <p className="panel-sub">Ringkasan calon yang baru saja diuji</p>
+                </div>
+              </div>
+              <div className="p-3">
+                {result ? (
+                  <div className="text-center py-3">
+                    <h5 className="fw-bold mb-1">{result.student_name || 'Tanpa Nama'}</h5>
+                    <p className="text-muted small font-monospace mb-3">{result.student_code || 'Tanpa NIM'}</p>
+                    <div className="mb-3">{getStatusBadge(result.predicted_cluster)}</div>
+                    <p className="small text-muted font-monospace">
+                      Confidence Score: {result.confidence_score ? `${(Number(result.confidence_score) * 100).toFixed(1)}%` : '-'}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="text-center py-5 text-muted">
+                    <p className="mb-0 small">Masukkan data mahasiswa di formulir sebelah kiri untuk melihat hasil kelayakan.</p>
+                  </div>
+                )}
+              </div>
+            </section>
+          </div>
         </div>
       )}
 
-      {/* Main Grid: Form and Result Preview */}
-      <div className="row g-4 mb-4">
-        {/* Form Panel */}
-        <div className="col-12 col-lg-7">
-          <section className="panel h-100">
-            <div className="panel-head">
-              <div>
-                <h2 className="panel-title">Form Input Calon Penerima Beasiswa</h2>
-                <p className="panel-sub">
-                  Masukkan identitas mahasiswa beserta 6 indikator penilaian untuk dievaluasi
-                </p>
-              </div>
+      {/* MODE 2: UNGGAH BANYAK (CSV) */}
+      {mode === 'batch' && (
+        <section className="panel mb-4 d-print-none">
+          <div className="panel-head">
+            <div>
+              <h2 className="panel-title">Prediksi Sekaligus Menggunakan Berkas CSV</h2>
+              <p className="panel-sub">Unggah daftar banyak calon mahasiswa untuk diprediksi secara otomatis</p>
             </div>
-            <div className="p-3">
-              <form onSubmit={handleSubmit}>
-                {/* Identitas Mahasiswa */}
-                <div className="row g-3 mb-3 p-2 bg-light rounded border">
-                  <div className="col-md-7">
-                    <label className="form-label fw-bold" htmlFor="student_name">
-                      Nama Mahasiswa / Calon Penerima
-                    </label>
-                    <input
-                      id="student_name"
-                      name="student_name"
-                      type="text"
-                      className="form-control"
-                      value={formData.student_name}
-                      onChange={handleChange}
-                      placeholder="Contoh: Ahmad Fauzi"
-                    />
-                  </div>
-                  <div className="col-md-5">
-                    <label className="form-label fw-bold" htmlFor="student_code">
-                      NIM / No. Pendaftaran
-                    </label>
-                    <input
-                      id="student_code"
-                      name="student_code"
-                      type="text"
-                      className="form-control"
-                      value={formData.student_code}
-                      onChange={handleChange}
-                      placeholder="Contoh: MHS2024001"
-                    />
-                  </div>
+            <button
+              type="button"
+              className="btn btn-sm btn-outline-secondary"
+              onClick={handleDownloadSampleCSV}
+            >
+              Unduh Format Template CSV
+            </button>
+          </div>
+          <div className="p-3">
+            <form onSubmit={handleBatchSubmit}>
+              <div className="row g-3 align-items-center mb-3">
+                <div className="col-md-5">
+                  <label className="form-label fw-bold">Pilih Berkas CSV / Excel</label>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".csv, .xlsx, .xls"
+                    className="form-control"
+                    onChange={(e) => setBatchFile(e.target.files?.[0] || null)}
+                    required
+                  />
+                  <div className="form-text small">Mendukung format .csv atau .xlsx dengan header nama, nim, ipk, dll.</div>
                 </div>
-
-                <div className="mb-3">
-                  <label className="form-label" htmlFor="model_version_id">
-                    Model Backpropagation Aktif *
-                  </label>
+                <div className="col-md-4">
+                  <label className="form-label fw-bold">Model Acuan *</label>
                   <select
-                    id="model_version_id"
-                    name="model_version_id"
                     className="form-select"
                     value={selectedModelId}
                     onChange={(e) => setSelectedModelId(e.target.value)}
@@ -226,299 +519,79 @@ export default function PredictionsPage() {
                     <option value="">-- Pilih Model --</option>
                     {models.map((m) => (
                       <option key={m.id} value={m.id}>
-                        {m.model_name || `Model v${m.id}`} - {m.version || 'v1.0'} (Akurasi: {m.metrics?.accuracy ? `${(m.metrics.accuracy * 100).toFixed(1)}%` : 'Ready'})
+                        {m.model_name || `Model v${m.id}`} ({m.metrics?.accuracy ? `Akurasi ${(m.metrics.accuracy * 100).toFixed(1)}%` : 'Ready'})
                       </option>
                     ))}
                   </select>
                 </div>
-
-                <div className="row g-3 mb-3">
-                  <div className="col-md-6">
-                    <label className="form-label" htmlFor="ipk">
-                      IPK (0.00 - 4.00) *
-                    </label>
-                    <input
-                      id="ipk"
-                      name="ipk"
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      max="4"
-                      className="form-control"
-                      value={formData.ipk}
-                      onChange={handleChange}
-                      required
-                      placeholder="Contoh: 3.65"
-                    />
-                  </div>
-
-                  <div className="col-md-6">
-                    <label className="form-label" htmlFor="parent_income">
-                      Penghasilan Orang Tua (Rp) *
-                    </label>
-                    <input
-                      id="parent_income"
-                      name="parent_income"
-                      type="number"
-                      min="0"
-                      className="form-control"
-                      value={formData.parent_income}
-                      onChange={handleChange}
-                      required
-                      placeholder="Contoh: 2500000"
-                    />
-                  </div>
-
-                  <div className="col-md-6">
-                    <label className="form-label" htmlFor="family_dependents">
-                      Jumlah Tanggungan Keluarga *
-                    </label>
-                    <input
-                      id="family_dependents"
-                      name="family_dependents"
-                      type="number"
-                      min="0"
-                      className="form-control"
-                      value={formData.family_dependents}
-                      onChange={handleChange}
-                      required
-                      placeholder="Contoh: 3"
-                    />
-                  </div>
-
-                  <div className="col-md-6">
-                    <label className="form-label" htmlFor="academic_achievement_score">
-                      Skor Prestasi Akademik (0 - 4) *
-                    </label>
-                    <input
-                      id="academic_achievement_score"
-                      name="academic_achievement_score"
-                      type="number"
-                      step="0.1"
-                      min="0"
-                      max="4"
-                      className="form-control"
-                      value={formData.academic_achievement_score}
-                      onChange={handleChange}
-                      required
-                      placeholder="Contoh: 3.5"
-                    />
-                  </div>
-
-                  <div className="col-md-6">
-                    <label className="form-label" htmlFor="nonacademic_achievement_score">
-                      Skor Prestasi Non-Akademik (0 - 4) *
-                    </label>
-                    <input
-                      id="nonacademic_achievement_score"
-                      name="nonacademic_achievement_score"
-                      type="number"
-                      step="0.1"
-                      min="0"
-                      max="4"
-                      className="form-control"
-                      value={formData.nonacademic_achievement_score}
-                      onChange={handleChange}
-                      required
-                      placeholder="Contoh: 2.0"
-                    />
-                  </div>
-
-                  <div className="col-md-6">
-                    <label className="form-label" htmlFor="attendance_percentage">
-                      Persentase Kehadiran (%) *
-                    </label>
-                    <input
-                      id="attendance_percentage"
-                      name="attendance_percentage"
-                      type="number"
-                      step="0.1"
-                      min="0"
-                      max="100"
-                      className="form-control"
-                      value={formData.attendance_percentage}
-                      onChange={handleChange}
-                      required
-                      placeholder="Contoh: 95"
-                    />
-                  </div>
-                </div>
-
-                <div className="mb-4">
-                  <label className="form-label" htmlFor="notes">
-                    Catatan Tambahan (Opsional)
-                  </label>
-                  <textarea
-                    id="notes"
-                    name="notes"
-                    rows="2"
-                    className="form-control"
-                    value={formData.notes}
-                    onChange={handleChange}
-                    placeholder="Contoh: Pengajuan Beasiswa Prestasi & Tidak Mampu Tahun 2024"
-                  />
-                </div>
-
-                <button
-                  type="submit"
-                  className="btn btn-primary w-100 py-2 d-flex align-items-center justify-content-center gap-2"
-                  disabled={loading || !selectedModelId}
-                >
-                  {loading ? (
-                    <>
-                      <div className="spinner-border spinner-border-sm" role="status" />
-                      <span>Memproses Inferensi Neural Network...</span>
-                    </>
-                  ) : (
-                    <>
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 18, height: 18 }}>
-                        <polygon points="5 3 19 12 5 21 5 3" />
-                      </svg>
-                      <span>Jalankan Prediksi &amp; Tentukan Kelayakan</span>
-                    </>
-                  )}
-                </button>
-              </form>
-            </div>
-          </section>
-        </div>
-
-        {/* Live Result View or Explanatory Placeholder */}
-        <div className="col-12 col-lg-5">
-          <section className="panel h-100">
-            <div className="panel-head">
-              <div>
-                <h2 className="panel-title">Hasil Keputusan Terakhir</h2>
-                <p className="panel-sub">Status rekomendasi langsung untuk calon yang baru saja diuji</p>
-              </div>
-            </div>
-            <div className="p-3">
-              {result ? (
-                <div>
-                  {(() => {
-                    const clusterNum = Number(result.predicted_cluster ?? result.cluster_label);
-                    let badgeColor = 'bg-primary-subtle text-primary border-primary';
-                    let titleStatus = 'Hasil Klasifikasi Klaster';
-                    let descStatus = 'Kandidat memiliki karakteristik yang sesuai dengan pola klaster ini.';
-
-                    if (clusterNum === 2) {
-                      badgeColor = 'bg-success-subtle text-success border-success';
-                      titleStatus = 'SANGAT LAYAK (Prioritas Utama)';
-                      descStatus = 'Prestasi akademik & kehadiran sangat tinggi serta kondisi ekonomi keluarga paling membutuhkan bantuan.';
-                    } else if (clusterNum === 1) {
-                      badgeColor = 'bg-info-subtle text-info border-info';
-                      titleStatus = 'LAYAK (Kandidat Cadangan)';
-                      descStatus = 'Catatan akademik baik dan kondisi ekonomi menengah-ke-bawah yang memenuhi kriteria penerimaan beasiswa.';
-                    } else if (clusterNum === 3) {
-                      badgeColor = 'bg-warning-subtle text-warning border-warning';
-                      titleStatus = 'DIPERTIMBANGKAN (Prioritas Rendah)';
-                      descStatus = 'Capaian akademik cukup, namun tingkat kebutuhan finansial tidak mendesak.';
-                    } else if (clusterNum === 0) {
-                      badgeColor = 'bg-danger-subtle text-danger border-danger';
-                      titleStatus = 'TIDAK LAYAK';
-                      descStatus = 'Terhitung mampu secara sosio-ekonomi atau catatan akademik belum memenuhi kriteria penerimaan.';
-                    }
-
-                    return (
-                      <div>
-                        {result.student_name && (
-                          <div className="text-center pb-2 mb-2 border-bottom">
-                            <h5 className="fw-bold mb-0 text-dark">{result.student_name}</h5>
-                            <small className="text-muted font-monospace">{result.student_code || 'No NIM'}</small>
-                          </div>
-                        )}
-                        <div className="text-center mb-3">
-                          <span className={`badge ${badgeColor} fs-5 px-3 py-2 border mb-2 d-inline-block`}>
-                            Klaster C{clusterNum}
-                          </span>
-                          <h5 className="fw-bold mb-1">{titleStatus}</h5>
-                          <p className="text-muted small mb-0 font-monospace">
-                            Confidence Score: {result.confidence_score ? `${(Number(result.confidence_score) * 100).toFixed(2)}%` : '-'}
-                          </p>
-                        </div>
-                        <div className="p-3 rounded mb-3 bg-light border small">
-                          <p className="mb-0 text-muted">{descStatus}</p>
-                        </div>
-                      </div>
-                    );
-                  })()}
-                </div>
-              ) : (
-                <div className="text-center py-5 text-muted">
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    style={{ width: 48, height: 48, opacity: 0.4 }}
-                    className="mb-3"
+                <div className="col-md-3 pt-md-4">
+                  <button
+                    type="submit"
+                    className="btn btn-primary w-100 py-2"
+                    disabled={loading || !batchFile || !selectedModelId}
                   >
-                    <circle cx="12" cy="12" r="10" />
-                    <line x1="12" y1="8" x2="12" y2="12" />
-                    <line x1="12" y1="16" x2="12.01" y2="16" />
-                  </svg>
-                  <p className="mb-0 small">
-                    Masukkan data calon penerima beasiswa lalu klik tombol untuk melihat hasil analisis kelayakan di sini.
-                  </p>
+                    {loading ? (
+                      <div className="spinner-border spinner-border-sm" role="status" />
+                    ) : (
+                      'Proses Prediksi Berkas'
+                    )}
+                  </button>
                 </div>
-              )}
-            </div>
-          </section>
-        </div>
-      </div>
+              </div>
+            </form>
 
-      {/* Prediction History Table */}
+            {batchResults && batchResults.length > 0 && (
+              <div className="alert alert-success mt-3 py-2 mb-0 small">
+                Berhasil memproses <strong>{batchResults.length}</strong> data. Hasil sudah otomatis tersimpan di tabel riwayat di bawah.
+              </div>
+            )}
+          </div>
+        </section>
+      )}
+
+      {/* TABEL HASIL / RIWAYAT PREDIKSI */}
       <section className="panel mb-4">
-        <div className="panel-head">
+        <div className="panel-head d-print-none">
           <div>
-            <h2 className="panel-title">Riwayat Prediksi Calon Penerima Beasiswa</h2>
-            <p className="panel-sub">Daftar calon yang telah diuji (nama mahasiswa, nilai, dan klaster keputusan)</p>
+            <h2 className="panel-title">Daftar Hasil Keputusan Calon Penerima Beasiswa</h2>
+            <p className="panel-sub">Daftar mahasiswa yang telah diuji (NIM, Nama, Nilai Indikator, dan Rekomendasi Kelayakan)</p>
           </div>
         </div>
         <div className="table-wrap">
-          <table className="table-data table-stack">
+          <table className="table-data table-stack align-middle">
             <thead>
               <tr>
-                <th scope="col">Waktu</th>
+                <th scope="col" style={{ width: 45 }} className="text-center">No</th>
                 <th scope="col">Nama Mahasiswa</th>
                 <th scope="col">NIM</th>
                 <th scope="col" className="text-end">IPK</th>
                 <th scope="col" className="text-end">Gaji Ortu</th>
-                <th scope="col">Klaster Hasil</th>
-                <th scope="col" className="text-end">Aksi</th>
+                <th scope="col" className="text-center">Tanggungan</th>
+                <th scope="col" className="text-center">Kehadiran</th>
+                <th scope="col" className="text-center">Hasil Keputusan</th>
+                <th scope="col" className="text-end">Keyakinan</th>
+                <th scope="col" className="text-end d-print-none">Aksi</th>
               </tr>
             </thead>
             <tbody>
-              {history.map((h) => (
+              {history.map((h, idx) => (
                 <tr key={h.id}>
-                  <td className="num">
-                    {h.created_at
-                      ? new Date(h.created_at).toLocaleDateString('id-ID', {
-                          day: 'numeric',
-                          month: 'short',
-                          hour: '2-digit',
-                          minute: '2-digit',
-                        })
-                      : '-'}
-                  </td>
+                  <td className="text-center font-monospace">{idx + 1}</td>
                   <td className="fw-bold text-dark">
                     {h.student_name || <span className="text-muted fst-italic">Tanpa Nama</span>}
                   </td>
-                  <td className="font-monospace text-muted small">
-                    {h.student_code || '-'}
+                  <td className="font-monospace text-muted small">{h.student_code || '-'}</td>
+                  <td className="num text-end font-monospace">{h.ipk ? Number(h.ipk).toFixed(2) : '-'}</td>
+                  <td className="num text-end font-monospace">
+                    {h.parent_income ? `Rp ${Number(h.parent_income).toLocaleString('id-ID')}` : '-'}
                   </td>
-                  <td className="num text-end">{h.ipk ? Number(h.ipk).toFixed(2) : '-'}</td>
-                  <td className="num text-end">
-                    {h.parent_income
-                      ? `Rp ${Number(h.parent_income).toLocaleString('id-ID')}`
-                      : '-'}
+                  <td className="text-center font-monospace">{h.family_dependents} org</td>
+                  <td className="text-center font-monospace">{h.attendance_percentage}%</td>
+                  <td className="text-center">{getStatusBadge(h.predicted_cluster)}</td>
+                  <td className="num text-end font-monospace">
+                    {h.confidence_score ? `${(Number(h.confidence_score) * 100).toFixed(1)}%` : '-'}
                   </td>
-                  <td>
-                    <span className="badge bg-info-subtle text-info border">
-                      Klaster C{h.predicted_cluster}
-                    </span>
-                  </td>
-                  <td className="text-end">
+                  <td className="text-end d-print-none">
                     <div className="d-inline-flex gap-2">
                       <button
                         type="button"
@@ -540,8 +613,8 @@ export default function PredictionsPage() {
               ))}
               {history.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="text-center text-muted py-4">
-                    Belum ada riwayat inferensi prediksi.
+                  <td colSpan={10} className="text-center text-muted py-5">
+                    Belum ada data inferensi prediksi.
                   </td>
                 </tr>
               )}
@@ -555,111 +628,56 @@ export default function PredictionsPage() {
         isOpen={isResultModalOpen}
         onClose={() => setIsResultModalOpen(false)}
         size="md"
-        title="Hasil Rekomendasi Prediksi Beasiswa"
-        subtitle="Inferensi Jaringan Saraf Backpropagation MLP (6 Indikator)"
+        title="Hasil Rekomendasi Kelayakan"
+        subtitle="Analisis Algoritma Neural Network SPK Beasiswa"
         footer={
-          <button
-            type="button"
-            className="btn btn-primary px-4"
-            onClick={() => setIsResultModalOpen(false)}
-          >
+          <button type="button" className="btn btn-primary px-4" onClick={() => setIsResultModalOpen(false)}>
             Tutup
           </button>
         }
       >
-        {result && (() => {
-          const clusterNum = Number(result.predicted_cluster ?? result.cluster_label);
-          let badgeColor = 'bg-primary-subtle text-primary border-primary';
-          let titleStatus = 'Hasil Klasifikasi Klaster';
-          let descStatus = 'Kandidat memiliki karakteristik yang sesuai dengan pola klaster ini.';
-
-          if (clusterNum === 2) {
-            badgeColor = 'bg-success-subtle text-success border-success';
-            titleStatus = 'SANGAT LAYAK (Prioritas Utama Beasiswa)';
-            descStatus = 'Kandidat memiliki prestasi akademik sangat tinggi (IPK tinggi, keaktifan prestasi & kehadiran) serta kondisi ekonomi keluarga yang paling membutuhkan bantuan finansial.';
-          } else if (clusterNum === 1) {
-            badgeColor = 'bg-info-subtle text-info border-info';
-            titleStatus = 'LAYAK (Kandidat Cadangan / Kuota Lanjutan)';
-            descStatus = 'Kandidat memiliki catatan akademik baik dan kondisi ekonomi menengah-ke-bawah yang memenuhi kriteria penerimaan beasiswa.';
-          } else if (clusterNum === 3) {
-            badgeColor = 'bg-warning-subtle text-warning border-warning';
-            titleStatus = 'DIPERTIMBANGKAN (Prioritas Rendah)';
-            descStatus = 'Kandidat memiliki capaian akademik cukup, namun tingkat kebutuhan finansial tidak mendesak dibanding klaster prioritas.';
-          } else if (clusterNum === 0) {
-            badgeColor = 'bg-danger-subtle text-danger border-danger';
-            titleStatus = 'TIDAK LAYAK / TIDAK DIREKOMENDASIKAN';
-            descStatus = 'Kandidat tergolong mampu secara sosio-ekonomi (penghasilan ortu tinggi) atau catatan akademik/kehadiran belum memenuhi ambang seleksi beasiswa.';
-          }
-
-          return (
-            <div className="py-2">
-              {result.student_name && (
-                <div className="text-center p-3 mb-3 bg-light rounded border">
-                  <span className="text-muted small d-block">Calon Penerima Beasiswa:</span>
-                  <h4 className="fw-bold mb-0 text-primary">{result.student_name}</h4>
-                  {result.student_code && <span className="font-monospace text-muted small">NIM: {result.student_code}</span>}
-                </div>
-              )}
-
-              <div className="text-center mb-3">
-                <span className={`badge ${badgeColor} fs-5 px-3 py-2 border mb-2 d-inline-block`}>
-                  Klaster C{clusterNum}
-                </span>
-                <h4 className="fw-bold mb-1">{titleStatus}</h4>
-                <p className="text-muted small mb-0 font-monospace">
-                  Confidence Score: {result.confidence_score ? `${(Number(result.confidence_score) * 100).toFixed(2)}% (Tingkat Keyakinan Model)` : '-'}
-                </p>
+        {result && (
+          <div className="py-2 text-center">
+            {result.student_name && (
+              <div className="p-3 mb-3 bg-light rounded border">
+                <span className="text-muted small d-block">Identitas Mahasiswa:</span>
+                <h4 className="fw-bold mb-0 text-primary">{result.student_name}</h4>
+                {result.student_code && <span className="font-monospace text-muted small">NIM: {result.student_code}</span>}
               </div>
-
-              <div className="p-3 rounded mb-3 bg-light border small">
-                <h6 className="fw-bold mb-2 text-dark">Makna &amp; Profil Rekomendasi:</h6>
-                <p className="mb-2 text-muted">{descStatus}</p>
-                <div className="border-top pt-2 mt-2 text-muted" style={{ fontSize: '0.8rem' }}>
-                  Model Jaringan Saraf Tiruan telah memetakan 6 indikator kandidat terhadap pola sentroid klaster.
-                </div>
-              </div>
-
-              <div className="alert alert-secondary py-2 small mb-0">
-                <strong>Catatan SPK:</strong> Rekomendasi ini adalah sistem pendukung keputusan analitis untuk membantu panitia dalam memprioritaskan kuota beasiswa.
-              </div>
-            </div>
-          );
-        })()}
+            )}
+            <div className="mb-3">{getStatusBadge(result.predicted_cluster)}</div>
+            <p className="text-muted small font-monospace mb-0">
+              Keyakinan: {result.confidence_score ? `${(Number(result.confidence_score) * 100).toFixed(2)}%` : '-'}
+            </p>
+          </div>
+        )}
       </Modal>
 
-      {/* POPUP MODAL: Detail Riwayat Prediksi */}
+      {/* POPUP MODAL: Detail Riwayat */}
       <Modal
         isOpen={isHistoryModalOpen}
         onClose={() => setIsHistoryModalOpen(false)}
         size="md"
-        title={`Rincian Record Prediksi #${selectedHistoryItem?.id || ''}`}
-        subtitle={`Waktu Inferensi: ${selectedHistoryItem?.created_at ? new Date(selectedHistoryItem.created_at).toLocaleString('id-ID') : '-'}`}
+        title={`Rincian Calon Mahasiswa #${selectedHistoryItem?.id || ''}`}
+        subtitle={`Waktu Uji: ${selectedHistoryItem?.created_at ? new Date(selectedHistoryItem.created_at).toLocaleString('id-ID') : '-'}`}
         footer={
-          <button
-            type="button"
-            className="btn btn-secondary"
-            onClick={() => setIsHistoryModalOpen(false)}
-          >
+          <button type="button" className="btn btn-secondary" onClick={() => setIsHistoryModalOpen(false)}>
             Tutup
           </button>
         }
       >
         {selectedHistoryItem && (
           <div>
-            {selectedHistoryItem.student_name && (
-              <div className="p-3 bg-light rounded border mb-3">
-                <span className="text-muted small d-block">Nama Calon Penerima:</span>
-                <h5 className="fw-bold mb-0 text-dark">{selectedHistoryItem.student_name}</h5>
-                {selectedHistoryItem.student_code && (
-                  <span className="font-monospace text-muted small">NIM: {selectedHistoryItem.student_code}</span>
-                )}
-              </div>
-            )}
+            <div className="p-3 bg-light rounded border mb-3">
+              <span className="text-muted small d-block">Nama Mahasiswa:</span>
+              <h5 className="fw-bold mb-0 text-dark">{selectedHistoryItem.student_name || 'Tanpa Nama'}</h5>
+              <span className="font-monospace text-muted small">NIM: {selectedHistoryItem.student_code || '-'}</span>
+            </div>
 
             <div className="d-flex justify-content-between align-items-center mb-3 p-3 bg-light rounded border">
               <div>
-                <span className="text-muted small d-block">Klaster Hasil Inferensi</span>
-                <span className="fs-5 fw-bold text-primary">Klaster {selectedHistoryItem.predicted_cluster}</span>
+                <span className="text-muted small d-block">Status Keputusan:</span>
+                <div className="mt-1">{getStatusBadge(selectedHistoryItem.predicted_cluster)}</div>
               </div>
               <div className="text-end">
                 <span className="text-muted small d-block">Model Versi</span>
@@ -667,10 +685,9 @@ export default function PredictionsPage() {
               </div>
             </div>
 
-            <h6 className="fw-bold text-primary mb-2">6 Parameter Calon Penerima:</h6>
             <ul className="list-group list-group-flush border rounded mb-3">
               <li className="list-group-item d-flex justify-content-between align-items-center">
-                <span>Indeks Prestasi Kumulatif (IPK)</span>
+                <span>IPK</span>
                 <span className="fw-bold font-monospace">{Number(selectedHistoryItem.ipk).toFixed(2)}</span>
               </li>
               <li className="list-group-item d-flex justify-content-between align-items-center">
@@ -678,39 +695,39 @@ export default function PredictionsPage() {
                 <span className="fw-bold font-monospace">Rp {Number(selectedHistoryItem.parent_income).toLocaleString('id-ID')}</span>
               </li>
               <li className="list-group-item d-flex justify-content-between align-items-center">
-                <span>Jumlah Tanggungan Keluarga</span>
+                <span>Jumlah Tanggungan</span>
                 <span className="fw-bold font-monospace">{selectedHistoryItem.family_dependents} Orang</span>
               </li>
               <li className="list-group-item d-flex justify-content-between align-items-center">
-                <span>Skor Prestasi Akademik</span>
-                <span className="fw-bold font-monospace">{selectedHistoryItem.academic_achievement_score} / 4</span>
+                <span>Prestasi Akademik</span>
+                <span className="fw-bold font-monospace">{selectedHistoryItem.academic_achievement_score}</span>
               </li>
               <li className="list-group-item d-flex justify-content-between align-items-center">
-                <span>Skor Prestasi Non-Akademik</span>
-                <span className="fw-bold font-monospace">{selectedHistoryItem.nonacademic_achievement_score} / 4</span>
+                <span>Prestasi Non-Akademik</span>
+                <span className="fw-bold font-monospace">{selectedHistoryItem.nonacademic_achievement_score}</span>
               </li>
               <li className="list-group-item d-flex justify-content-between align-items-center">
-                <span>Persentase Kehadiran</span>
+                <span>Kehadiran</span>
                 <span className="fw-bold font-monospace">{selectedHistoryItem.attendance_percentage}%</span>
               </li>
             </ul>
 
             {selectedHistoryItem.notes && (
               <div className="p-3 bg-light rounded border small">
-                <strong>Catatan Pendaftaran:</strong> {selectedHistoryItem.notes}
+                <strong>Catatan:</strong> {selectedHistoryItem.notes}
               </div>
             )}
           </div>
         )}
       </Modal>
 
-      {/* POPUP MODAL: Konfirmasi Hapus Riwayat */}
+      {/* POPUP MODAL: Konfirmasi Hapus */}
       <Modal
         isOpen={isDeleteModalOpen}
         onClose={() => !deleting && setIsDeleteModalOpen(false)}
         size="sm"
-        title="Konfirmasi Hapus Riwayat"
-        subtitle="Tindakan ini tidak dapat dibatalkan"
+        title="Konfirmasi Hapus"
+        subtitle="Data yang dihapus tidak dapat dipulihkan"
         footer={
           <div className="d-flex justify-content-end gap-2 w-100">
             <button
@@ -733,8 +750,7 @@ export default function PredictionsPage() {
         }
       >
         <p className="mb-0">
-          Apakah Anda yakin ingin menghapus riwayat inferensi{' '}
-          <strong>#{deleteTarget?.id}</strong> {deleteTarget?.student_name ? `(${deleteTarget.student_name})` : `(Klaster C${deleteTarget?.predicted_cluster})`}?
+          Hapus riwayat calon <strong>{deleteTarget?.student_name || `#${deleteTarget?.id}`}</strong>?
         </p>
       </Modal>
     </>
