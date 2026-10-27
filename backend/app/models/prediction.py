@@ -1,6 +1,6 @@
 from sqlalchemy import (
     BigInteger, SmallInteger, Text, Enum, TIMESTAMP, DECIMAL,
-    ForeignKey, Index, Integer
+    ForeignKey, Index, Integer, String
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
@@ -14,6 +14,8 @@ class Prediction(Base):
     model_version_id: Mapped[int] = mapped_column(
         BigInteger, ForeignKey("model_versions.id"), nullable=False
     )
+    student_name: Mapped[str | None] = mapped_column(String(150), nullable=True)
+    student_code: Mapped[str | None] = mapped_column(String(60), nullable=True)
     ipk: Mapped[float] = mapped_column(DECIMAL(4, 2), nullable=False)
     parent_income: Mapped[float] = mapped_column(DECIMAL(15, 2), nullable=False)
     family_dependents: Mapped[int] = mapped_column(SmallInteger, nullable=False)

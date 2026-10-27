@@ -28,6 +28,8 @@ def create_prediction(
     service = PredictionService(db)
     return service.predict(
         model_version_id=payload.model_version_id,
+        student_name=payload.student_name,
+        student_code=payload.student_code,
         ipk=payload.ipk,
         parent_income=payload.parent_income,
         family_dependents=payload.family_dependents,

@@ -9,6 +9,8 @@ export default function PredictionsPage() {
   const [models, setModels] = useState([]);
   const [selectedModelId, setSelectedModelId] = useState('');
   const [formData, setFormData] = useState({
+    student_name: '',
+    student_code: '',
     ipk: '',
     parent_income: '',
     family_dependents: '',
@@ -73,6 +75,8 @@ export default function PredictionsPage() {
 
     const payload = {
       model_version_id: parseInt(selectedModelId),
+      student_name: formData.student_name.trim() || null,
+      student_code: formData.student_code.trim() || null,
       ipk: parseFloat(formData.ipk),
       parent_income: parseFloat(formData.parent_income),
       family_dependents: parseInt(formData.family_dependents),
@@ -160,32 +164,69 @@ export default function PredictionsPage() {
         </div>
       )}
 
-      <div className="row g-3 g-xxl-4 mb-4">
-        {/* Form Input */}
-        <div className="col-lg-8">
+      {/* Main Grid: Form and Result Preview */}
+      <div className="row g-4 mb-4">
+        {/* Form Panel */}
+        <div className="col-12 col-lg-7">
           <section className="panel h-100">
             <div className="panel-head">
               <div>
-                <h2 className="panel-title">Form Input 6 Variabel Mahasiswa</h2>
-                <p className="panel-sub">Masukkan parameter akademik dan sosio-ekonomi calon penerima beasiswa</p>
+                <h2 className="panel-title">Form Input Calon Penerima Beasiswa</h2>
+                <p className="panel-sub">
+                  Masukkan identitas mahasiswa beserta 6 indikator penilaian untuk dievaluasi
+                </p>
               </div>
             </div>
-            <div className="panel-body">
+            <div className="p-3">
               <form onSubmit={handleSubmit}>
+                {/* Identitas Mahasiswa */}
+                <div className="row g-3 mb-3 p-2 bg-light rounded border">
+                  <div className="col-md-7">
+                    <label className="form-label fw-bold" htmlFor="student_name">
+                      Nama Mahasiswa / Calon Penerima
+                    </label>
+                    <input
+                      id="student_name"
+                      name="student_name"
+                      type="text"
+                      className="form-control"
+                      value={formData.student_name}
+                      onChange={handleChange}
+                      placeholder="Contoh: Ahmad Fauzi"
+                    />
+                  </div>
+                  <div className="col-md-5">
+                    <label className="form-label fw-bold" htmlFor="student_code">
+                      NIM / No. Pendaftaran
+                    </label>
+                    <input
+                      id="student_code"
+                      name="student_code"
+                      type="text"
+                      className="form-control"
+                      value={formData.student_code}
+                      onChange={handleChange}
+                      placeholder="Contoh: MHS2024001"
+                    />
+                  </div>
+                </div>
+
                 <div className="mb-3">
-                  <label className="form-label" htmlFor="modelSelect">
-                    Pilih Versi Model (Status: Ready) *
+                  <label className="form-label" htmlFor="model_version_id">
+                    Model Backpropagation Aktif *
                   </label>
                   <select
-                    id="modelSelect"
+                    id="model_version_id"
+                    name="model_version_id"
                     className="form-select"
                     value={selectedModelId}
                     onChange={(e) => setSelectedModelId(e.target.value)}
                     required
                   >
+                    <option value="">-- Pilih Model --</option>
                     {models.map((m) => (
                       <option key={m.id} value={m.id}>
-                        {m.model_name || `Model #${m.id}`} (v{m.model_version || m.version}) - Akurasi: {m.accuracy ? `${(Number(m.accuracy) * 100).toFixed(1)}%` : '-'}
+                        {m.model_name || `Model v${m.id}`} - {m.version || 'v1.0'} (Akurasi: {m.metrics?.accuracy ? `${(m.metrics.accuracy * 100).toFixed(1)}%` : 'Ready'})
                       </option>
                     ))}
                   </select>
@@ -247,7 +288,7 @@ export default function PredictionsPage() {
 
                   <div className="col-md-6">
                     <label className="form-label" htmlFor="academic_achievement_score">
-                      Skor Prestasi Akademik (0 - 100) *
+                      Skor Prestasi Akademik (0 - 4) *
                     </label>
                     <input
                       id="academic_achievement_score"
@@ -255,18 +296,18 @@ export default function PredictionsPage() {
                       type="number"
                       step="0.1"
                       min="0"
-                      max="100"
+                      max="4"
                       className="form-control"
                       value={formData.academic_achievement_score}
                       onChange={handleChange}
                       required
-                      placeholder="Contoh: 85"
+                      placeholder="Contoh: 3.5"
                     />
                   </div>
 
                   <div className="col-md-6">
                     <label className="form-label" htmlFor="nonacademic_achievement_score">
-                      Skor Prestasi Non-Akademik (0 - 100) *
+                      Skor Prestasi Non-Akademik (0 - 4) *
                     </label>
                     <input
                       id="nonacademic_achievement_score"
@@ -274,12 +315,12 @@ export default function PredictionsPage() {
                       type="number"
                       step="0.1"
                       min="0"
-                      max="100"
+                      max="4"
                       className="form-control"
                       value={formData.nonacademic_achievement_score}
                       onChange={handleChange}
                       required
-                      placeholder="Contoh: 70"
+                      placeholder="Contoh: 2.0"
                     />
                   </div>
 
@@ -298,38 +339,43 @@ export default function PredictionsPage() {
                       value={formData.attendance_percentage}
                       onChange={handleChange}
                       required
-                      placeholder="Contoh: 95.0"
+                      placeholder="Contoh: 95"
                     />
                   </div>
                 </div>
 
                 <div className="mb-4">
                   <label className="form-label" htmlFor="notes">
-                    Catatan / Keterangan (Opsional)
+                    Catatan Tambahan (Opsional)
                   </label>
-                  <input
+                  <textarea
                     id="notes"
                     name="notes"
-                    type="text"
+                    rows="2"
                     className="form-control"
                     value={formData.notes}
                     onChange={handleChange}
-                    placeholder="Contoh: Pendaftar Program Unggulan Kampus"
+                    placeholder="Contoh: Pengajuan Beasiswa Prestasi & Tidak Mampu Tahun 2024"
                   />
                 </div>
 
                 <button
                   type="submit"
-                  className="btn btn-primary w-100"
-                  disabled={loading || models.length === 0}
+                  className="btn btn-primary w-100 py-2 d-flex align-items-center justify-content-center gap-2"
+                  disabled={loading || !selectedModelId}
                 >
                   {loading ? (
                     <>
-                      <span className="spinner-border spinner-border-sm me-2" role="status" />
-                      Memproses Inferensi...
+                      <div className="spinner-border spinner-border-sm" role="status" />
+                      <span>Memproses Inferensi Neural Network...</span>
                     </>
                   ) : (
-                    'Jalankan Prediksi'
+                    <>
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 18, height: 18 }}>
+                        <polygon points="5 3 19 12 5 21 5 3" />
+                      </svg>
+                      <span>Jalankan Prediksi &amp; Tentukan Kelayakan</span>
+                    </>
                   )}
                 </button>
               </form>
@@ -337,51 +383,82 @@ export default function PredictionsPage() {
           </section>
         </div>
 
-        {/* Prediction Output Status Card */}
-        <div className="col-lg-4">
-          <section className="panel h-100 d-flex flex-column justify-content-between">
+        {/* Live Result View or Explanatory Placeholder */}
+        <div className="col-12 col-lg-5">
+          <section className="panel h-100">
             <div className="panel-head">
               <div>
-                <h2 className="panel-title">Status Inferensi Terakhir</h2>
-                <p className="panel-sub">Hasil pengujian model aktif</p>
+                <h2 className="panel-title">Hasil Keputusan Terakhir</h2>
+                <p className="panel-sub">Status rekomendasi langsung untuk calon yang baru saja diuji</p>
               </div>
             </div>
-            <div className="panel-body text-center py-4">
+            <div className="p-3">
               {result ? (
                 <div>
-                  <span className="badge bg-success-subtle text-success fs-5 p-3 mb-3 border border-success">
-                    Klaster C{result.predicted_cluster ?? result.cluster_label}
-                  </span>
-                  <h4 className="fw-bold mb-2">Prediksi Berhasil</h4>
-                  <p className="text-muted small mb-3">
-                    Kepercayaan: {result.confidence_score ? `${(Number(result.confidence_score) * 100).toFixed(1)}%` : '-'}
-                  </p>
-                  <button
-                    type="button"
-                    className="btn btn-sm btn-outline-primary"
-                    onClick={() => setIsResultModalOpen(true)}
-                  >
-                    Buka Hasil
-                  </button>
+                  {(() => {
+                    const clusterNum = Number(result.predicted_cluster ?? result.cluster_label);
+                    let badgeColor = 'bg-primary-subtle text-primary border-primary';
+                    let titleStatus = 'Hasil Klasifikasi Klaster';
+                    let descStatus = 'Kandidat memiliki karakteristik yang sesuai dengan pola klaster ini.';
+
+                    if (clusterNum === 2) {
+                      badgeColor = 'bg-success-subtle text-success border-success';
+                      titleStatus = 'SANGAT LAYAK (Prioritas Utama)';
+                      descStatus = 'Prestasi akademik & kehadiran sangat tinggi serta kondisi ekonomi keluarga paling membutuhkan bantuan.';
+                    } else if (clusterNum === 1) {
+                      badgeColor = 'bg-info-subtle text-info border-info';
+                      titleStatus = 'LAYAK (Kandidat Cadangan)';
+                      descStatus = 'Catatan akademik baik dan kondisi ekonomi menengah-ke-bawah yang memenuhi kriteria penerimaan beasiswa.';
+                    } else if (clusterNum === 3) {
+                      badgeColor = 'bg-warning-subtle text-warning border-warning';
+                      titleStatus = 'DIPERTIMBANGKAN (Prioritas Rendah)';
+                      descStatus = 'Capaian akademik cukup, namun tingkat kebutuhan finansial tidak mendesak.';
+                    } else if (clusterNum === 0) {
+                      badgeColor = 'bg-danger-subtle text-danger border-danger';
+                      titleStatus = 'TIDAK LAYAK';
+                      descStatus = 'Terhitung mampu secara sosio-ekonomi atau catatan akademik belum memenuhi kriteria penerimaan.';
+                    }
+
+                    return (
+                      <div>
+                        {result.student_name && (
+                          <div className="text-center pb-2 mb-2 border-bottom">
+                            <h5 className="fw-bold mb-0 text-dark">{result.student_name}</h5>
+                            <small className="text-muted font-monospace">{result.student_code || 'No NIM'}</small>
+                          </div>
+                        )}
+                        <div className="text-center mb-3">
+                          <span className={`badge ${badgeColor} fs-5 px-3 py-2 border mb-2 d-inline-block`}>
+                            Klaster C{clusterNum}
+                          </span>
+                          <h5 className="fw-bold mb-1">{titleStatus}</h5>
+                          <p className="text-muted small mb-0 font-monospace">
+                            Confidence Score: {result.confidence_score ? `${(Number(result.confidence_score) * 100).toFixed(2)}%` : '-'}
+                          </p>
+                        </div>
+                        <div className="p-3 rounded mb-3 bg-light border small">
+                          <p className="mb-0 text-muted">{descStatus}</p>
+                        </div>
+                      </div>
+                    );
+                  })()}
                 </div>
               ) : (
-                <div className="text-muted py-4">
+                <div className="text-center py-5 text-muted">
                   <svg
                     viewBox="0 0 24 24"
                     fill="none"
                     stroke="currentColor"
                     strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    style={{ width: 48, height: 48, opacity: 0.35 }}
-                    className="mb-2"
+                    style={{ width: 48, height: 48, opacity: 0.4 }}
+                    className="mb-3"
                   >
                     <circle cx="12" cy="12" r="10" />
                     <line x1="12" y1="8" x2="12" y2="12" />
                     <line x1="12" y1="16" x2="12.01" y2="16" />
                   </svg>
                   <p className="mb-0 small">
-                    Hasil inferensi akan otomatis muncul dalam pop-up interaktif setelah Anda menekan tombol jalankan prediksi.
+                    Masukkan data calon penerima beasiswa lalu klik tombol untuk melihat hasil analisis kelayakan di sini.
                   </p>
                 </div>
               )}
@@ -394,8 +471,8 @@ export default function PredictionsPage() {
       <section className="panel mb-4">
         <div className="panel-head">
           <div>
-            <h2 className="panel-title">Riwayat Prediksi Terbaru</h2>
-            <p className="panel-sub">Daftar ringkas log prediksi (klik tombol detail untuk melihat rincian pop-up)</p>
+            <h2 className="panel-title">Riwayat Prediksi Calon Penerima Beasiswa</h2>
+            <p className="panel-sub">Daftar calon yang telah diuji (nama mahasiswa, nilai, dan klaster keputusan)</p>
           </div>
         </div>
         <div className="table-wrap">
@@ -403,7 +480,8 @@ export default function PredictionsPage() {
             <thead>
               <tr>
                 <th scope="col">Waktu</th>
-                <th scope="col">Model</th>
+                <th scope="col">Nama Mahasiswa</th>
+                <th scope="col">NIM</th>
                 <th scope="col" className="text-end">IPK</th>
                 <th scope="col" className="text-end">Gaji Ortu</th>
                 <th scope="col">Klaster Hasil</th>
@@ -423,7 +501,12 @@ export default function PredictionsPage() {
                         })
                       : '-'}
                   </td>
-                  <td>v{h.model_version_id}</td>
+                  <td className="fw-bold text-dark">
+                    {h.student_name || <span className="text-muted fst-italic">Tanpa Nama</span>}
+                  </td>
+                  <td className="font-monospace text-muted small">
+                    {h.student_code || '-'}
+                  </td>
                   <td className="num text-end">{h.ipk ? Number(h.ipk).toFixed(2) : '-'}</td>
                   <td className="num text-end">
                     {h.parent_income
@@ -432,7 +515,7 @@ export default function PredictionsPage() {
                   </td>
                   <td>
                     <span className="badge bg-info-subtle text-info border">
-                      Klaster {h.predicted_cluster}
+                      Klaster C{h.predicted_cluster}
                     </span>
                   </td>
                   <td className="text-end">
@@ -457,7 +540,7 @@ export default function PredictionsPage() {
               ))}
               {history.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="text-center text-muted py-4">
+                  <td colSpan={7} className="text-center text-muted py-4">
                     Belum ada riwayat inferensi prediksi.
                   </td>
                 </tr>
@@ -486,11 +569,6 @@ export default function PredictionsPage() {
       >
         {result && (() => {
           const clusterNum = Number(result.predicted_cluster ?? result.cluster_label);
-          // Berdasarkan analisis sentroid K=4 aktif:
-          // C2: IPK 3.80, Gaji 872rb, Tanggungan 5, Prestasi 3.7 -> PRIORITAS UTAMA
-          // C1: IPK 3.40, Gaji 1.69jt, Tanggungan 3.3, Prestasi 2.3 -> LAYAK (CADANGAN)
-          // C3: IPK 2.84, Gaji 3.50jt, Tanggungan 1.8, Prestasi 0.6 -> KURANG LAYAK / DIPERTIMBANGKAN
-          // C0: IPK 2.38, Gaji 6.28jt, Tanggungan 0.7, Prestasi 0.0 -> TIDAK LAYAK
           let badgeColor = 'bg-primary-subtle text-primary border-primary';
           let titleStatus = 'Hasil Klasifikasi Klaster';
           let descStatus = 'Kandidat memiliki karakteristik yang sesuai dengan pola klaster ini.';
@@ -515,6 +593,14 @@ export default function PredictionsPage() {
 
           return (
             <div className="py-2">
+              {result.student_name && (
+                <div className="text-center p-3 mb-3 bg-light rounded border">
+                  <span className="text-muted small d-block">Calon Penerima Beasiswa:</span>
+                  <h4 className="fw-bold mb-0 text-primary">{result.student_name}</h4>
+                  {result.student_code && <span className="font-monospace text-muted small">NIM: {result.student_code}</span>}
+                </div>
+              )}
+
               <div className="text-center mb-3">
                 <span className={`badge ${badgeColor} fs-5 px-3 py-2 border mb-2 d-inline-block`}>
                   Klaster C{clusterNum}
@@ -527,11 +613,9 @@ export default function PredictionsPage() {
 
               <div className="p-3 rounded mb-3 bg-light border small">
                 <h6 className="fw-bold mb-2 text-dark">Makna &amp; Profil Rekomendasi:</h6>
-                <p className="mb-2 text-muted">
-                  {descStatus}
-                </p>
+                <p className="mb-2 text-muted">{descStatus}</p>
                 <div className="border-top pt-2 mt-2 text-muted" style={{ fontSize: '0.8rem' }}>
-                  Model Jaringan Saraf Tiruan telah memetakan 6 indikator kandidat (IPK, Gaji Ortu, Tanggungan, Prestasi Akademik/Non-akademik, Kehadiran) terhadap pola sentroid klaster.
+                  Model Jaringan Saraf Tiruan telah memetakan 6 indikator kandidat terhadap pola sentroid klaster.
                 </div>
               </div>
 
@@ -562,6 +646,16 @@ export default function PredictionsPage() {
       >
         {selectedHistoryItem && (
           <div>
+            {selectedHistoryItem.student_name && (
+              <div className="p-3 bg-light rounded border mb-3">
+                <span className="text-muted small d-block">Nama Calon Penerima:</span>
+                <h5 className="fw-bold mb-0 text-dark">{selectedHistoryItem.student_name}</h5>
+                {selectedHistoryItem.student_code && (
+                  <span className="font-monospace text-muted small">NIM: {selectedHistoryItem.student_code}</span>
+                )}
+              </div>
+            )}
+
             <div className="d-flex justify-content-between align-items-center mb-3 p-3 bg-light rounded border">
               <div>
                 <span className="text-muted small d-block">Klaster Hasil Inferensi</span>
@@ -589,11 +683,11 @@ export default function PredictionsPage() {
               </li>
               <li className="list-group-item d-flex justify-content-between align-items-center">
                 <span>Skor Prestasi Akademik</span>
-                <span className="fw-bold font-monospace">{selectedHistoryItem.academic_achievement_score} / 100</span>
+                <span className="fw-bold font-monospace">{selectedHistoryItem.academic_achievement_score} / 4</span>
               </li>
               <li className="list-group-item d-flex justify-content-between align-items-center">
                 <span>Skor Prestasi Non-Akademik</span>
-                <span className="fw-bold font-monospace">{selectedHistoryItem.nonacademic_achievement_score} / 100</span>
+                <span className="fw-bold font-monospace">{selectedHistoryItem.nonacademic_achievement_score} / 4</span>
               </li>
               <li className="list-group-item d-flex justify-content-between align-items-center">
                 <span>Persentase Kehadiran</span>
@@ -640,7 +734,7 @@ export default function PredictionsPage() {
       >
         <p className="mb-0">
           Apakah Anda yakin ingin menghapus riwayat inferensi{' '}
-          <strong>#{deleteTarget?.id}</strong> (Klaster C{deleteTarget?.predicted_cluster})?
+          <strong>#{deleteTarget?.id}</strong> {deleteTarget?.student_name ? `(${deleteTarget.student_name})` : `(Klaster C${deleteTarget?.predicted_cluster})`}?
         </p>
       </Modal>
     </>

@@ -87,9 +87,9 @@ export default function EvaluationPage() {
             <strong>Catatan Evaluasi:</strong> Target Backpropagation adalah label cluster K-Means acuan (mengukur presisi pemetaan pola 6 indikator beasiswa).
           </span>
         </div>
-        <span className="badge bg-success-subtle text-success border border-success px-2 py-1 ms-2 text-nowrap">
+        {/* <span className="badge bg-success-subtle text-success border border-success px-2 py-1 ms-2 text-nowrap">
           Leakage-Free Verified
-        </span>
+        </span> */}
       </div>
 
       {/* Model Selector & Metadata in a Single Compact Card */}
@@ -142,7 +142,6 @@ export default function EvaluationPage() {
                     <rect x="3" y="3" width="18" height="18" rx="2" />
                     <path d="M3 9h18M9 21V9" />
                   </svg>
-                  <span>Lihat Confusion Matrix</span>
                 </button>
               </div>
             </div>

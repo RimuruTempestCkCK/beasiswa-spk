@@ -29,6 +29,8 @@ class PredictionService:
     def predict(
         self,
         model_version_id: Optional[int],
+        student_name: Optional[str],
+        student_code: Optional[str],
         ipk: float,
         parent_income: float,
         family_dependents: int,
@@ -67,6 +69,8 @@ class PredictionService:
 
         prediction = self.prediction_repo.create(
             model_version_id=model.id,
+            student_name=student_name,
+            student_code=student_code,
             ipk=ipk,
             parent_income=parent_income,
             family_dependents=family_dependents,
@@ -86,6 +90,8 @@ class PredictionService:
             {
                 "id": p.id,
                 "model_version_id": p.model_version_id,
+                "student_name": p.student_name,
+                "student_code": p.student_code,
                 "ipk": float(p.ipk),
                 "parent_income": float(p.parent_income),
                 "family_dependents": p.family_dependents,

@@ -69,6 +69,8 @@ def get_experiments_report(db: Session = Depends(get_db), current_user=Depends(g
         status_text, score = get_status_recommendation(p.predicted_cluster, p.confidence_score)
         prediction_rankings.append({
             "id": p.id,
+            "student_name": p.student_name,
+            "student_code": p.student_code,
             "ipk": float(p.ipk),
             "parent_income": float(p.parent_income),
             "family_dependents": p.family_dependents,
@@ -136,6 +138,8 @@ def export_predictions_csv(db: Session = Depends(get_db), current_user=Depends(g
         status_text, score = get_status_recommendation(p.predicted_cluster, p.confidence_score)
         items.append({
             "id": p.id,
+            "student_name": p.student_name or "-",
+            "student_code": p.student_code or "-",
             "ipk": float(p.ipk),
             "parent_income": float(p.parent_income),
             "family_dependents": p.family_dependents,
@@ -156,7 +160,7 @@ def export_predictions_csv(db: Session = Depends(get_db), current_user=Depends(g
     output = io.StringIO()
     writer = csv.writer(output)
     writer.writerow([
-        "Peringkat", "ID Uji", "IPK", "Penghasilan Ortu (Rp)", "Tanggungan",
+        "Peringkat", "ID Uji", "Nama Mahasiswa", "NIM / Kode", "IPK", "Penghasilan Ortu (Rp)", "Tanggungan",
         "Prestasi Akademik", "Prestasi Non-Akademik", "Kehadiran (%)",
         "Klaster Hasil", "Confidence Score", "Rekomendasi Keputusan", "Skor SPK",
         "Keterangan / Catatan", "Waktu Inferensi"
@@ -164,7 +168,8 @@ def export_predictions_csv(db: Session = Depends(get_db), current_user=Depends(g
 
     for rank, item in enumerate(items, 1):
         writer.writerow([
-            rank, f"#{item['id']}", item["ipk"], int(item["parent_income"]),
+            rank, f"#{item['id']}", item["student_name"], item["student_code"],
+            item["ipk"], int(item["parent_income"]),
             item["family_dependents"], item["academic"], item["nonacademic"],
             item["attendance"], item["cluster"], item["confidence"],
             item["status"], item["score"], item["notes"], item["created_at"]

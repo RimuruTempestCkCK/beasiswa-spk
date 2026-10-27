@@ -58,25 +58,65 @@ export default function ReportsPage() {
                   <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
                   <rect x="6" y="14" width="12" height="8" />
                 </svg>
-                <span>Cetak / Cetak PDF</span>
+                <span>Cetak / PDF</span>
               </button>
               <button
                 type="button"
-                className="btn btn-sm btn-primary d-inline-flex align-items-center gap-1"
+                className="btn btn-sm btn-outline-success d-inline-flex align-items-center gap-1"
                 onClick={handleExportCSV}
-                title="Unduh laporan rekomendasi hasil seleksi dalam format CSV"
+                title="Unduh seluruh daftar hasil rekomendasi calon penerima beasiswa dalam file CSV"
               >
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 15, height: 15 }}>
-                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" />
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                  <polyline points="7 10 12 15 17 10" />
+                  <line x1="12" y1="15" x2="12" y2="3" />
                 </svg>
-                <span>Ekspor Laporan (CSV)</span>
+                <span>Ekspor CSV</span>
               </button>
             </div>
           }
         />
 
-        {/* Tab Navigation */}
-        <div className="d-flex align-items-center justify-content-between mb-3 border-bottom pb-2">
+        {/* Analytical summary cards */}
+        <div className="row g-3 g-xxl-4 mb-4">
+          <div className="col-sm-6 col-xl-3">
+            <div className="card-kpi p-3">
+              <span className="card-kpi-sub">Total Calon Teruji</span>
+              <span className="card-kpi-val text-primary">{recommendations.length}</span>
+              <span className="card-kpi-trend text-muted">Kandidat Masuk Evaluasi</span>
+            </div>
+          </div>
+          <div className="col-sm-6 col-xl-3">
+            <div className="card-kpi p-3">
+              <span className="card-kpi-sub">Prioritas Sangat Layak</span>
+              <span className="card-kpi-val text-success">
+                {recommendations.filter((r) => r.predicted_cluster === 2).length}
+              </span>
+              <span className="card-kpi-trend text-success">Klaster Prioritas Utama</span>
+            </div>
+          </div>
+          <div className="col-sm-6 col-xl-3">
+            <div className="card-kpi p-3">
+              <span className="card-kpi-sub">Kandidat Cadangan</span>
+              <span className="card-kpi-val text-info">
+                {recommendations.filter((r) => r.predicted_cluster === 1).length}
+              </span>
+              <span className="card-kpi-trend text-info">Klaster Layak</span>
+            </div>
+          </div>
+          <div className="col-sm-6 col-xl-3">
+            <div className="card-kpi p-3">
+              <span className="card-kpi-sub">Tidak Direkomendasikan</span>
+              <span className="card-kpi-val text-danger">
+                {recommendations.filter((r) => r.predicted_cluster === 0).length}
+              </span>
+              <span className="card-kpi-trend text-danger">Klaster Tidak Layak</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Tab switcher */}
+        <div className="mb-4">
           <ul className="nav nav-pills gap-2">
             <li className="nav-item">
               <button
@@ -129,13 +169,14 @@ export default function ReportsPage() {
                 <table className="table-data table-stack align-middle">
                   <thead>
                     <tr>
-                      <th scope="col" style={{ width: 60 }} className="text-center">No</th>
-                      <th scope="col">ID Uji</th>
+                      <th scope="col" style={{ width: 50 }} className="text-center">No</th>
+                      <th scope="col">Nama Mahasiswa</th>
+                      <th scope="col">NIM</th>
                       <th scope="col" className="text-end">IPK</th>
                       <th scope="col" className="text-end">Penghasilan Ortu</th>
                       <th scope="col" className="text-center">Tanggungan</th>
                       <th scope="col" className="text-center">Kehadiran</th>
-                      <th scope="col" className="text-center">Klaster Hasil</th>
+                      <th scope="col" className="text-center">Klaster</th>
                       <th scope="col">Rekomendasi Keputusan</th>
                       <th scope="col" className="text-end">Keyakinan</th>
                       <th scope="col" className="text-end">Skor SPK</th>
@@ -153,7 +194,12 @@ export default function ReportsPage() {
                       return (
                         <tr key={r.id || idx}>
                           <td className="text-center fw-bold">{idx + 1}</td>
-                          <td className="font-monospace text-muted">#{r.id}</td>
+                          <td className="fw-bold text-dark">
+                            {r.student_name || <span className="text-muted fst-italic">Tanpa Nama</span>}
+                          </td>
+                          <td className="font-monospace text-muted small">
+                            {r.student_code || '-'}
+                          </td>
                           <td className="num text-end font-monospace">{r.ipk.toFixed(2)}</td>
                           <td className="num text-end font-monospace">Rp {r.parent_income.toLocaleString('id-ID')}</td>
                           <td className="text-center font-monospace">{r.family_dependents} org</td>
@@ -180,7 +226,7 @@ export default function ReportsPage() {
                     })}
                     {recommendations.length === 0 && (
                       <tr>
-                        <td colSpan={11} className="text-center py-5 text-muted">
+                        <td colSpan={12} className="text-center py-5 text-muted">
                           Belum ada data kandidat yang diuji pada menu <strong>Prediksi Kelayakan</strong>.
                         </td>
                       </tr>
@@ -208,32 +254,38 @@ export default function ReportsPage() {
                       <thead>
                         <tr>
                           <th scope="col">Run ID</th>
-                          <th scope="col">K</th>
+                          <th scope="col">Jumlah Klaster (K)</th>
                           <th scope="col" className="text-end">Skor DBI</th>
-                          <th scope="col">Status</th>
+                          <th scope="col">Status Acuan</th>
                           <th scope="col" className="text-end">Aksi</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {clusteringRuns.map((r) => (
-                          <tr key={r.id}>
-                            <td className="num fw-bold">#{r.id}</td>
-                            <td className="num">{r.k_value || r.k}</td>
-                            <td className="num text-end">
-                              {r.dbi_score !== null && r.dbi_score !== undefined
-                                ? Number(r.dbi_score).toFixed(4)
+                        {clusteringRuns.map((c) => (
+                          <tr key={c.id}>
+                            <td className="font-monospace">#{c.id}</td>
+                            <td>K = {c.k_value || c.k}</td>
+                            <td className="num text-end font-monospace">
+                              {c.dbi_score !== null && c.dbi_score !== undefined
+                                ? Number(c.dbi_score).toFixed(4)
                                 : '-'}
                             </td>
                             <td>
-                              <span className={`status status-${r.status === 'completed' ? 'success' : 'neutral'}`}>
-                                {r.is_selected ? 'Acuan Terpilih' : r.status}
+                              <span
+                                className={`badge ${
+                                  c.is_selected
+                                    ? 'bg-success-subtle text-success border'
+                                    : 'bg-light text-muted border'
+                                }`}
+                              >
+                                {c.is_selected ? 'Acuan Terpilih' : 'Pembanding'}
                               </span>
                             </td>
                             <td className="text-end">
                               <button
                                 type="button"
                                 className="btn btn-sm btn-outline-primary"
-                                onClick={() => setSelectedClusteringRun(r)}
+                                onClick={() => setSelectedClusteringRun(c)}
                               >
                                 Detail
                               </button>
@@ -251,33 +303,42 @@ export default function ReportsPage() {
                 <section className="panel h-100">
                   <div className="panel-head">
                     <div>
-                      <h2 className="panel-title">Versi Model Terlatih</h2>
-                      <p className="panel-sub">Arsip model Backpropagation</p>
+                      <h2 className="panel-title">Model Neural Network Backpropagation</h2>
+                      <p className="panel-sub">Kinerja model pengklasifikasi</p>
                     </div>
                   </div>
                   <div className="table-wrap">
                     <table className="table-data table-stack">
                       <thead>
                         <tr>
-                          <th scope="col">Versi</th>
-                          <th scope="col" className="text-end">Akurasi</th>
+                          <th scope="col">Nama / Versi</th>
                           <th scope="col">Status</th>
+                          <th scope="col" className="text-end">Akurasi</th>
                           <th scope="col" className="text-end">Aksi</th>
                         </tr>
                       </thead>
                       <tbody>
                         {models.map((m) => (
                           <tr key={m.id}>
-                            <td className="num fw-bold">v{m.version || m.model_version || m.id}</td>
-                            <td className="num text-end">
+                            <td>
+                              <strong>{m.name || m.model_name}</strong>
+                              <span className="text-muted small d-block">v{m.version || m.model_version}</span>
+                            </td>
+                            <td>
+                              <span
+                                className={`badge ${
+                                  m.status === 'ready'
+                                    ? 'bg-success-subtle text-success border'
+                                    : 'bg-secondary-subtle text-secondary'
+                                }`}
+                              >
+                                {m.status}
+                              </span>
+                            </td>
+                            <td className="num text-end font-monospace">
                               {m.accuracy !== null && m.accuracy !== undefined
                                 ? `${(Number(m.accuracy) * 100).toFixed(1)}%`
                                 : '-'}
-                            </td>
-                            <td>
-                              <span className={`status status-${m.status === 'ready' ? 'success' : 'neutral'}`}>
-                                {m.status}
-                              </span>
                             </td>
                             <td className="text-end">
                               <button
