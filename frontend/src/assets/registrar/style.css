@@ -1095,3 +1095,81 @@ a.person-name:hover { color: var(--rg-primary); text-decoration: underline; }
   .tt-frame { overflow: visible; }
   .tt-table { min-width: 0; }
 }
+
+/* ------------------------------------------------------------------------
+   19. Dark Mode Contrast & Utility Overrides
+   ------------------------------------------------------------------------ */
+.bg-light {
+  background-color: var(--rg-surface-2) !important;
+}
+
+.text-dark {
+  color: var(--rg-ink) !important;
+}
+
+[data-bs-theme="dark"] .bg-light {
+  background-color: var(--rg-surface-2) !important;
+  color: var(--rg-ink) !important;
+}
+
+[data-bs-theme="dark"] .text-dark {
+  color: var(--rg-ink) !important;
+}
+
+[data-bs-theme="dark"] .border {
+  border-color: var(--rg-line) !important;
+}
+
+[data-bs-theme="dark"] .list-group-item {
+  background-color: var(--rg-surface);
+  color: var(--rg-ink);
+  border-color: var(--rg-line);
+}
+
+[data-bs-theme="dark"] .alert-info {
+  background-color: rgba(92, 194, 186, 0.12) !important;
+  border-color: rgba(92, 194, 186, 0.3) !important;
+  color: var(--rg-primary) !important;
+}
+
+[data-bs-theme="dark"] .alert-warning {
+  background-color: rgba(239, 179, 66, 0.12) !important;
+  border-color: rgba(239, 179, 66, 0.3) !important;
+  color: var(--rg-accent) !important;
+}
+
+[data-bs-theme="dark"] .alert-secondary {
+  background-color: var(--rg-surface-2) !important;
+  border-color: var(--rg-line) !important;
+  color: var(--rg-muted) !important;
+}
+
+[data-bs-theme="dark"] .badge.bg-light {
+  background-color: var(--rg-surface-2) !important;
+  color: var(--rg-ink) !important;
+  border-color: var(--rg-line) !important;
+}
+
+[data-bs-theme="dark"] .badge.bg-secondary-subtle {
+  background-color: var(--rg-surface-2) !important;
+  color: var(--rg-muted) !important;
+  border-color: var(--rg-line) !important;
+}
+
+[data-bs-theme="dark"] .form-control,
+[data-bs-theme="dark"] .form-select {
+  background-color: var(--rg-surface);
+  color: var(--rg-ink);
+  border-color: var(--rg-line-2);
+}
+
+[data-bs-theme="dark"] .form-control:focus,
+[data-bs-theme="dark"] .form-select:focus {
+  background-color: var(--rg-surface);
+  color: var(--rg-ink);
+  border-color: var(--rg-primary);
+}
+
+[data-bs-theme="dark"] .form-control::placeholder {
+  color: var(--rg-faint);
+}

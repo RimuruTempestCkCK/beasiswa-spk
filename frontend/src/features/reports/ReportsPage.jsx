@@ -78,42 +78,73 @@ export default function ReportsPage() {
         />
 
         {/* Analytical summary cards */}
-        <div className="row g-3 g-xxl-4 mb-4">
-          <div className="col-sm-6 col-xl-3">
-            <div className="card-kpi p-3">
-              <span className="card-kpi-sub">Total Calon Teruji</span>
-              <span className="card-kpi-val text-primary">{recommendations.length}</span>
-              <span className="card-kpi-trend text-muted">Kandidat Masuk Evaluasi</span>
-            </div>
-          </div>
-          <div className="col-sm-6 col-xl-3">
-            <div className="card-kpi p-3">
-              <span className="card-kpi-sub">Prioritas Sangat Layak</span>
-              <span className="card-kpi-val text-success">
-                {recommendations.filter((r) => r.predicted_cluster === 2).length}
+        <section className="kpi-grid mb-4" aria-label="Ringkasan Hasil Evaluasi Rekomendasi">
+          <div className="kpi">
+            <div className="kpi-top">
+              <span className="kpi-icon tone-teal">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                  <circle cx="9" cy="7" r="4" />
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                </svg>
               </span>
-              <span className="card-kpi-trend text-success">Klaster Prioritas Utama</span>
+              <p className="kpi-label">Total Calon Teruji</p>
             </div>
+            <p className="kpi-value text-primary">{recommendations.length}</p>
+            <p className="kpi-note">Kandidat masuk evaluasi SPK</p>
           </div>
-          <div className="col-sm-6 col-xl-3">
-            <div className="card-kpi p-3">
-              <span className="card-kpi-sub">Kandidat Cadangan</span>
-              <span className="card-kpi-val text-info">
-                {recommendations.filter((r) => r.predicted_cluster === 1).length}
+
+          <div className="kpi">
+            <div className="kpi-top">
+              <span className="kpi-icon tone-green">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                  <polyline points="22 4 12 14.01 9 11.01" />
+                </svg>
               </span>
-              <span className="card-kpi-trend text-info">Klaster Layak</span>
+              <p className="kpi-label">Prioritas Sangat Layak</p>
             </div>
+            <p className="kpi-value text-success">
+              {recommendations.filter((r) => r.predicted_cluster === 2).length}
+            </p>
+            <p className="kpi-note">Klaster prioritas utama beasiswa</p>
           </div>
-          <div className="col-sm-6 col-xl-3">
-            <div className="card-kpi p-3">
-              <span className="card-kpi-sub">Tidak Direkomendasikan</span>
-              <span className="card-kpi-val text-danger">
-                {recommendations.filter((r) => r.predicted_cluster === 0).length}
+
+          <div className="kpi">
+            <div className="kpi-top">
+              <span className="kpi-icon tone-teal">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="12" y1="8" x2="12" y2="12" />
+                  <line x1="12" y1="16" x2="12.01" y2="16" />
+                </svg>
               </span>
-              <span className="card-kpi-trend text-danger">Klaster Tidak Layak</span>
+              <p className="kpi-label">Kandidat Cadangan</p>
             </div>
+            <p className="kpi-value text-info">
+              {recommendations.filter((r) => r.predicted_cluster === 1).length}
+            </p>
+            <p className="kpi-note">Klaster layak (kuota lanjutan)</p>
           </div>
-        </div>
+
+          <div className="kpi">
+            <div className="kpi-top">
+              <span className="kpi-icon tone-coral">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="15" y1="9" x2="9" y2="15" />
+                  <line x1="9" y1="9" x2="15" y2="15" />
+                </svg>
+              </span>
+              <p className="kpi-label">Tidak Direkomendasikan</p>
+            </div>
+            <p className="kpi-value text-danger">
+              {recommendations.filter((r) => r.predicted_cluster === 0).length}
+            </p>
+            <p className="kpi-note">Belum memenuhi ambang seleksi</p>
+          </div>
+        </section>
 
         {/* Tab switcher */}
         <div className="mb-4">
