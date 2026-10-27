@@ -55,27 +55,6 @@ export default function DashboardPage() {
         eyebrow={`Peran: ${userRole.toUpperCase()} · SPK Beasiswa`}
       />
 
-      {/* Analytical decision disclaimer banner */}
-      <div className="alert alert-info d-flex align-items-center gap-3 mb-4" role="alert">
-        <svg
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          style={{ width: 22, height: 22, flexShrink: 0 }}
-          aria-hidden="true"
-        >
-          <circle cx="12" cy="12" r="10" />
-          <line x1="12" y1="8" x2="12" y2="12" />
-          <line x1="12" y1="16" x2="12.01" y2="16" />
-        </svg>
-        <div className="small">
-          <strong>Rekomendasi Analitis Berbasis Kriteria:</strong> Sistem mengelompokkan kelayakan mahasiswa berdasarkan 6 indikator kanonis (IPK, Gaji Ortu, Tanggungan, Prestasi Akademik/Non-akademik, Kehadiran). Keputusan resmi penerimaan tetap berada pada wewenang panitia pengelola beasiswa.
-        </div>
-      </div>
-
       {loading ? (
         <div className="text-center py-5">
           <div className="spinner-border text-primary" role="status" style={{ width: '2.5rem', height: '2.5rem' }}>

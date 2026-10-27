@@ -68,30 +68,6 @@ export default function EvaluationPage() {
         }
       />
 
-      {/* Header Info / Disclaimer Compact */}
-      <div className="alert alert-warning d-flex align-items-center justify-content-between p-2 px-3 mb-3 rounded small">
-        <div className="d-flex align-items-center gap-2">
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            style={{ width: 16, height: 16, flexShrink: 0 }}
-            className="text-warning-emphasis"
-          >
-            <circle cx="12" cy="12" r="10" />
-            <line x1="12" y1="8" x2="12" y2="12" />
-            <line x1="12" y1="16" x2="12.01" y2="16" />
-          </svg>
-          <span>
-            <strong>Catatan Evaluasi:</strong> Target Backpropagation adalah label cluster K-Means acuan (mengukur presisi pemetaan pola 6 indikator beasiswa).
-          </span>
-        </div>
-        {/* <span className="badge bg-success-subtle text-success border border-success px-2 py-1 ms-2 text-nowrap">
-          Leakage-Free Verified
-        </span> */}
-      </div>
-
       {/* Model Selector & Metadata in a Single Compact Card */}
       <section className="panel mb-3">
         <div className="panel-body p-3">
