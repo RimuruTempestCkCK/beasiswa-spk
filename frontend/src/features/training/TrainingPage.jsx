@@ -296,7 +296,7 @@ export default function TrainingPage() {
                   <tbody>
                     {models.map((m) => (
                       <tr key={m.id}>
-                        <td className="num fw-bold">v{m.model_version || m.version || m.id}</td>
+                        <td className="num fw-bold">v{(m.model_version || m.version || `${m.id}`).replace(/^v+/, '')}</td>
                         <td className="cell-main">
                           <span className="fw-semibold">{m.model_name || `Model #${m.id}`}</span>
                         </td>
