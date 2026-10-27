@@ -69,7 +69,7 @@ export default function EvaluationPage() {
       />
 
       {/* Header Info / Disclaimer Compact */}
-      <div className="d-flex align-items-center justify-content-between p-2 px-3 mb-3 bg-warning-subtle border border-warning rounded small text-dark">
+      <div className="alert alert-warning d-flex align-items-center justify-content-between p-2 px-3 mb-3 rounded small">
         <div className="d-flex align-items-center gap-2">
           <svg
             viewBox="0 0 24 24"
