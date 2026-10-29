@@ -30,10 +30,12 @@ def list_records(
         limit=page_size,
         search=search,
     )
+    total_pages = (total + page_size - 1) // page_size if page_size > 0 else 1
     return {
         "total": total,
         "page": page,
         "page_size": page_size,
+        "total_pages": total_pages,
         "items": [
             {
                 "id": r.id,

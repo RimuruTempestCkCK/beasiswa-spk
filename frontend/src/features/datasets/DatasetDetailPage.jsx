@@ -18,6 +18,8 @@ export default function DatasetDetailPage() {
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [totalRecords, setTotalRecords] = useState(0);
+  const [pageSize, setPageSize] = useState(25);
   const [filter, setFilter] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState(null);
@@ -42,16 +44,19 @@ export default function DatasetDetailPage() {
       .catch(() => toast.error('Gagal memuat detail dataset'));
   };
 
-  const fetchRecords = (p = 1, search = '') => {
+  const fetchRecords = (p = 1, search = filter, size = pageSize) => {
     setLoading(true);
-    const params = { page: p, page_size: 10, search };
+    const params = { page: p, page_size: size, search };
     if (id) params.dataset_id = id;
 
     apiClient
       .get(API.RECORDS.LIST, { params })
       .then((res) => {
         setRecords(res.data.items || res.data || []);
-        setTotalPages(res.data.total_pages || 1);
+        const total = res.data.total || 0;
+        setTotalRecords(total);
+        const calculatedPages = res.data.total_pages || Math.ceil(total / size) || 1;
+        setTotalPages(calculatedPages);
       })
       .catch(() => toast.error('Gagal memuat data mahasiswa'))
       .finally(() => setLoading(false));
@@ -239,8 +244,35 @@ export default function DatasetDetailPage() {
           </div>
         )}
 
-        {totalPages > 1 && (
-          <div className="p-3 d-flex justify-content-between align-items-center border-top">
+        {/* Pagination & Info Bar */}
+        <div className="p-3 d-flex flex-wrap justify-content-between align-items-center gap-3 border-top bg-light-subtle">
+          <div className="d-flex align-items-center gap-3">
+            <span className="text-muted small">
+              Menampilkan {records.length > 0 ? (page - 1) * pageSize + 1 : 0} - {Math.min(page * pageSize, totalRecords)} dari <strong>{totalRecords.toLocaleString('id-ID')}</strong> data
+            </span>
+            <div className="d-flex align-items-center gap-2">
+              <label htmlFor="pageSizeSelect" className="text-muted small mb-0">Baris:</label>
+              <select
+                id="pageSizeSelect"
+                className="form-select form-select-sm"
+                style={{ width: 'auto' }}
+                value={pageSize}
+                onChange={(e) => {
+                  const newSize = parseInt(e.target.value);
+                  setPageSize(newSize);
+                  setPage(1);
+                  fetchRecords(1, filter, newSize);
+                }}
+              >
+                <option value={10}>10</option>
+                <option value={25}>25</option>
+                <option value={50}>50</option>
+                <option value={100}>100</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="d-flex align-items-center gap-2">
             <span className="text-muted small">
               Halaman {page} dari {totalPages}
             </span>
@@ -250,13 +282,56 @@ export default function DatasetDetailPage() {
                 className="btn btn-outline-secondary"
                 disabled={page <= 1}
                 onClick={() => {
+                  setPage(1);
+                  fetchRecords(1, filter, pageSize);
+                }}
+                title="Halaman Pertama"
+              >
+                &laquo;
+              </button>
+              <button
+                type="button"
+                className="btn btn-outline-secondary"
+                disabled={page <= 1}
+                onClick={() => {
                   const p = Math.max(1, page - 1);
                   setPage(p);
-                  fetchRecords(p, filter);
+                  fetchRecords(p, filter, pageSize);
                 }}
               >
                 Sebelumnya
               </button>
+
+              {/* Numbered pagination */}
+              {Array.from({ length: totalPages }, (_, i) => i + 1)
+                .filter((p) => p === 1 || p === totalPages || Math.abs(p - page) <= 2)
+                .reduce((acc, p, idx, arr) => {
+                  if (idx > 0 && p - arr[idx - 1] > 1) {
+                    acc.push(-1 * idx); // ellipsis key
+                  }
+                  acc.push(p);
+                  return acc;
+                }, [])
+                .map((p) =>
+                  p < 0 ? (
+                    <button key={`ellipsis-${p}`} type="button" className="btn btn-outline-secondary" disabled>
+                      ...
+                    </button>
+                  ) : (
+                    <button
+                      key={p}
+                      type="button"
+                      className={`btn ${p === page ? 'btn-primary' : 'btn-outline-secondary'}`}
+                      onClick={() => {
+                        setPage(p);
+                        fetchRecords(p, filter, pageSize);
+                      }}
+                    >
+                      {p}
+                    </button>
+                  )
+                )}
+
               <button
                 type="button"
                 className="btn btn-outline-secondary"
@@ -264,14 +339,26 @@ export default function DatasetDetailPage() {
                 onClick={() => {
                   const p = Math.min(totalPages, page + 1);
                   setPage(p);
-                  fetchRecords(p, filter);
+                  fetchRecords(p, filter, pageSize);
                 }}
               >
                 Selanjutnya
               </button>
+              <button
+                type="button"
+                className="btn btn-outline-secondary"
+                disabled={page >= totalPages}
+                onClick={() => {
+                  setPage(totalPages);
+                  fetchRecords(totalPages, filter, pageSize);
+                }}
+                title="Halaman Terakhir"
+              >
+                &raquo;
+              </button>
             </div>
           </div>
-        )}
+        </div>
       </section>
 
       {/* POPUP MODAL: Tambah Record */}
