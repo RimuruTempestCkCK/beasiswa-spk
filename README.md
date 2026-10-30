@@ -4,7 +4,7 @@ Sistem Pendukung Keputusan (SPK) berbasis web untuk menentukan rekomendasi kelay
 
 ---
 
-## 🚀 Cara Menjalankan Aplikasi
+## Cara Menjalankan Aplikasi
 
 ### 1. Database (MySQL / XAMPP)
 1. Buka **XAMPP Control Panel**, lalu klik **Start** pada modul **MySQL** (Port `3306`).
@@ -40,7 +40,7 @@ npm run dev
 
 ---
 
-## 👥 Akun Login Bawaan
+## Akun Login Bawaan
 
 | Role | Email Login | Password | Hak Akses |
 |---|---|---|---|
@@ -50,7 +50,7 @@ npm run dev
 
 ---
 
-## 🔄 Alur Penggunaan Sistem (End-to-End)
+## Alur Penggunaan Sistem (End-to-End)
 
 ```
 1. Batch Dataset    → Data latih 50 mahasiswa tersimpan sebagai acuan historis.
@@ -64,7 +64,17 @@ npm run dev
 
 ---
 
-## 📊 6 Indikator Penilaian
+## Tangkapan Layar Sistem
+
+### Analisis Clustering K-Means
+![Analisis Clustering K-Means](docs/images/analisis-clustering.png)
+
+### Analisis dan Evaluasi Model Backpropagation
+![Analisis Evaluasi Model](docs/images/analisis-evaluasi.png)
+
+---
+
+## 6 Indikator Penilaian
 1. **IPK** (Indeks Prestasi Kumulatif)
 2. **Penghasilan Orang Tua** (Rp)
 3. **Jumlah Tanggungan Keluarga** (Orang)

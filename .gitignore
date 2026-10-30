@@ -56,7 +56,8 @@ artifacts/*
 !artifacts/.gitkeep
 
 # Local documentation only
-docs/
+docs/*
+!docs/images/
 
 # MCP Playwright artifacts
 .playwright-mcp/
