@@ -161,16 +161,18 @@
    4. Base
    ------------------------------------------------------------------------ */
 html { -webkit-text-size-adjust: 100%; }
+body, button, input, select, textarea, .btn, .form-control, .form-select, .table, .modal {
+  font-family: var(--rg-font);
+}
 body {
   margin: 0;
   background: var(--rg-bg);
   color: var(--rg-ink);
-  font-family: var(--rg-font);
   font-size: .9375rem;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
 }
-h1, h2, h3, h4 { font-family: var(--rg-font); color: var(--rg-ink); }
+h1, h2, h3, h4, h5, h6 { font-family: var(--rg-font); color: var(--rg-ink); }
 a { text-underline-offset: 3px; }
 svg { flex: none; }
 .num, .mono { font-variant-numeric: tabular-nums; }
