@@ -8,16 +8,14 @@ REQUIRED_FEATURES = [
     "family_dependents",
     "academic_achievement_score",
     "nonacademic_achievement_score",
-    "attendance_percentage",
 ]
 
 FEATURE_RANGES = {
     "ipk": (0.0, 4.0),
-    "parent_income": (0.000001, None),  # > 0
+    "parent_income": (0.0, None),       # >= 0
     "family_dependents": (0, None),     # >= 0
-    "academic_achievement_score": (0.0, None),   # >= 0
-    "nonacademic_achievement_score": (0.0, None),# >= 0
-    "attendance_percentage": (0.0, 100.0),
+    "academic_achievement_score": (0.0, None),   # >= 0 (skala biner 0/1 atau skor)
+    "nonacademic_achievement_score": (0.0, None),# >= 0 (skala biner 0/1 atau skor)
 }
 
 

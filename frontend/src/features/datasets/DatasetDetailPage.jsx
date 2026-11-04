@@ -32,8 +32,7 @@ export default function DatasetDetailPage() {
     jumlah_tanggungan: '',
     skor_prestasi_akademik: '',
     skor_prestasi_nonakademik: '',
-    persentase_kehadiran: '',
-  });
+      });
   const [saving, setSaving] = useState(false);
 
   const fetchDataset = () => {
@@ -85,8 +84,7 @@ export default function DatasetDetailPage() {
         jumlah_tanggungan: parseInt(form.jumlah_tanggungan),
         skor_prestasi_akademik: parseFloat(form.skor_prestasi_akademik),
         skor_prestasi_nonakademik: parseFloat(form.skor_prestasi_nonakademik),
-        persentase_kehadiran: parseFloat(form.persentase_kehadiran),
-      };
+              };
       await apiClient.post(API.RECORDS.CREATE, payload);
       toast.success('Record mahasiswa berhasil ditambahkan');
       setModalOpen(false);
@@ -98,8 +96,7 @@ export default function DatasetDetailPage() {
         jumlah_tanggungan: '',
         skor_prestasi_akademik: '',
         skor_prestasi_nonakademik: '',
-        persentase_kehadiran: '',
-      });
+              });
       fetchRecords(1);
       fetchDataset();
     } catch (err) {
@@ -467,60 +464,44 @@ export default function DatasetDetailPage() {
             </div>
             <div className="col-md-6">
               <label className="form-label" htmlFor="skor_prestasi_akademik">
-                Skor Prestasi Akademik (0 - 100) *
+                Prestasi Akademik (0 / 1) *
               </label>
               <input
                 id="skor_prestasi_akademik"
                 type="number"
                 step="0.1"
                 min="0"
-                max="100"
+                max="1"
                 className="form-control"
                 value={form.skor_prestasi_akademik}
                 onChange={(e) => setForm({ ...form, skor_prestasi_akademik: e.target.value })}
                 required
-                placeholder="Contoh: 80"
+                placeholder="0 atau 1"
               />
             </div>
             <div className="col-md-6">
               <label className="form-label" htmlFor="skor_prestasi_nonakademik">
-                Skor Prestasi Non-Akademik (0 - 100) *
+                Prestasi Non-Akademik (0 / 1) *
               </label>
               <input
                 id="skor_prestasi_nonakademik"
                 type="number"
                 step="0.1"
                 min="0"
-                max="100"
+                max="1"
                 className="form-control"
                 value={form.skor_prestasi_nonakademik}
                 onChange={(e) => setForm({ ...form, skor_prestasi_nonakademik: e.target.value })}
                 required
-                placeholder="Contoh: 75"
+                placeholder="0 atau 1"
               />
             </div>
-            <div className="col-md-6">
-              <label className="form-label" htmlFor="persentase_kehadiran">
-                Persentase Kehadiran (%) *
-              </label>
-              <input
-                id="persentase_kehadiran"
-                type="number"
-                step="0.1"
-                min="0"
-                max="100"
-                className="form-control"
-                value={form.persentase_kehadiran}
-                onChange={(e) => setForm({ ...form, persentase_kehadiran: e.target.value })}
-                required
-                placeholder="Contoh: 95.0"
-              />
-            </div>
+
           </div>
         </form>
       </Modal>
 
-      {/* POPUP MODAL: Rincian 6 Variabel Record */}
+      {/* POPUP MODAL: Rincian 5 Variabel Record */}
       <Modal
         isOpen={detailModalOpen}
         onClose={() => setDetailModalOpen(false)}
@@ -571,16 +552,12 @@ export default function DatasetDetailPage() {
                 <span className="fw-bold font-monospace">{selectedRecord.family_dependents || selectedRecord.jumlah_tanggungan || 0} Orang</span>
               </li>
               <li className="list-group-item d-flex justify-content-between align-items-center">
-                <span>Skor Prestasi Akademik</span>
-                <span className="fw-bold font-monospace">{selectedRecord.academic_achievement_score || selectedRecord.skor_prestasi_akademik || 0} / 100</span>
+                <span>Prestasi Akademik</span>
+                <span className="fw-bold font-monospace">{(selectedRecord.academic_achievement_score ?? selectedRecord.skor_prestasi_akademik) == 1 ? 'Ada (1)' : 'Tidak (0)'}</span>
               </li>
               <li className="list-group-item d-flex justify-content-between align-items-center">
-                <span>Skor Prestasi Non-Akademik</span>
-                <span className="fw-bold font-monospace">{selectedRecord.nonacademic_achievement_score || selectedRecord.skor_prestasi_nonakademik || 0} / 100</span>
-              </li>
-              <li className="list-group-item d-flex justify-content-between align-items-center">
-                <span>Persentase Kehadiran</span>
-                <span className="fw-bold font-monospace">{selectedRecord.attendance_percentage || selectedRecord.persentase_kehadiran || 0}%</span>
+                <span>Prestasi Non-Akademik</span>
+                <span className="fw-bold font-monospace">{(selectedRecord.nonacademic_achievement_score ?? selectedRecord.skor_prestasi_nonakademik) == 1 ? 'Ada (1)' : 'Tidak (0)'}</span>
               </li>
             </ul>
           </div>

@@ -1,6 +1,15 @@
-# SPK Seleksi Beasiswa (K-Means & Backpropagation)
+# SPK Seleksi Beasiswa Universitas Dharma Andalas (K-Means & Backpropagation)
 
-Sistem Pendukung Keputusan (SPK) berbasis web untuk menentukan rekomendasi kelayakan penerima beasiswa berdasarkan **6 Indikator Kriteria** menggunakan kombinasi algoritma **K-Means Clustering** dan **Artificial Neural Network Backpropagation (MLP)**.
+Sistem Pendukung Keputusan (SPK) berbasis web untuk menentukan rekomendasi kelayakan penerima beasiswa Universitas Dharma Andalas berdasarkan **Kerangka Penelitian Gambar 3.1** menggunakan **5 Variabel Penelitian** dengan kombinasi algoritma **K-Means Clustering (Davies-Bouldin Index)** dan **Artificial Neural Network Backpropagation (MLP)**.
+
+---
+
+## 5 Variabel Penelitian (Gambar 3.1)
+1. **Nilai Rata Akhir / IPS** (`ipk`) — Rentang numerik desimal `0.00` - `4.00`
+2. **Penghasilan Orang Tua** (`parent_income`) — Nilai numerik Rupiah per bulan ($\ge 0$)
+3. **Jumlah Tanggungan Keluarga / Jumlah Saudara** (`family_dependents`) — Nilai numerik bulat ($\ge 0$)
+4. **Prestasi Akademik** (`academic_achievement_score`) — Skala biner: `1` (Ada Prestasi), `0` (Tidak Ada Prestasi)
+5. **Prestasi Non-Akademik** (`nonacademic_achievement_score`) — Skala biner: `1` (Ada Prestasi), `0` (Tidak Ada Prestasi)
 
 ---
 
@@ -9,7 +18,7 @@ Sistem Pendukung Keputusan (SPK) berbasis web untuk menentukan rekomendasi kelay
 ### 1. Database (MySQL / XAMPP)
 1. Buka **XAMPP Control Panel**, lalu klik **Start** pada modul **MySQL** (Port `3306`).
 2. Buat database baru bernama `beasiswa_spk` melalui phpMyAdmin (`http://localhost/phpmyadmin`).
-3. *(Skema tabel, akun user, dan 50 data awal mahasiswa otomatis di-seed oleh backend saat pertama kali dijalankan).*
+3. *(Skema tabel, akun user, dan data awal otomatis di-seed oleh backend saat pertama kali dijalankan).*
 
 ---
 
@@ -50,34 +59,14 @@ npm run dev
 
 ---
 
-## Alur Penggunaan Sistem (End-to-End)
+## Alur Penggunaan Sistem Sesuai Metodologi (Gambar 3.1)
 
 ```
-1. Batch Dataset    → Data latih 50 mahasiswa tersimpan sebagai acuan historis.
-2. Preprocessing    → Pembersihan missing values & normalisasi Min-Max [0, 1].
-3. Clustering       → Eksperimen K-Means (K=2, 3, 4) & pilih model acuan dengan skor DBI terbaik.
-4. Training Model   → Latih jaringan saraf Backpropagation dan jadikan status 'Ready' (Aktif).
-5. Evaluasi Model   → Tinjau akurasi pengujian, presisi, recall, dan Confusion Matrix.
-6. Prediksi         → Masukkan data pendaftar baru untuk mendapatkan rekomendasi status kelayakan.
-7. Laporan          → Lihat daftar peringkat penerima beasiswa, cetak langsung ke PDF, atau ekspor CSV.
+1. Data Awal        → Upload file Excel/CSV data historis pendaftar beasiswa Undha.
+2. Preprocessing    → Data Cleaning, Transformasi nominal/biner, dan Normalisasi Min-Max [0, 1].
+3. K-Means (DBI)    → Eksperimen klaster K=2, 3, 4, 5 & memilih K optimal dengan DBI terendah.
+4. Backpropagation  → Latih jaringan saraf Backpropagation MLP berdasarkan label klaster K-Means.
+5. Evaluasi Model   → Confusion Matrix, Akurasi, Presisi, Recall, dan F1-Score pada data uji (Test 20%).
+6. GUI Prediksi     → Uji kelayakan kandidat beasiswa (individual / batch CSV).
+7. Laporan SPK      → Pemeringkatan rekomendasi kelayakan penerima beasiswa dan ekspor laporan CSV/PDF.
 ```
-
----
-
-## Tangkapan Layar Sistem
-
-### Analisis Clustering K-Means
-![Analisis Clustering K-Means](docs/images/analisis-clustering.png)
-
-### Analisis dan Evaluasi Model Backpropagation
-![Analisis Evaluasi Model](docs/images/analisis-evaluasi.png)
-
----
-
-## 6 Indikator Penilaian
-1. **IPK** (Indeks Prestasi Kumulatif)
-2. **Penghasilan Orang Tua** (Rp)
-3. **Jumlah Tanggungan Keluarga** (Orang)
-4. **Skor Prestasi Akademik** ($0 - 4$)
-5. **Skor Prestasi Non-Akademik** ($0 - 4$)
-6. **Persentase Kehadiran Kuliah** ($0\% - 100\%$)

@@ -35,12 +35,18 @@ def impute_medians(df: pd.DataFrame, medians: Optional[Dict[str, float]] = None)
 def fix_range_violations(df: pd.DataFrame) -> pd.DataFrame:
     """Clip values to valid ranges."""
     df = df.copy()
-    df["ipk"] = df["ipk"].clip(0.0, 4.0)
-    df["parent_income"] = df["parent_income"].clip(lower=0.000001)
-    df["family_dependents"] = df["family_dependents"].clip(lower=0)
-    df["academic_achievement_score"] = df["academic_achievement_score"].clip(lower=0.0)
-    df["nonacademic_achievement_score"] = df["nonacademic_achievement_score"].clip(lower=0.0)
-    df["attendance_percentage"] = df["attendance_percentage"].clip(0.0, 100.0)
+    if "ipk" in df.columns:
+        df["ipk"] = df["ipk"].clip(0.0, 4.0)
+    if "parent_income" in df.columns:
+        df["parent_income"] = df["parent_income"].clip(lower=0.0)
+    if "family_dependents" in df.columns:
+        df["family_dependents"] = df["family_dependents"].clip(lower=0)
+    if "academic_achievement_score" in df.columns:
+        df["academic_achievement_score"] = df["academic_achievement_score"].clip(lower=0.0)
+    if "nonacademic_achievement_score" in df.columns:
+        df["nonacademic_achievement_score"] = df["nonacademic_achievement_score"].clip(lower=0.0)
+    if "attendance_percentage" in df.columns:
+        df["attendance_percentage"] = df["attendance_percentage"].clip(0.0, 100.0)
     return df
 
 

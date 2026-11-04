@@ -10,6 +10,7 @@ from app.repositories.dataset_repo import DatasetRepository
 from app.repositories.user_repo import UserRepository
 from app.models.dataset import BatchStatus, DataStatus
 from app.ml.data_validation import validate_dataframe, REQUIRED_FEATURES
+from app.ml.raw_data_cleaner import clean_and_transform_raw_dataset
 
 
 OPTIONAL_COLUMNS = ["student_code", "student_name"]
@@ -79,28 +80,19 @@ class DatasetService:
         # Parse file
         try:
             if ext in (".xlsx", ".xls"):
-                df = pd.read_excel(save_path)
+                df_raw = pd.read_excel(save_path)
                 source_type = "excel"
             else:
-                df = pd.read_csv(save_path)
+                df_raw = pd.read_csv(save_path)
                 source_type = "csv"
         except Exception as e:
             if os.path.exists(save_path):
                 os.remove(save_path)
             raise HTTPException(status_code=400, detail=f"Cannot parse file: {str(e)}")
 
-        # Normalize column names (handle Indonesian & lowercase)
-        col_map = {
-            "nim": "student_code",
-            "nama": "student_name",
-            "penghasilan_ortu": "parent_income",
-            "jumlah_tanggungan": "family_dependents",
-            "skor_prestasi_akademik": "academic_achievement_score",
-            "skor_prestasi_nonakademik": "nonacademic_achievement_score",
-            "persentase_kehadiran": "attendance_percentage",
-        }
-        df.columns = [c.strip().lower() for c in df.columns]
-        df.rename(columns={c: col_map[c] for c in df.columns if c in col_map}, inplace=True)
+        # Automatically clean and transform raw format (e.g. Data Awal beasiswa.xlsx)
+        # into standard 5 research variables
+        df, raw_count, dropped_count = clean_and_transform_raw_dataset(df_raw)
 
         # Check required columns
         missing = [c for c in REQUIRED_FEATURES if c not in df.columns]
@@ -160,33 +152,25 @@ class DatasetService:
         )
 
         return {
+            "batch_id": batch_id,
             "total_rows": len(df),
             "valid_rows": valid_rows,
             "invalid_rows": invalid_rows,
-            "preview": preview,
-            "issues": issues[:50],
-            "validation": {
-                "total_rows": len(df),
-                "valid_rows": valid_rows,
-                "invalid_rows": invalid_rows,
-                "errors": issues[:50],
-            },
+            "filename": filename,
+            "status": BatchStatus.imported.value,
         }
 
-    def get_validation(self, batch_id: int) -> dict:
-        batch = self.get_batch(batch_id)
-        status_counts = self.repo.count_records_by_status(batch_id)
-        return {"batch_id": batch_id, "status_counts": status_counts}
-
-    def get_preview(self, batch_id: int, limit: int = 10) -> List[dict]:
+    def list_records(self, batch_id: int, page: int = 1, page_size: int = 20) -> dict:
         self.get_batch(batch_id)
-        _, records = self.repo.list_records(dataset_batch_id=batch_id, skip=0, limit=limit)
-        return [
+        skip = (page - 1) * page_size
+        total, items = self.repo.list_records(batch_id, skip=skip, limit=page_size)
+        serialized = [
             {
                 "id": r.id,
+                "dataset_batch_id": r.dataset_batch_id,
                 "student_code": r.student_code,
-                "nim": r.student_code,
                 "student_name": r.student_name,
+                "nim": r.student_code,
                 "nama": r.student_name,
                 "ipk": float(r.ipk) if r.ipk is not None else None,
                 "parent_income": float(r.parent_income) if r.parent_income is not None else None,
@@ -197,9 +181,9 @@ class DatasetService:
                 "skor_prestasi_akademik": float(r.academic_achievement_score) if r.academic_achievement_score is not None else None,
                 "nonacademic_achievement_score": float(r.nonacademic_achievement_score) if r.nonacademic_achievement_score is not None else None,
                 "skor_prestasi_nonakademik": float(r.nonacademic_achievement_score) if r.nonacademic_achievement_score is not None else None,
-                "attendance_percentage": float(r.attendance_percentage) if r.attendance_percentage is not None else None,
-                "persentase_kehadiran": float(r.attendance_percentage) if r.attendance_percentage is not None else None,
                 "data_status": r.data_status,
+                "created_at": r.created_at,
             }
-            for r in records
+            for r in items
         ]
+        return {"total": total, "page": page, "page_size": page_size, "items": serialized}

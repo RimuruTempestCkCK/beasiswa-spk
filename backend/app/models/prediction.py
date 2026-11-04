@@ -21,7 +21,7 @@ class Prediction(Base):
     family_dependents: Mapped[int] = mapped_column(SmallInteger, nullable=False)
     academic_achievement_score: Mapped[float] = mapped_column(DECIMAL(8, 3), nullable=False)
     nonacademic_achievement_score: Mapped[float] = mapped_column(DECIMAL(8, 3), nullable=False)
-    attendance_percentage: Mapped[float] = mapped_column(DECIMAL(5, 2), nullable=False)
+    attendance_percentage: Mapped[float | None] = mapped_column(DECIMAL(5, 2), nullable=True)
     predicted_cluster: Mapped[int] = mapped_column(Integer, nullable=False)
     confidence_score: Mapped[float | None] = mapped_column(DECIMAL(8, 7), nullable=True)
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)

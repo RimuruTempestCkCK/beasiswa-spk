@@ -38,24 +38,35 @@ def get_current_user_allow_query(
 
 
 def get_status_recommendation(c_label: int, confidence: Optional[float] = None) -> tuple[str, float]:
-    """Helper to convert cluster number into human decision text & rank score."""
+    """
+    Helper to convert cluster number into human decision text & rank score.
+    Supports K=2 optimal cluster (C0 & C1) and multi-cluster models.
+    """
     conf = float(confidence or 0.85)
-    if c_label == 2:
-        return "SANGAT LAYAK (Prioritas Utama)", round(85.0 + conf * 15.0, 2)
-    elif c_label == 1:
-        return "LAYAK (Kandidat Cadangan)", round(70.0 + conf * 15.0, 2)
+    # If 2 clusters (K=2): C1 = Layak, C0 = Tidak Layak
+    if c_label == 1:
+        return "LAYAK", round(75.0 + conf * 25.0, 2)
+    elif c_label == 2:
+        return "SANGAT LAYAK (Prioritas)", round(85.0 + conf * 15.0, 2)
     elif c_label == 3:
         return "DIPERTIMBANGKAN", round(55.0 + conf * 15.0, 2)
     else:
         return "TIDAK LAYAK", round(35.0 + conf * 15.0, 2)
 
 
-@router.get("/experiments")
-def get_experiments_report(db: Session = Depends(get_db), current_user=Depends(get_current_user)):
-    """Comprehensive summary list of all pipeline runs across batches, clustering, models, and scholarship recommendations."""
-    batches = db.query(DatasetBatch).all()
-    models = db.query(ModelVersion).order_by(desc(ModelVersion.id)).all()
-    clusters = db.query(ClusteringRun).order_by(desc(ClusteringRun.id)).all()
+@router.get("/summary")
+def get_reports_summary(
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    """Provides consolidated stats across Datasets, Models, and Predictions."""
+    # Batches
+    batches = db.query(DatasetBatch).order_by(desc(DatasetBatch.created_at)).all()
+    total_raw_students = sum([b.total_rows or 0 for b in batches])
+
+    # Models
+    models = db.query(ModelVersion).order_by(desc(ModelVersion.created_at)).all()
+    clusters = db.query(ClusteringRun).order_by(desc(ClusteringRun.created_at)).all()
 
     # Active model
     active_cluster = db.query(ClusteringRun).filter(ClusteringRun.is_selected == True).first()
@@ -76,7 +87,6 @@ def get_experiments_report(db: Session = Depends(get_db), current_user=Depends(g
             "family_dependents": p.family_dependents,
             "academic_achievement_score": float(p.academic_achievement_score),
             "nonacademic_achievement_score": float(p.nonacademic_achievement_score),
-            "attendance_percentage": float(p.attendance_percentage),
             "predicted_cluster": p.predicted_cluster,
             "confidence_score": float(p.confidence_score) if p.confidence_score is not None else None,
             "status_recommendation": status_text,
@@ -88,49 +98,39 @@ def get_experiments_report(db: Session = Depends(get_db), current_user=Depends(g
     # Sort descending by recommendation score
     prediction_rankings.sort(key=lambda x: x["score_recommendation"], reverse=True)
 
+    # Compute summary KPIs
+    sangat_layak = len([p for p in prediction_rankings if "LAYAK" in p["status_recommendation"] and "TIDAK" not in p["status_recommendation"]])
+    tidak_layak = len([p for p in prediction_rankings if "TIDAK" in p["status_recommendation"]])
+    dipertimbangkan = len(prediction_rankings) - sangat_layak - tidak_layak
+
     return {
-        "batches_count": len(batches),
-        "clustering_runs_count": len(clusters),
-        "model_versions_count": len(models),
-        "predictions_count": len(predictions),
-        "active_clustering_run_id": active_cluster.id if active_cluster else None,
-        "models": [
-            {
-                "id": m.id,
-                "name": m.model_name,
-                "model_name": m.model_name,
-                "version": m.model_version,
-                "model_version": m.model_version,
-                "status": m.status,
-                "metrics": m.metrics,
-                "accuracy": m.metrics.get("accuracy") if m.metrics else None,
-                "target_clustering_run_id": m.target_clustering_run_id,
-                "clustering_run_id": m.target_clustering_run_id,
-                "created_at": m.created_at,
-            }
-            for m in models
-        ],
-        "clusters": [
-            {
-                "id": c.id,
-                "preprocessing_run_id": c.preprocessing_run_id,
-                "k_value": c.k_value,
-                "k": c.k_value,
-                "dbi_score": float(c.dbi_score) if c.dbi_score is not None else None,
-                "status": c.status,
-                "is_selected": c.is_selected,
-                "created_at": c.created_at,
-            }
-            for c in clusters
-        ],
-        "scholarship_recommendations": prediction_rankings,
+        "overview": {
+            "total_datasets": len(batches),
+            "total_students_enrolled": total_raw_students,
+            "total_predictions": len(predictions),
+            "total_models": len(models),
+            "total_clustering_experiments": len(clusters),
+            "sangat_layak_count": sangat_layak,
+            "layak_count": sangat_layak,
+            "dipertimbangkan_count": dipertimbangkan,
+            "tidak_layak_count": tidak_layak,
+        },
+        "active_clustering": {
+            "id": active_cluster.id if active_cluster else None,
+            "k_value": active_cluster.k_value if active_cluster else None,
+            "dbi_score": float(active_cluster.dbi_score) if active_cluster and active_cluster.dbi_score else None,
+            "status": active_cluster.status if active_cluster else None,
+        } if active_cluster else None,
+        "rankings": prediction_rankings[:50],  # Top 50 kandidat
     }
 
 
-@router.get("/export/predictions")
-@router.get("/export/rankings")
-def export_predictions_csv(db: Session = Depends(get_db), current_user=Depends(get_current_user_allow_query)):
-    """Export all actual scholarship candidate inference results into CSV format."""
+@router.get("/export/csv")
+def export_reports_csv(
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user_allow_query),
+):
+    """Exports full ranked decision table strictly with the 5 research features to CSV."""
     predictions = db.query(Prediction).order_by(desc(Prediction.created_at)).all()
 
     items = []
@@ -145,7 +145,6 @@ def export_predictions_csv(db: Session = Depends(get_db), current_user=Depends(g
             "family_dependents": p.family_dependents,
             "academic": float(p.academic_achievement_score),
             "nonacademic": float(p.nonacademic_achievement_score),
-            "attendance": float(p.attendance_percentage),
             "cluster": f"C{p.predicted_cluster}",
             "confidence": f"{(float(p.confidence_score)*100):.2f}%" if p.confidence_score else "-",
             "status": status_text,
@@ -160,8 +159,8 @@ def export_predictions_csv(db: Session = Depends(get_db), current_user=Depends(g
     output = io.StringIO()
     writer = csv.writer(output)
     writer.writerow([
-        "Peringkat", "ID Uji", "Nama Mahasiswa", "NIM / Kode", "IPK", "Penghasilan Ortu (Rp)", "Tanggungan",
-        "Prestasi Akademik", "Prestasi Non-Akademik", "Kehadiran (%)",
+        "Peringkat", "ID Uji", "Nama Mahasiswa", "NIM / Kode", "IPK / IPS", "Penghasilan Ortu (Rp)", "Tanggungan",
+        "Prestasi Akademik", "Prestasi Non-Akademik",
         "Klaster Hasil", "Confidence Score", "Rekomendasi Keputusan", "Skor SPK",
         "Keterangan / Catatan", "Waktu Inferensi"
     ])
@@ -170,8 +169,8 @@ def export_predictions_csv(db: Session = Depends(get_db), current_user=Depends(g
         writer.writerow([
             rank, f"#{item['id']}", item["student_name"], item["student_code"],
             item["ipk"], int(item["parent_income"]),
-            item["family_dependents"], item["academic"], item["nonacademic"],
-            item["attendance"], item["cluster"], item["confidence"],
+            item["family_dependents"], int(item["academic"]), int(item["nonacademic"]),
+            item["cluster"], item["confidence"],
             item["status"], item["score"], item["notes"], item["created_at"]
         ])
 

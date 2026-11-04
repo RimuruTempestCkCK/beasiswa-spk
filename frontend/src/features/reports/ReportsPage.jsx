@@ -206,7 +206,8 @@ export default function ReportsPage() {
                       <th scope="col" className="text-end">IPK</th>
                       <th scope="col" className="text-end">Penghasilan Ortu</th>
                       <th scope="col" className="text-center">Tanggungan</th>
-                      <th scope="col" className="text-center">Kehadiran</th>
+                      <th scope="col" className="text-center">Prestasi Akad.</th>
+                      <th scope="col" className="text-center">Prestasi Non-Akad.</th>
                       <th scope="col" className="text-center">Klaster</th>
                       <th scope="col">Rekomendasi Keputusan</th>
                       <th scope="col" className="text-end">Keyakinan</th>
@@ -217,8 +218,8 @@ export default function ReportsPage() {
                   <tbody>
                     {recommendations.map((r, idx) => {
                       let badgeCls = 'bg-secondary-subtle text-secondary border';
-                      if (r.predicted_cluster === 2) badgeCls = 'bg-success-subtle text-success border border-success fw-bold';
-                      else if (r.predicted_cluster === 1) badgeCls = 'bg-info-subtle text-info border border-info';
+                      if (r.predicted_cluster === 1) badgeCls = 'bg-success-subtle text-success border border-success fw-bold';
+                      else if (r.predicted_cluster === 2) badgeCls = 'bg-primary-subtle text-primary border border-primary fw-bold';
                       else if (r.predicted_cluster === 3) badgeCls = 'bg-warning-subtle text-warning border border-warning';
                       else if (r.predicted_cluster === 0) badgeCls = 'bg-danger-subtle text-danger border border-danger';
 
@@ -234,7 +235,8 @@ export default function ReportsPage() {
                           <td className="num text-end font-monospace">{r.ipk.toFixed(2)}</td>
                           <td className="num text-end font-monospace">Rp {r.parent_income.toLocaleString('id-ID')}</td>
                           <td className="text-center font-monospace">{r.family_dependents} org</td>
-                          <td className="text-center font-monospace">{r.attendance_percentage.toFixed(1)}%</td>
+                          <td className="text-center font-monospace">{Number(r.academic_achievement_score) === 1 ? 'Ada (1)' : 'Tidak (0)'}</td>
+                          <td className="text-center font-monospace">{Number(r.nonacademic_achievement_score) === 1 ? 'Ada (1)' : 'Tidak (0)'}</td>
                           <td className="text-center">
                             <span className="badge bg-light text-dark border">C{r.predicted_cluster}</span>
                           </td>

@@ -40,9 +40,9 @@ class PredictionService:
         family_dependents: int,
         academic_achievement_score: float,
         nonacademic_achievement_score: float,
-        attendance_percentage: float,
-        notes: Optional[str],
-        created_by: Optional[int],
+        attendance_percentage: Optional[float] = None,
+        notes: Optional[str] = None,
+        created_by: Optional[int] = None,
     ):
         # Resolve target model: use provided ID or resolve active model deterministically
         if model_version_id:
@@ -66,7 +66,6 @@ class PredictionService:
             "family_dependents": float(family_dependents),
             "academic_achievement_score": academic_achievement_score,
             "nonacademic_achievement_score": nonacademic_achievement_score,
-            "attendance_percentage": attendance_percentage,
         }
 
         predicted_cluster, confidence_score = predict_single(model.artifact_path, features)
@@ -146,7 +145,7 @@ class PredictionService:
         if missing:
             raise HTTPException(
                 status_code=400,
-                detail=f"Kolom wajib tidak ditemukan: {', '.join(missing)}. Kolom wajib adalah: ipk, parent_income, family_dependents, academic_achievement_score, nonacademic_achievement_score, attendance_percentage."
+                detail=f"Kolom wajib tidak ditemukan: {', '.join(missing)}. Kolom wajib adalah: {', '.join(REQUIRED_FEATURES)}."
             )
 
         processed = []
@@ -157,7 +156,7 @@ class PredictionService:
                 fam_dep = int(row["family_dependents"])
                 acad = float(row["academic_achievement_score"])
                 nonacad = float(row["nonacademic_achievement_score"])
-                att = float(row["attendance_percentage"])
+                att = float(row["attendance_percentage"]) if "attendance_percentage" in row and pd.notna(row["attendance_percentage"]) else None
             except Exception:
                 continue
 
@@ -179,7 +178,6 @@ class PredictionService:
                 "family_dependents": float(fam_dep),
                 "academic_achievement_score": acad,
                 "nonacademic_achievement_score": nonacad,
-                "attendance_percentage": att,
             }
 
             predicted_cluster, confidence_score = predict_single(model.artifact_path, features)

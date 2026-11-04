@@ -416,7 +416,6 @@ export default function ClusteringPage() {
                     <th scope="col" className="text-end">Tanggungan</th>
                     <th scope="col" className="text-end">Prestasi Akad.</th>
                     <th scope="col" className="text-end">Prestasi Non-Akad.</th>
-                    <th scope="col" className="text-end">Kehadiran</th>
                     <th scope="col" className="text-end">Jumlah Mhs</th>
                   </tr>
                 </thead>
@@ -434,7 +433,6 @@ export default function ClusteringPage() {
                       <td className="text-end font-monospace">{p.mean_dependents !== undefined ? Number(p.mean_dependents).toFixed(1) : '-'}</td>
                       <td className="text-end font-monospace">{p.mean_academic !== undefined ? Number(p.mean_academic).toFixed(1) : '-'}</td>
                       <td className="text-end font-monospace">{p.mean_nonacademic !== undefined ? Number(p.mean_nonacademic).toFixed(1) : '-'}</td>
-                      <td className="text-end font-monospace">{p.mean_attendance !== undefined ? `${Number(p.mean_attendance).toFixed(1)}%` : '-'}</td>
                       <td className="text-end fw-bold text-success">{p.count ?? '-'}</td>
                     </tr>
                   ))}

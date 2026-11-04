@@ -95,7 +95,6 @@ class TrainingService:
                     "family_dependents": float(r.family_dependents) if r.family_dependents is not None else None,
                     "academic_achievement_score": float(r.academic_achievement_score) if r.academic_achievement_score is not None else None,
                     "nonacademic_achievement_score": float(r.nonacademic_achievement_score) if r.nonacademic_achievement_score is not None else None,
-                    "attendance_percentage": float(r.attendance_percentage) if r.attendance_percentage is not None else None,
                 })
             df_raw = pd.DataFrame(data)
 

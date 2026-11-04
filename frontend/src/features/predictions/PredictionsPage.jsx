@@ -19,8 +19,7 @@ export default function PredictionsPage() {
     family_dependents: '',
     academic_achievement_score: '',
     nonacademic_achievement_score: '',
-    attendance_percentage: '',
-    notes: '',
+        notes: '',
   });
 
   // Batch CSV file
@@ -89,8 +88,7 @@ export default function PredictionsPage() {
       family_dependents: parseInt(formData.family_dependents),
       academic_achievement_score: parseFloat(formData.academic_achievement_score),
       nonacademic_achievement_score: parseFloat(formData.nonacademic_achievement_score),
-      attendance_percentage: parseFloat(formData.attendance_percentage),
-      notes: formData.notes,
+            notes: formData.notes,
     };
 
     apiClient
@@ -144,7 +142,7 @@ export default function PredictionsPage() {
 
   const handleDownloadSampleCSV = () => {
     const csvContent =
-      'nim,nama,ipk,penghasilan_ortu,jumlah_tanggungan,skor_prestasi_akademik,skor_prestasi_nonakademik,persentase_kehadiran,catatan\n' +
+      'nim,nama,ipk,penghasilan_ortu,jumlah_tanggungan,skor_prestasi_akademik,skor_prestasi_nonakademik,catatan\n' +
       'MHS2024101,Rizky Fauzan,3.85,1200000,4,3.5,3.0,96,Pengajuan Beasiswa Mandiri\n' +
       'MHS2024102,Dewi Anggraini,3.40,2500000,3,2.0,1.5,88,Kandidat Cadangan Kuota\n' +
       'MHS2024103,Bagas Pratama,2.45,6500000,1,0.5,0.0,70,Data Pembanding Tidak Mampu\n';
@@ -190,8 +188,8 @@ export default function PredictionsPage() {
 
   const getStatusBadge = (cluster) => {
     const c = Number(cluster);
-    if (c === 2) return <span className="badge bg-success-subtle text-success border border-success fw-bold">Sangat Layak (C2)</span>;
-    if (c === 1) return <span className="badge bg-info-subtle text-info border border-info">Layak (C1)</span>;
+    if (c === 1) return <span className="badge bg-success-subtle text-success border border-success fw-bold">Layak (C1)</span>;
+    if (c === 2) return <span className="badge bg-primary-subtle text-primary border border-primary fw-bold">Sangat Layak (C2)</span>;
     if (c === 3) return <span className="badge bg-warning-subtle text-warning border border-warning">Dipertimbangkan (C3)</span>;
     return <span className="badge bg-danger-subtle text-danger border border-danger">Tidak Layak (C0)</span>;
   };
@@ -370,53 +368,38 @@ export default function PredictionsPage() {
                       />
                     </div>
                     <div className="col-md-6">
-                      <label className="form-label" htmlFor="academic_achievement_score">Prestasi Akademik (0 - 4) *</label>
+                      <label className="form-label" htmlFor="academic_achievement_score">Prestasi Akademik (0 / 1) *</label>
                       <input
                         id="academic_achievement_score"
                         name="academic_achievement_score"
                         type="number"
                         step="0.1"
                         min="0"
-                        max="4"
+                        max="1"
                         className="form-control"
                         value={formData.academic_achievement_score}
                         onChange={handleChange}
                         required
-                        placeholder="3.0"
+                        placeholder="0 atau 1"
                       />
                     </div>
                     <div className="col-md-6">
-                      <label className="form-label" htmlFor="nonacademic_achievement_score">Prestasi Non-Akademik (0 - 4) *</label>
+                      <label className="form-label" htmlFor="nonacademic_achievement_score">Prestasi Non-Akademik (0 / 1) *</label>
                       <input
                         id="nonacademic_achievement_score"
                         name="nonacademic_achievement_score"
                         type="number"
                         step="0.1"
                         min="0"
-                        max="4"
+                        max="1"
                         className="form-control"
                         value={formData.nonacademic_achievement_score}
                         onChange={handleChange}
                         required
-                        placeholder="2.0"
+                        placeholder="0 atau 1"
                       />
                     </div>
-                    <div className="col-md-6">
-                      <label className="form-label" htmlFor="attendance_percentage">Kehadiran (%) *</label>
-                      <input
-                        id="attendance_percentage"
-                        name="attendance_percentage"
-                        type="number"
-                        step="0.1"
-                        min="0"
-                        max="100"
-                        className="form-control"
-                        value={formData.attendance_percentage}
-                        onChange={handleChange}
-                        required
-                        placeholder="95"
-                      />
-                    </div>
+
                   </div>
 
                   <div className="mb-4">
@@ -567,7 +550,8 @@ export default function PredictionsPage() {
                 <th scope="col" className="text-end">IPK</th>
                 <th scope="col" className="text-end">Gaji Ortu</th>
                 <th scope="col" className="text-center">Tanggungan</th>
-                <th scope="col" className="text-center">Kehadiran</th>
+                <th scope="col" className="text-center">Prestasi Akad.</th>
+                <th scope="col" className="text-center">Prestasi Non-Akad.</th>
                 <th scope="col" className="text-center">Hasil Keputusan</th>
                 <th scope="col" className="text-end">Keyakinan</th>
                 <th scope="col" className="text-end d-print-none">Aksi</th>
@@ -586,7 +570,8 @@ export default function PredictionsPage() {
                     {h.parent_income ? `Rp ${Number(h.parent_income).toLocaleString('id-ID')}` : '-'}
                   </td>
                   <td className="text-center font-monospace">{h.family_dependents} org</td>
-                  <td className="text-center font-monospace">{h.attendance_percentage}%</td>
+                  <td className="text-center font-monospace">{Number(h.academic_achievement_score) === 1 ? 'Ada (1)' : 'Tidak (0)'}</td>
+                  <td className="text-center font-monospace">{Number(h.nonacademic_achievement_score) === 1 ? 'Ada (1)' : 'Tidak (0)'}</td>
                   <td className="text-center">{getStatusBadge(h.predicted_cluster)}</td>
                   <td className="num text-end font-monospace">
                     {h.confidence_score ? `${(Number(h.confidence_score) * 100).toFixed(1)}%` : '-'}
@@ -706,10 +691,7 @@ export default function PredictionsPage() {
                 <span>Prestasi Non-Akademik</span>
                 <span className="fw-bold font-monospace">{selectedHistoryItem.nonacademic_achievement_score}</span>
               </li>
-              <li className="list-group-item d-flex justify-content-between align-items-center">
-                <span>Kehadiran</span>
-                <span className="fw-bold font-monospace">{selectedHistoryItem.attendance_percentage}%</span>
-              </li>
+
             </ul>
 
             {selectedHistoryItem.notes && (

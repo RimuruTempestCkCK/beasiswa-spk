@@ -12,7 +12,7 @@ class PredictionRequest(BaseModel):
     family_dependents: int
     academic_achievement_score: float
     nonacademic_achievement_score: float
-    attendance_percentage: float
+    attendance_percentage: Optional[float] = None
     notes: Optional[str] = None
 
     @field_validator("ipk")
@@ -25,8 +25,8 @@ class PredictionRequest(BaseModel):
     @field_validator("parent_income")
     @classmethod
     def validate_income(cls, v: float) -> float:
-        if v <= 0:
-            raise ValueError("Parent income must be greater than 0")
+        if v < 0:
+            raise ValueError("Parent income must be >= 0")
         return v
 
     @field_validator("family_dependents")
@@ -38,8 +38,8 @@ class PredictionRequest(BaseModel):
 
     @field_validator("attendance_percentage")
     @classmethod
-    def validate_attendance(cls, v: float) -> float:
-        if not 0.0 <= v <= 100.0:
+    def validate_attendance(cls, v: Optional[float]) -> Optional[float]:
+        if v is not None and not 0.0 <= v <= 100.0:
             raise ValueError("Attendance percentage must be between 0 and 100")
         return v
 
@@ -54,7 +54,7 @@ class PredictionOut(BaseModel):
     family_dependents: int
     academic_achievement_score: float
     nonacademic_achievement_score: float
-    attendance_percentage: float
+    attendance_percentage: Optional[float] = None
     predicted_cluster: int
     confidence_score: Optional[float]
     notes: Optional[str]
