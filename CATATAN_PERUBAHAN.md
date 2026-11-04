@@ -127,11 +127,13 @@ Dokumen ini mencatat seluruh perubahan teknis, metodologis, dan implementasi kod
 
 ## 6. Pembaruan Identitas Visual Logo Universitas Dharma Andalas (4 November 2026)
 
-- **Aset Logo Baru**: Lambang resmi Universitas Dharma Andalas / Yayasan Pendidikan Dharma Andalas (`frontend/public/img/logo-unidha.png` dan `frontend/public/favicon.png`).
+- **Aset Logo Baru**: Lambang resmi Universitas Dharma Andalas / Yayasan Pendidikan Dharma Andalas (`frontend/public/img/logo-unidha.png`, `frontend/public/favicon.png`, dan `frontend/public/favicon.ico`).
 - **Komponen Frontend yang Diperbarui**:
   - `frontend/src/Layout/Sidebar.jsx`: Brand mark sidebar diganti dari SVG generik menjadi gambar logo resmi Universitas Dharma Andalas.
   - `frontend/src/features/auth/LoginPage.jsx`: Brand mark pada tampilan desktop pitch dan mobile header diganti menggunakan logo resmi Universitas Dharma Andalas.
   - `frontend/public/index.html`: Favicon browser diperbarui mengarah ke logo resmi serta title tab browser diselaraskan menjadi `SPK Penerima Beasiswa - Universitas Dharma Andalas`.
+  - `frontend/public/favicon.ico`: Dikonversi dan digenerate langsung dari logo resmi Universitas Dharma Andalas (64x64 icon multi-layer) menggantikan icon bawaan CRA/React default.
+  - `frontend/public/manifest.json`: Metadata PWA diselaraskan dengan nama SPK Beasiswa Universitas Dharma Andalas dan tautan favicon resmi.
 
 ---
 
