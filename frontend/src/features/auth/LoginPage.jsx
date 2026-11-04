@@ -59,15 +59,7 @@ export default function LoginPage() {
         <div className="auth-aside-inner">
           <div className="brand brand-on-dark" aria-label="SPK Beasiswa">
             <span className="brand-mark">
-              <svg className="crest" viewBox="0 0 32 32" aria-hidden="true" focusable="false">
-                <path
-                  className="crest-shield"
-                  d="M16 2 4 6.5v8.2c0 7.3 5 13.3 12 15.3 7-2 12-8 12-15.3V6.5z"
-                />
-                <path className="crest-line" d="M10 14 16 9.5l6 4.5" />
-                <path className="crest-line" d="M9.5 19c2.2-1.6 4.3-1.6 6.5 0s4.3 1.6 6.5 0" />
-                <path className="crest-line" d="M9.5 23c2.2-1.6 4.3-1.6 6.5 0s4.3 1.6 6.5 0" />
-              </svg>
+              <img src="/img/logo-unidha.png" alt="Logo Universitas Dharma Andalas" className="crest" style={{ objectFit: "contain" }} />
             </span>
             <span className="brand-text">
               <span className="brand-name">SPK Beasiswa</span>
@@ -145,15 +137,7 @@ export default function LoginPage() {
         <header className="auth-top">
           <div className="brand auth-brand-sm">
             <span className="brand-mark">
-              <svg className="crest" viewBox="0 0 32 32" aria-hidden="true" focusable="false">
-                <path
-                  className="crest-shield"
-                  d="M16 2 4 6.5v8.2c0 7.3 5 13.3 12 15.3 7-2 12-8 12-15.3V6.5z"
-                />
-                <path className="crest-line" d="M10 14 16 9.5l6 4.5" />
-                <path className="crest-line" d="M9.5 19c2.2-1.6 4.3-1.6 6.5 0s4.3 1.6 6.5 0" />
-                <path className="crest-line" d="M9.5 23c2.2-1.6 4.3-1.6 6.5 0s4.3 1.6 6.5 0" />
-              </svg>
+              <img src="/img/logo-unidha.png" alt="Logo Universitas Dharma Andalas" className="crest" style={{ objectFit: "contain" }} />
             </span>
             <span className="brand-text">
               <span className="brand-name">SPK Beasiswa</span>

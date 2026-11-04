@@ -122,3 +122,14 @@ Dokumen ini mencatat seluruh perubahan teknis, metodologis, dan implementasi kod
 - **Penyelarasan Kode**:
   - `backend/app/api/v1/endpoints/reports.py`: Klaster 0 ditetapkan sebagai **"LAYAK"**, Klaster 1 sebagai **"TIDAK LAYAK"**.
   - `frontend/src/features/predictions/PredictionsPage.jsx` & `ReportsPage.jsx`: Badge status diselaraskan: C0 $\rightarrow$ **Layak (Hijau)**, C1 $\rightarrow$ **Tidak Layak (Merah)**.
+
+---
+
+## 6. Pembaruan Identitas Visual Logo Universitas Dharma Andalas (4 November 2026)
+
+- **Aset Logo Baru**: Lambang resmi Universitas Dharma Andalas / Yayasan Pendidikan Dharma Andalas (`frontend/public/img/logo-unidha.png` dan `frontend/public/favicon.png`).
+- **Komponen Frontend yang Diperbarui**:
+  - `frontend/src/Layout/Sidebar.jsx`: Brand mark sidebar diganti dari SVG generik menjadi gambar logo resmi Universitas Dharma Andalas.
+  - `frontend/src/features/auth/LoginPage.jsx`: Brand mark pada tampilan desktop pitch dan mobile header diganti menggunakan logo resmi Universitas Dharma Andalas.
+  - `frontend/public/index.html`: Favicon browser diperbarui mengarah ke logo resmi serta title tab browser diselaraskan menjadi `SPK Penerima Beasiswa - Universitas Dharma Andalas`.
+
