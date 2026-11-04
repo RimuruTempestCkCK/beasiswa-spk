@@ -56,6 +56,7 @@ def get_status_recommendation(c_label: int, confidence: Optional[float] = None) 
 
 
 @router.get("/summary")
+@router.get("/experiments")
 def get_reports_summary(
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
@@ -104,6 +105,35 @@ def get_reports_summary(
     tidak_layak = len([p for p in prediction_rankings if "TIDAK" in p["status_recommendation"]])
     dipertimbangkan = len(prediction_rankings) - sangat_layak - tidak_layak
 
+    models_data = []
+    for m in models:
+        acc = None
+        if m.metrics and isinstance(m.metrics, dict):
+            acc = m.metrics.get("accuracy")
+        models_data.append({
+            "id": m.id,
+            "model_name": m.model_name,
+            "model_version": m.model_version,
+            "status": m.status.value if hasattr(m.status, 'value') else str(m.status),
+            "accuracy": acc,
+            "metrics": m.metrics,
+            "training_config": m.training_config,
+            "created_at": m.created_at,
+        })
+
+    clusters_data = []
+    for c in clusters:
+        clusters_data.append({
+            "id": c.id,
+            "k_value": c.k_value,
+            "k": c.k_value,
+            "dbi_score": float(c.dbi_score) if c.dbi_score is not None else None,
+            "is_selected": c.is_selected,
+            "status": c.status.value if hasattr(c.status, 'value') else str(c.status),
+            "centroids": c.config.get("centroids") if c.config else None,
+            "created_at": c.created_at,
+        })
+
     return {
         "overview": {
             "total_datasets": len(batches),
@@ -123,6 +153,10 @@ def get_reports_summary(
             "status": active_cluster.status if active_cluster else None,
         } if active_cluster else None,
         "rankings": prediction_rankings[:50],  # Top 50 kandidat
+        "scholarship_recommendations": prediction_rankings,
+        "clusters": clusters_data,
+        "clustering_runs": clusters_data,
+        "models": models_data,
     }
 
 

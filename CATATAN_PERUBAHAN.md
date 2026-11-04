@@ -133,3 +133,22 @@ Dokumen ini mencatat seluruh perubahan teknis, metodologis, dan implementasi kod
   - `frontend/src/features/auth/LoginPage.jsx`: Brand mark pada tampilan desktop pitch dan mobile header diganti menggunakan logo resmi Universitas Dharma Andalas.
   - `frontend/public/index.html`: Favicon browser diperbarui mengarah ke logo resmi serta title tab browser diselaraskan menjadi `SPK Penerima Beasiswa - Universitas Dharma Andalas`.
 
+---
+
+## 7. Audit & Pengujian Menyeluruh Aplikasi (4 November 2026)
+
+- **Menjalankan Server**:
+  - Backend FastAPI berjalan pada `http://127.0.0.1:8000`.
+  - Frontend Vite React berjalan pada `http://localhost:3001`.
+- **Inspeksi dan Validasi Halaman dengan Playwright MCP**:
+  - **Login / Otentikasi** (`/auth/login`): Berfungsi normal dengan kredensial administrator.
+  - **Dashboard** (`/dashboard`): Menampilkan ringkasan KPI (Batch dataset, Total Mahasiswa, Eksperimen K-Means, Model Aktif Ready).
+  - **Batch Dataset** (`/datasets` & `/datasets/import`): Tabel dataset terisi, fitur unggah file raw Excel/CSV siap digunakan.
+  - **Preprocessing Data** (`/preprocessing`): Menampilkan riwayat normalisasi dan form imputasi data.
+  - **K-Means Clustering** (`/clustering`): Eksperimen K=2, 3, 4 dengan evaluasi Davies-Bouldin Index (DBI) tampil lengkap beserta status acuan terpilih.
+  - **Pelatihan Model Backpropagation** (`/training`): Pelatihan JST MLP berjalan sukses dan otomatis mengubah status model menjadi `ready`.
+  - **Prediksi Kelayakan Beasiswa** (`/predictions`): Form input 5 variabel penelitian diuji langsung (contoh: Budi Santoso, IPK 3.75, Penghasilan 1.5jt, Tanggungan 3, Prestasi 1/1) dan berhasil melakukan inferensi real-time.
+  - **Laporan Rekomendasi & Audit Eksperimen** (`/reports`): Endpoint laporan diperbaiki sehingga tab rekomendasi seleksi dan audit eksperimen model menampilkan data secara akurat.
+  - **Manajemen Pengguna** (`/users`): Menampilkan daftar staf, operator, reviewer, dan admin sistem.
+
+
