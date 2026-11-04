@@ -91,3 +91,22 @@ Dokumen ini mencatat seluruh perubahan teknis, metodologis, dan implementasi kod
   - F1-Score (Macro): $1.0000$
   - Confusion Matrix:
     $$\begin{bmatrix} 68 & 0 \\ 0 & 16 \end{bmatrix}$$
+
+
+---
+
+## 4. Pembaruan File Perhitungan Manual Excel (4 November 2026)
+
+- **Berkas yang dibuat**: [Perhitungan_Manual_SPK_Beasiswa_Undha.xlsx](file:///C:/Users/Maxtop/Downloads/beasiswa-spk/Perhitungan_Manual_SPK_Beasiswa_Undha.xlsx)
+- **Tujuan**: Menyediakan lembar kerja Excel interaktif lengkap dengan formula rumus asli untuk validasi perhitungan manual pada skripsi/jurnal penelitian.
+- **Struktur Sheet**:
+  1. `1. Data Mentah`: Salinan utuh dari data awal pendaftar beasiswa (741 baris).
+  2. `2. Data Bersih (5 Variabel)`: 416 data valid setelah cleaning baris kosong IPS dan transformasi fitur.
+  3. `3. Normalisasi Min-Max`: Perhitungan normalisasi rentang $[0, 1]$ dengan formula dinamis Excel `=(X - MIN)/(MAX - MIN)`.
+  4. `4. K-Means (K=2) Euclidean`: Tabel Centroid K=2 dan formula jarak Euclidean `SQRT((x-c)^2 + ...)` untuk menentukan klaster terdekat dan status kelayakan tiap mahasiswa.
+  5. `5. Evaluasi DBI (K Optimal)`: Tabel evaluasi Davies-Bouldin Index untuk K=2, 3, 4, 5 dengan K=2 sebagai nilai terendah ($0.2761$).
+  6. `6. Evaluasi Backpropagation`: Pembagian Train-Test 80:20, Confusion Matrix ($2 \times 2$), dan formula Akurasi, Presisi, Recall, dan F1-Score.
+
+- **Pembaruan Formula Metrik Sheet 6 (4 November 2026)**:
+  - Memperbaiki formula F1-Score Macro pada sel D19 agar merujuk langsung ke sel formula Excel yang valid: `=2*(D17*D18)/(D17+D18)`.
+  - Memperbaiki pemisahan antara teks penjelasan rumus dan formula dinamis Excel di seluruh tabel metrik untuk mencegah error `#NAME?`.
