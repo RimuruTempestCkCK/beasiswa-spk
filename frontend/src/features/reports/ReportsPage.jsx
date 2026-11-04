@@ -218,10 +218,10 @@ export default function ReportsPage() {
                   <tbody>
                     {recommendations.map((r, idx) => {
                       let badgeCls = 'bg-secondary-subtle text-secondary border';
-                      if (r.predicted_cluster === 1) badgeCls = 'bg-success-subtle text-success border border-success fw-bold';
+                      if (r.predicted_cluster === 0) badgeCls = 'bg-success-subtle text-success border border-success fw-bold';
+                      else if (r.predicted_cluster === 1) badgeCls = 'bg-danger-subtle text-danger border border-danger';
                       else if (r.predicted_cluster === 2) badgeCls = 'bg-primary-subtle text-primary border border-primary fw-bold';
                       else if (r.predicted_cluster === 3) badgeCls = 'bg-warning-subtle text-warning border border-warning';
-                      else if (r.predicted_cluster === 0) badgeCls = 'bg-danger-subtle text-danger border border-danger';
 
                       return (
                         <tr key={r.id || idx}>

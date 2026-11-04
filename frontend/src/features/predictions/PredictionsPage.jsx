@@ -188,10 +188,10 @@ export default function PredictionsPage() {
 
   const getStatusBadge = (cluster) => {
     const c = Number(cluster);
-    if (c === 1) return <span className="badge bg-success-subtle text-success border border-success fw-bold">Layak (C1)</span>;
+    if (c === 0) return <span className="badge bg-success-subtle text-success border border-success fw-bold">Layak (C0)</span>;
+    if (c === 1) return <span className="badge bg-danger-subtle text-danger border border-danger">Tidak Layak (C1)</span>;
     if (c === 2) return <span className="badge bg-primary-subtle text-primary border border-primary fw-bold">Sangat Layak (C2)</span>;
-    if (c === 3) return <span className="badge bg-warning-subtle text-warning border border-warning">Dipertimbangkan (C3)</span>;
-    return <span className="badge bg-danger-subtle text-danger border border-danger">Tidak Layak (C0)</span>;
+    return <span className="badge bg-secondary-subtle text-secondary border">Klaster {c}</span>;
   };
 
   return (

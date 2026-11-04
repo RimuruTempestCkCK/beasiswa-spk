@@ -110,3 +110,15 @@ Dokumen ini mencatat seluruh perubahan teknis, metodologis, dan implementasi kod
 - **Pembaruan Formula Metrik Sheet 6 (4 November 2026)**:
   - Memperbaiki formula F1-Score Macro pada sel D19 agar merujuk langsung ke sel formula Excel yang valid: `=2*(D17*D18)/(D17+D18)`.
   - Memperbaiki pemisahan antara teks penjelasan rumus dan formula dinamis Excel di seluruh tabel metrik untuk mencegah error `#NAME?`.
+
+
+---
+
+## 5. Sinkronisasi Metodologis Label Kelayakan Klaster (4 November 2026)
+
+- **Temuan**: Hasil K-Means $K=2$ menghasilkan:
+  - **Klaster 0 ($N = 339$)**: Rata-rata IPK tinggi ($3.61$) dan **100% mahasiswa memiliki prestasi akademik & non-akademik**.
+  - **Klaster 1 ($N = 77$)**: Rata-rata IPK lebih rendah ($3.12$) dan **0% mahasiswa memiliki prestasi**.
+- **Penyelarasan Kode**:
+  - `backend/app/api/v1/endpoints/reports.py`: Klaster 0 ditetapkan sebagai **"LAYAK"**, Klaster 1 sebagai **"TIDAK LAYAK"**.
+  - `frontend/src/features/predictions/PredictionsPage.jsx` & `ReportsPage.jsx`: Badge status diselaraskan: C0 $\rightarrow$ **Layak (Hijau)**, C1 $\rightarrow$ **Tidak Layak (Merah)**.

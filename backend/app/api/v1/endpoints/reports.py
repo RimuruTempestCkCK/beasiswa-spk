@@ -40,18 +40,19 @@ def get_current_user_allow_query(
 def get_status_recommendation(c_label: int, confidence: Optional[float] = None) -> tuple[str, float]:
     """
     Helper to convert cluster number into human decision text & rank score.
-    Supports K=2 optimal cluster (C0 & C1) and multi-cluster models.
+    Berdasarkan karakteristik centroid K=2:
+      - Klaster 0: IPK tinggi (3.61) & 100% Berprestasi -> LAYAK
+      - Klaster 1: IPK lebih rendah (3.12) & 0% Prestasi -> TIDAK LAYAK
     """
     conf = float(confidence or 0.85)
-    # If 2 clusters (K=2): C1 = Layak, C0 = Tidak Layak
-    if c_label == 1:
+    if c_label == 0:
         return "LAYAK", round(75.0 + conf * 25.0, 2)
-    elif c_label == 2:
-        return "SANGAT LAYAK (Prioritas)", round(85.0 + conf * 15.0, 2)
-    elif c_label == 3:
-        return "DIPERTIMBANGKAN", round(55.0 + conf * 15.0, 2)
-    else:
+    elif c_label == 1:
         return "TIDAK LAYAK", round(35.0 + conf * 15.0, 2)
+    elif c_label == 2:
+        return "SANGAT LAYAK", round(85.0 + conf * 15.0, 2)
+    else:
+        return "TIDAK LAYAK", round(30.0 + conf * 10.0, 2)
 
 
 @router.get("/summary")
