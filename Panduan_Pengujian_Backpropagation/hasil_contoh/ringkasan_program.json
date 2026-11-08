@@ -1,0 +1,20 @@
+{
+  "Input": "/mnt/data/Data_Backpropagation_435_Target_1_0.xlsx",
+  "Jumlah_data": 435,
+  "Jumlah_input": 5,
+  "Target_internal": {
+    "Layak": 1,
+    "Tidak Layak": 0
+  },
+  "Training": 348,
+  "Testing": 87,
+  "NOBP_training": 222,
+  "NOBP_testing": 55,
+  "Metode_pembagian": "Group split berdasarkan NOBP menggunakan optimasi integer (MILP)",
+  "Learning_rate": 0.5,
+  "Epoch_maksimum": 1000,
+  "Seed": 42,
+  "Arsitektur_terbaik": "5-10-1",
+  "Kriteria_pemilihan": "Akurasi tertinggi, kemudian MSE terendah",
+  "Catatan_duplikasi_NOBP": "Seluruh record dengan NOBP sama ditempatkan pada satu kelompok; tidak ada NOBP yang tumpang tindih antara training dan testing. Delapan NOBP memiliki target berbeda pada record berbeda dan perlu ditelusuri."
+}

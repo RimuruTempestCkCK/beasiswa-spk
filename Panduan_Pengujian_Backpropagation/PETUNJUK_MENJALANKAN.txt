@@ -1,0 +1,55 @@
+PANDUAN PENGUJIAN BACKPROPAGATION DI PYTHON
+
+ISI FOLDER
+- program_backpropagation.py : kode utama Backpropagation.
+- Data_Backpropagation_435_Target_1_0.xlsx : data penelitian 435 pendaftar.
+- hasil_contoh/ : contoh hasil yang dihasilkan saat program dijalankan.
+
+A. PERSIAPAN
+1. Instal Python 3 jika belum tersedia.
+2. Ekstrak ZIP ini ke satu folder, misalnya Documents\Pengujian_BP.
+3. Buka folder tersebut menggunakan Visual Studio Code.
+4. Pilih Terminal > New Terminal.
+5. Jalankan perintah instalasi paket berikut:
+
+   py -m pip install pandas numpy matplotlib scipy openpyxl numba
+
+   Jika perintah 'py' tidak dikenali, ganti 'py' dengan 'python'.
+
+B. MENJALANKAN PROGRAM
+Pastikan terminal berada di folder yang berisi program_backpropagation.py dan file Excel.
+Jalankan:
+
+py program_backpropagation.py --input "Data_Backpropagation_435_Target_1_0.xlsx" --sheet "Data Backpropagation" --output "hasil_uji" --epochs 1000 --alpha 0.5 --seed 42
+
+Jika 'py' tidak dikenali, gunakan:
+
+python program_backpropagation.py --input "Data_Backpropagation_435_Target_1_0.xlsx" --sheet "Data Backpropagation" --output "hasil_uji" --epochs 1000 --alpha 0.5 --seed 42
+
+C. HASIL YANG DICARI
+Setelah program selesai, folder hasil_uji akan terbentuk. File penting:
+- 08_evaluasi_10_arsitektur.csv : perbandingan 10 arsitektur.
+- 09_riwayat_error_training_semua_arsitektur.csv : riwayat MSE training tiap epoch.
+- 10_hasil_testing_semua_arsitektur.csv : prediksi seluruh data testing untuk semua arsitektur.
+- 11_hasil_testing_arsitektur_terbaik_*.csv : rincian prediksi model terbaik.
+- 12_bobot_bias_akhir_semua_arsitektur.csv : bobot dan bias akhir.
+- 13_arsitektur_terbaik_*.png : gambar arsitektur terbaik.
+- 14_grafik_perbandingan_akurasi.png : grafik akurasi.
+- 15_grafik_perbandingan_mse.png : grafik MSE.
+- 16_grafik_mse_training_arsitektur_terbaik.png : grafik MSE training.
+- audit_dataset.json : ringkasan audit data dan pembagian.
+
+D. PARAMETER YANG DIGUNAKAN
+- Input: X1 sampai X5 (5 neuron input).
+- Hidden layer: 3 sampai 12 neuron (10 variasi arsitektur).
+- Output: 1 neuron dengan sigmoid biner.
+- Target internal: Layak = 1 dan Tidak Layak = 0.
+- Learning rate: 0,5.
+- Epoch maksimum: 1.000.
+- Seed: 42 agar pengujian dapat diulang dengan hasil yang konsisten pada lingkungan komputasi yang sama.
+- Pembagian data: group split berdasarkan NOBP, 348 training dan 87 testing untuk dataset ini.
+
+E. CATATAN INTERPRETASI
+Program mempelajari label hasil K-Means. Hasil akurasi menunjukkan kesesuaian prediksi Backpropagation terhadap label K-Means, bukan validasi independen atas keputusan penerimaan beasiswa. Audit menemukan X4 dan X5 identik dengan Target_BP pada dataset ini. Hal tersebut perlu dijelaskan sebagai batasan penelitian.
+
+Jika muncul error, salin seluruh pesan error dari terminal atau kirim tangkapan layar bagian error untuk diperiksa.

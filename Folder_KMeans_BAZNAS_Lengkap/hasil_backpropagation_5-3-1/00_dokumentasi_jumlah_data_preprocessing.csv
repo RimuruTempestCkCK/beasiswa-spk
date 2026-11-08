@@ -1,0 +1,7 @@
+Tahap Preprocessing,Jumlah,Keterangan / Alasan
+1. Data Awal Sumber (BAZNAS),437,Data mentah pendaftar beasiswa pada file master BAZNAS
+2. Data Setelah Deduplikasi NOBP,285,Satu baris satu NOBP (152 baris NOBP ganda dikeluarkan)
+3. Data Tidak Lengkap / Tidak Valid,11,11 baris memiliki data prestasi kosong / non-biner
+4. Data Sebelum Deduplikasi Nama,274,Data valid sebelum verifikasi kesamaan nama mahasiswa
+5. Data Nama Sama Dikeluarkan,6,6 baris nama sama dengan NOBP berbeda dikeluarkan
+6. Data Final Bersih,268,Data siap digunakan untuk K-Means & Backpropagation (268 baris)

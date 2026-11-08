@@ -1,0 +1,24 @@
+{
+  "Jumlah_record": 435,
+  "Jumlah_NOBP_unik": 277,
+  "Jumlah_NOBP_berulang": 104,
+  "Jumlah_NOBP_muncul_di_training_dan_testing": 0,
+  "NOBP_overlap": [],
+  "Jumlah_NOBP_dengan_target_berbeda": 8,
+  "X4_identik_X5": true,
+  "X4_identik_target": true,
+  "X5_identik_target": true,
+  "Training": 348,
+  "Testing": 87,
+  "NOBP_training": 222,
+  "NOBP_testing": 55,
+  "Metode_pembagian": "Group split berdasarkan NOBP menggunakan optimasi integer (MILP)",
+  "Distribusi_training_target_0_1": {
+    "0": 58,
+    "1": 290
+  },
+  "Distribusi_testing_target_0_1": {
+    "0": 15,
+    "1": 72
+  }
+}

@@ -1,0 +1,6 @@
+Atribut,Jumlah_Nilai_Unik,Akurasi_Aturan_satu_atribut,Setiap_nilai_mewakili_satu_target
+X1_IPS_IPK,113,1.0,True
+X2_Penghasilan_Rp,18,0.8413793103448276,False
+X3_Tanggungan,9,0.832183908045977,False
+X4_Prestasi_Akademik,2,1.0,True
+X5_Prestasi_NonAkademik,2,1.0,True
