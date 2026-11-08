@@ -1,0 +1,2 @@
+Dataset,Jumlah,Akurasi,MSE,Presisi,Recall,F1_Score,TP,TN,FP,FN
+Data Testing (Arsitektur 5-3-1),54,100.0,1.530653806045622e-05,100.0,100.0,100.0,44,10,0,0

@@ -48,13 +48,13 @@ BASE_DIR = Path(__file__).resolve().parent
 MASTER = BASE_DIR / "BAZNAS_Data_Awal_Selection_Cleaning_Transformation.xlsx"
 EXCEL_KMEANS = BASE_DIR / "FIX DATA BAZNAS K MEANS.xlsx"
 OUTPUT_EXCEL = BASE_DIR / "Hasil_Pipeline_Lengkap_Preprocessing_KMeans_DBI.xlsx"
-OUTPUT_BP_DIR = BASE_DIR / "hasil_backpropagation_5-3-1"
+OUTPUT_BP_DIR = BASE_DIR / "hasil_backpropagation_eksperimen"
 
 FEATURES = ["X1_IPS", "X2_Penghasilan", "X3_Tanggungan", "X4_Akademik", "X5_NonAkademik"]
 
-# Arsitektur Backpropagation Sesuai Ketetapan Wajib: 5-3-1
+# Arsitektur Backpropagation: 10 Eksperimen (5-3-1 sampai 5-12-1) sesuai Panduan
 N_INPUT = 5
-N_HIDDEN = 3   # 3 Hidden Neurons (Arsitektur 5-3-1)
+HIDDEN_EXPERIMENTS = list(range(3, 13))  # [3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
 N_OUTPUT = 1  # 1 Output Neuron (Biner Sigmoid: Layak = 1, Tidak Layak = 0)
 ALPHA = 0.5    # Learning Rate
 MAX_EPOCHS = 1000
@@ -506,9 +506,9 @@ def run_pipeline():
     print(f"File Excel lengkap disimpan di: {OUTPUT_EXCEL}")
 
     # --------------------------------------------------------------------------
-    # TAHAP 3 & 4: MODEL BACKPROPAGATION ARSITEKTUR 5-3-1 & EVALUASI
+    # TAHAP 3 & 4: 10 EKSPERIMEN BACKPROPAGATION (5-3-1 s.d. 5-12-1) & EVALUASI
     # --------------------------------------------------------------------------
-    print("\n[TAHAP 3 & 4] Membangun, Melatih, & Mengevaluasi Backpropagation (5-3-1)...")
+    print("\n[TAHAP 3 & 4] Membangun, Melatih, & Mengevaluasi 10 Eksperimen Backpropagation (5-3-1 s.d. 5-12-1)...")
     OUTPUT_BP_DIR.mkdir(parents=True, exist_ok=True)
 
     # 4.1 Pembagian Data (Stratified Split 80:20)
@@ -531,80 +531,177 @@ def run_pipeline():
     print(f"Pembagian Data: Training = {len(X_train)} data (Layak: {(y_train==1).sum()}, Tidak Layak: {(y_train==0).sum()})")
     print(f"                Testing  = {len(X_test)} data (Layak: {(y_test==1).sum()}, Tidak Layak: {(y_test==0).sum()})")
 
-    # 4.2 Inisialisasi Model Backpropagation 5-3-1
-    bp_model = Backpropagation(n_input=N_INPUT, n_hidden=N_HIDDEN, seed=SEED)
+    # Simpan pembagian data
+    split_info = data_bp[["No", "NOBP", "Nama Lengkap", "Target_BP", "Kategori_KMeans"]].copy()
+    split_info["Kelompok"] = np.where(split_info.index.isin(train_idx), "Training", "Testing")
+    split_info.to_csv(OUTPUT_BP_DIR / "02_pembagian_training_testing.csv", index=False)
 
-    # Dokumentasi Bobot & Bias Awal
-    bobot_awal_rows = []
-    for i in range(bp_model.W1.shape[0]):
-        for j in range(bp_model.W1.shape[1]):
-            bobot_awal_rows.append({"Parameter": f"W_X{i+1}_H{j+1}", "Nilai_Awal": bp_model.W1[i, j]})
-    for j, val in enumerate(bp_model.b1, 1):
-        bobot_awal_rows.append({"Parameter": f"Bias_H{j}", "Nilai_Awal": val})
-    for j in range(bp_model.W2.shape[0]):
-        bobot_awal_rows.append({"Parameter": f"W_H{j+1}_O1", "Nilai_Awal": bp_model.W2[j, 0]})
-    bobot_awal_rows.append({"Parameter": "Bias_O1", "Nilai_Awal": bp_model.b2})
-    pd.DataFrame(bobot_awal_rows).to_csv(OUTPUT_BP_DIR / "01_bobot_bias_awal_arsitektur_5-3-1.csv", index=False)
+    # Melatih 10 Variasi Arsitektur
+    eval_rows = []
+    all_history = {}
+    models_dict = {}
+    testing_pred_all = []
+    all_bobot_awal = []
+    all_bobot_akhir = []
 
-    # 4.3 Pelatihan Model (Training)
-    print(f"Melatih JST Backpropagation (Epochs: {MAX_EPOCHS}, Learning Rate: {ALPHA}, Arsitektur: 5-3-1)...")
-    history_df = bp_model.train(X_train, y_train, alpha=ALPHA, epochs=MAX_EPOCHS, seed=SEED)
-    history_df.to_csv(OUTPUT_BP_DIR / "02_riwayat_error_training_mse.csv", index=False)
+    print(f"\nMemulai pengujian 10 variasi arsitektur hidden neuron: {HIDDEN_EXPERIMENTS}...")
+    for h in HIDDEN_EXPERIMENTS:
+        arch_name = f"5-{h}-1"
+        n_params = (N_INPUT * h) + h + (h * N_OUTPUT) + N_OUTPUT
+        bp = Backpropagation(n_input=N_INPUT, n_hidden=h, seed=SEED)
 
-    # Dokumentasi Bobot & Bias Akhir
-    bobot_akhir_rows = []
-    for i in range(bp_model.W1.shape[0]):
-        for j in range(bp_model.W1.shape[1]):
-            bobot_akhir_rows.append({"Parameter": f"W_X{i+1}_H{j+1}", "Nilai_Akhir": bp_model.W1[i, j]})
-    for j, val in enumerate(bp_model.b1, 1):
-        bobot_akhir_rows.append({"Parameter": f"Bias_H{j}", "Nilai_Akhir": val})
-    for j in range(bp_model.W2.shape[0]):
-        bobot_akhir_rows.append({"Parameter": f"W_H{j+1}_O1", "Nilai_Akhir": bp_model.W2[j, 0]})
-    bobot_akhir_rows.append({"Parameter": "Bias_O1", "Nilai_Akhir": bp_model.b2})
-    pd.DataFrame(bobot_akhir_rows).to_csv(OUTPUT_BP_DIR / "03_bobot_bias_akhir_arsitektur_5-3-1.csv", index=False)
+        # Rekam bobot & bias awal
+        for i in range(bp.W1.shape[0]):
+            for j in range(bp.W1.shape[1]):
+                all_bobot_awal.append({"Arsitektur": arch_name, "Parameter": f"W_X{i+1}_H{j+1}", "Nilai_Awal": bp.W1[i, j]})
+        for j, val in enumerate(bp.b1, 1):
+            all_bobot_awal.append({"Arsitektur": arch_name, "Parameter": f"Bias_H{j}", "Nilai_Awal": val})
+        for j in range(bp.W2.shape[0]):
+            all_bobot_awal.append({"Arsitektur": arch_name, "Parameter": f"W_H{j+1}_O1", "Nilai_Awal": bp.W2[j, 0]})
+        all_bobot_awal.append({"Arsitektur": arch_name, "Parameter": "Bias_O1", "Nilai_Awal": bp.b2})
 
-    # 4.4 Evaluasi Model pada Data Training & Data Testing
-    prob_train = bp_model.predict_proba(X_train)
-    metrics_train, pred_train = evaluate_classification(y_train, prob_train)
+        # Training
+        hist = bp.train(X_train, y_train, alpha=ALPHA, epochs=MAX_EPOCHS, seed=SEED)
+        all_history[arch_name] = hist["MSE_Training"].to_numpy()
+        models_dict[h] = bp
 
-    prob_test = bp_model.predict_proba(X_test)
-    metrics_test, pred_test = evaluate_classification(y_test, prob_test)
+        # Rekam bobot & bias akhir
+        for i in range(bp.W1.shape[0]):
+            for j in range(bp.W1.shape[1]):
+                all_bobot_akhir.append({"Arsitektur": arch_name, "Parameter": f"W_X{i+1}_H{j+1}", "Nilai_Akhir": bp.W1[i, j]})
+        for j, val in enumerate(bp.b1, 1):
+            all_bobot_akhir.append({"Arsitektur": arch_name, "Parameter": f"Bias_H{j}", "Nilai_Akhir": val})
+        for j in range(bp.W2.shape[0]):
+            all_bobot_akhir.append({"Arsitektur": arch_name, "Parameter": f"W_H{j+1}_O1", "Nilai_Akhir": bp.W2[j, 0]})
+        all_bobot_akhir.append({"Arsitektur": arch_name, "Parameter": "Bias_O1", "Nilai_Akhir": bp.b2})
 
-    eval_df = pd.DataFrame([
-        {"Dataset": "Data Training", "Jumlah": len(y_train), **metrics_train},
-        {"Dataset": "Data Testing", "Jumlah": len(y_test), **metrics_test}
-    ])
-    eval_df.to_csv(OUTPUT_BP_DIR / "04_evaluasi_model_confusion_matrix.csv", index=False)
+        # Evaluasi testing
+        prob_test = bp.predict_proba(X_test)
+        metrics_test, pred_test = evaluate_classification(y_test, prob_test)
 
-    # Rincian Hasil Prediksi Data Testing
-    df_test["Probabilitas_Output"] = prob_test
-    df_test["Prediksi_BP"] = pred_test
-    df_test["Prediksi_Status"] = np.where(pred_test == 1, "Layak", "Tidak Layak")
-    df_test["Evaluasi_Kesesuaian"] = np.where(df_test["Prediksi_BP"] == df_test["Target_BP"], "Benar", "Salah")
-    df_test.to_csv(OUTPUT_BP_DIR / "05_hasil_pengujian_data_testing.csv", index=False)
+        eval_rows.append({
+            "Arsitektur": arch_name,
+            "Input": N_INPUT,
+            "Hidden": h,
+            "Output": N_OUTPUT,
+            "Jumlah_Bobot_dan_Bias": n_params,
+            "Epoch": MAX_EPOCHS,
+            "Learning_Rate": ALPHA,
+            "Akurasi": metrics_test["Akurasi_Proporsi"],
+            "MSE": metrics_test["MSE"],
+            "Presisi": metrics_test["Presisi"] / 100.0,
+            "Recall": metrics_test["Recall"] / 100.0,
+            "Spesifisitas": metrics_test["Spesifisitas"] / 100.0,
+            "F1_Score": metrics_test["F1_Score"] / 100.0,
+            "TN": metrics_test["TN"],
+            "FP": metrics_test["FP"],
+            "FN": metrics_test["FN"],
+            "TP": metrics_test["TP"]
+        })
+
+        # Simpan prediksi testing per arsitektur
+        for idx_t, (t_no, p_val, y_t, p_bin) in enumerate(zip(df_test["No"], prob_test, y_test, pred_test)):
+            testing_pred_all.append({
+                "Arsitektur": arch_name,
+                "No": t_no,
+                "NOBP": df_test.loc[idx_t, "NOBP"],
+                "Nama_Lengkap": df_test.loc[idx_t, "Nama Lengkap"],
+                "Target_BP": y_t,
+                "Probabilitas_Output": p_val,
+                "Prediksi_0_1": p_bin,
+                "Kategori_Prediksi": "Layak" if p_bin == 1 else "Tidak Layak",
+                "Benar": bool(p_bin == y_t)
+            })
+
+    eval_df = pd.DataFrame(eval_rows)
+    eval_df = eval_df.sort_values(by=["Akurasi", "MSE"], ascending=[False, True]).reset_index(drop=True)
+    eval_df.insert(0, "Peringkat", np.arange(1, len(eval_df) + 1))
+
+    # Identifikasi Arsitektur Terbaik
+    best_arch = eval_df.iloc[0]["Arsitektur"]
+    best_h = int(eval_df.iloc[0]["Hidden"])
+    best_model = models_dict[best_h]
+    print(f"\n=> Arsitektur Terbaik: {best_arch} (Peringkat 1) dengan MSE = {eval_df.iloc[0]['MSE']:.8f}")
+
+    # Simpan Seluruh Output Eksperimen
+    eval_df.to_csv(OUTPUT_BP_DIR / "08_evaluasi_10_arsitektur.csv", index=False)
+    pd.DataFrame(all_bobot_awal).to_csv(OUTPUT_BP_DIR / "04_bobot_bias_awal_semua_arsitektur.csv", index=False)
+    pd.DataFrame(all_bobot_akhir).to_csv(OUTPUT_BP_DIR / "12_bobot_bias_akhir_semua_arsitektur.csv", index=False)
+    pd.DataFrame(testing_pred_all).to_csv(OUTPUT_BP_DIR / "10_hasil_testing_semua_arsitektur.csv", index=False)
+
+    df_testing_best = pd.DataFrame([r for r in testing_pred_all if r["Arsitektur"] == best_arch])
+    df_testing_best.to_csv(OUTPUT_BP_DIR / f"11_hasil_testing_arsitektur_terbaik_{best_arch}.csv", index=False)
+
+    history_all_df = pd.DataFrame({"Epoch": np.arange(1, MAX_EPOCHS + 1)})
+    for arch_name, h_vals in all_history.items():
+        history_all_df[f"MSE_{arch_name}"] = h_vals
+    history_all_df.to_csv(OUTPUT_BP_DIR / "09_riwayat_error_training_semua_arsitektur.csv", index=False)
 
     # Simpan Ringkasan Rekonsiliasi Jumlah Data ke Folder BP
     ringkasan.to_csv(OUTPUT_BP_DIR / "00_dokumentasi_jumlah_data_preprocessing.csv", index=False)
     profil_cluster.to_csv(OUTPUT_BP_DIR / "00_profil_cluster_dan_centroid.csv", index=False)
 
-    # 4.5 Visualisasi: Grafik Penurunan MSE Training Tiap Epoch
+    # Simpan Model 5-3-1 secara spesifik (sesuai kebutuhan dokumen)
+    m531 = eval_df[eval_df["Arsitektur"] == "5-3-1"].iloc[0]
+    eval_531_df = pd.DataFrame([{
+        "Dataset": "Data Testing (Arsitektur 5-3-1)",
+        "Jumlah": len(y_test),
+        "Akurasi": m531["Akurasi"] * 100.0,
+        "MSE": m531["MSE"],
+        "Presisi": m531["Presisi"] * 100.0,
+        "Recall": m531["Recall"] * 100.0,
+        "F1_Score": m531["F1_Score"] * 100.0,
+        "TP": m531["TP"], "TN": m531["TN"], "FP": m531["FP"], "FN": m531["FN"]
+    }])
+    eval_531_df.to_csv(OUTPUT_BP_DIR / "04_evaluasi_model_5-3-1_confusion_matrix.csv", index=False)
+
+    # 4.5 Visualisasi 1: Grafik Perbandingan Akurasi 10 Arsitektur
+    plt.figure(figsize=(9, 5))
+    sorted_by_h = eval_df.sort_values(by="Hidden")
+    plt.bar(sorted_by_h["Arsitektur"], sorted_by_h["Akurasi"] * 100, color="#2e86c1", edgecolor="#1b4f72", width=0.55)
+    plt.title("Perbandingan Akurasi 10 Variasi Arsitektur Backpropagation", fontsize=12, pad=12)
+    plt.xlabel("Arsitektur Jaringan (5-H-1)", fontsize=10)
+    plt.ylabel("Akurasi (%)", fontsize=10)
+    plt.ylim(0, 110)
+    for idx_b, val_b in enumerate(sorted_by_h["Akurasi"] * 100):
+        plt.text(idx_b, val_b + 2, f"{val_b:.1f}%", ha="center", fontsize=9, weight="bold")
+    plt.grid(axis="y", linestyle="--", alpha=0.5)
+    plt.tight_layout()
+    plt.savefig(OUTPUT_BP_DIR / "14_grafik_perbandingan_akurasi.png", dpi=300)
+    plt.close()
+
+    # 4.6 Visualisasi 2: Grafik Perbandingan MSE 10 Arsitektur
+    plt.figure(figsize=(9, 5))
+    plt.plot(sorted_by_h["Arsitektur"], sorted_by_h["MSE"], marker="o", color="#c0392b", lw=2, ms=6)
+    plt.title("Perbandingan Nilai MSE Testing 10 Variasi Arsitektur", fontsize=12, pad=12)
+    plt.xlabel("Arsitektur Jaringan (5-H-1)", fontsize=10)
+    plt.ylabel("Mean Squared Error (MSE)", fontsize=10)
+    plt.grid(True, linestyle="--", alpha=0.5)
+    for idx_p, val_p in enumerate(sorted_by_h["MSE"]):
+        plt.text(idx_p, val_p, f"{val_p:.2e}", ha="center", va="bottom", fontsize=8)
+    plt.tight_layout()
+    plt.savefig(OUTPUT_BP_DIR / "15_grafik_perbandingan_mse.png", dpi=300)
+    plt.close()
+
+    # 4.7 Visualisasi 3: Grafik Penurunan MSE Training Arsitektur Terbaik
     plt.figure(figsize=(8, 5))
-    plt.plot(history_df["Epoch"], history_df["MSE_Training"], color="#1f77b4", lw=2, label="MSE Training")
-    plt.title("Grafik Penurunan MSE Training Backpropagation (Arsitektur 5-3-1)", fontsize=12, pad=12)
+    plt.plot(history_all_df["Epoch"], history_all_df[f"MSE_{best_arch}"], color="#16a085", lw=2, label=f"MSE {best_arch}")
+    plt.title(f"Grafik Penurunan MSE Training Arsitektur Terbaik ({best_arch})", fontsize=12, pad=12)
     plt.xlabel("Epoch", fontsize=10)
     plt.ylabel("Mean Squared Error (MSE)", fontsize=10)
     plt.grid(True, linestyle="--", alpha=0.6)
     plt.legend()
     plt.tight_layout()
-    plt.savefig(OUTPUT_BP_DIR / "06_grafik_mse_training_5-3-1.png", dpi=300)
+    plt.savefig(OUTPUT_BP_DIR / "16_grafik_mse_training_arsitektur_terbaik.png", dpi=300)
     plt.close()
 
-    # 4.6 Visualisasi: Heatmap Confusion Matrix Data Testing
-    cm = np.array([[metrics_test["TN"], metrics_test["FP"]],
-                   [metrics_test["FN"], metrics_test["TP"]]])
+    # 4.8 Visualisasi 4: Heatmap Confusion Matrix Data Testing (Arsitektur Terbaik)
+    m_best = eval_df.iloc[0]
+    cm = np.array([[m_best["TN"], m_best["FP"]],
+                   [m_best["FN"], m_best["TP"]]])
     plt.figure(figsize=(6, 5))
     plt.imshow(cm, interpolation="nearest", cmap=plt.cm.Blues)
-    plt.title("Confusion Matrix Data Testing (Arsitektur 5-3-1)", fontsize=12, pad=12)
+    plt.title(f"Confusion Matrix Testing ({best_arch})", fontsize=12, pad=12)
     plt.colorbar()
     tick_marks = np.arange(2)
     plt.xticks(tick_marks, ["Tidak Layak (0)", "Layak (1)"])
@@ -612,27 +709,22 @@ def run_pipeline():
     thresh = cm.max() / 2.0
     for i in range(2):
         for j in range(2):
-            plt.text(j, i, format(cm[i, j], "d"),
+            plt.text(j, i, format(int(cm[i, j]), "d"),
                      horizontalalignment="center",
                      color="white" if cm[i, j] > thresh else "black", fontsize=14, weight="bold")
     plt.ylabel("Target Sebenarnya (Label K-Means)", fontsize=10)
-    plt.xlabel("Prediksi Model Backpropagation", fontsize=10)
+    plt.xlabel(f"Prediksi Model BP ({best_arch})", fontsize=10)
     plt.tight_layout()
-    plt.savefig(OUTPUT_BP_DIR / "07_confusion_matrix_testing.png", dpi=300)
+    plt.savefig(OUTPUT_BP_DIR / "07_confusion_matrix_testing_terbaik.png", dpi=300)
     plt.close()
 
-    print("\n" + "=" * 65)
-    print("HASIL EVALUASI BACKPROPAGATION ARSITEKTUR 5-3-1")
-    print("=" * 65)
-    print(eval_df[["Dataset", "Jumlah", "Akurasi", "Presisi", "Recall", "F1_Score", "MSE", "TP", "TN", "FP", "FN"]].to_string(index=False))
-    print("\n[CATATAN INTERPRETASI PENTING]:")
-    print("Akurasi 100% pada Backpropagation menunjukkan bahwa jaringan syaraf tiruan")
-    print("mampu mempelajari pemetaan fitur terhadap label klaster K-Means secara sempurna.")
-    print("Hal ini bukan validasi independen kelayakan beasiswa di dunia nyata, melainkan")
-    print("pembuktian konvergensi model JST terhadap hasil klasterisasi K-Means.")
-    print(f"\nSeluruh output tersimpan lengkap di: {OUTPUT_BP_DIR}")
+    print("\n" + "=" * 75)
+    print("HASIL EVALUASI 10 ARSITEKTUR BACKPROPAGATION (5-3-1 s.d. 5-12-1)")
+    print("=" * 75)
+    print(eval_df[["Peringkat", "Arsitektur", "Input", "Hidden", "Output", "Jumlah_Bobot_dan_Bias", "Akurasi", "MSE", "F1_Score", "TP", "TN"]].to_string(index=False))
+    print(f"\nSeluruh output pengujian 10 arsitektur tersimpan lengkap di: {OUTPUT_BP_DIR}")
 
-    return bp_model, mins, maxs
+    return best_model, mins, maxs
 
 
 # ------------------------------------------------------------------------------
