@@ -643,82 +643,136 @@ def launch_gui(bp_model, mins, maxs):
     from tkinter import ttk, messagebox
 
     root = tk.Tk()
-    root.title("Sistem Pendukung Keputusan Penerima Beasiswa BAZNAS - BP 5-3-1")
-    root.geometry("640x680")
-    root.resizable(False, False)
+    root.title("SPK Beasiswa BAZNAS - Prediksi JST Backpropagation (5-3-1)")
+    root.geometry("780x760")
+    root.minsize(740, 720)
+    root.configure(bg="#f4f6f9")
 
-    # Style
+    # Styling modern
     style = ttk.Style(root)
     style.theme_use("clam")
 
-    header_frame = tk.Frame(root, bg="#1a5276", pady=15)
+    style.configure("Card.TLabelframe", background="#ffffff", bordercolor="#d5dbdb", relief="solid", borderwidth=1)
+    style.configure("Card.TLabelframe.Label", background="#ffffff", foreground="#1a5276", font=("Segoe UI", 10, "bold"))
+    style.configure("TLabel", background="#ffffff", font=("Segoe UI", 9))
+    style.configure("TEntry", fieldbackground="#fdfefe", padding=5)
+    style.configure("TCombobox", fieldbackground="#fdfefe", padding=4)
+
+    # 1. HEADER SECTION
+    header_frame = tk.Frame(root, bg="#1a5276", pady=18, padx=25)
     header_frame.pack(fill="x")
 
-    lbl_title = tk.Label(header_frame, text="SISTEM PREDIKSI KELAYAKAN BEASISWA BAZNAS",
-                         font=("Helvetica", 13, "bold"), fg="white", bg="#1a5276")
-    lbl_title.pack()
-    lbl_subtitle = tk.Label(header_frame, text="Implementasi Model Backpropagation Arsitektur 5-3-1\nUniversitas Dharma Andalas",
-                            font=("Helvetica", 9), fg="#ebf5fb", bg="#1a5276")
-    lbl_subtitle.pack(pady=4)
+    lbl_badge = tk.Label(header_frame, text="SISTEM PENDUKUNG KEPUTUSAN (SPK)",
+                         font=("Segoe UI", 8, "bold"), fg="#a9cce3", bg="#1a5276")
+    lbl_badge.pack(anchor="w")
 
-    content_frame = ttk.LabelFrame(root, text=" Form Input Kriteria Calon Penerima ", padding=15)
-    content_frame.pack(fill="both", expand=True, padx=20, pady=15)
+    lbl_title = tk.Label(header_frame, text="Klasifikasi Kelayakan Beasiswa BAZNAS",
+                         font=("Segoe UI", 15, "bold"), fg="#ffffff", bg="#1a5276")
+    lbl_title.pack(anchor="w", pady=(2, 2))
 
-    # Form Fields
-    # 1. IPS
-    lbl_ips = ttk.Label(content_frame, text="1. Nilai Rata-Rata Akhir / IPS (Contoh: 3.75):", font=("Helvetica", 9, "bold"))
-    lbl_ips.grid(row=0, column=0, sticky="w", pady=6)
-    ent_ips = ttk.Entry(content_frame, font=("Helvetica", 10), width=28)
-    ent_ips.grid(row=0, column=1, sticky="e", pady=6)
+    lbl_subtitle = tk.Label(header_frame,
+                            text="Implementasi Jaringan Syaraf Tiruan Backpropagation Arsitektur 5-3-1 | Universitas Dharma Andalas",
+                            font=("Segoe UI", 9), fg="#d4e6f1", bg="#1a5276")
+    lbl_subtitle.pack(anchor="w")
 
-    # 2. Penghasilan Orang Tua
-    lbl_gaji = ttk.Label(content_frame, text="2. Penghasilan Orang Tua (Rp):", font=("Helvetica", 9, "bold"))
-    lbl_gaji.grid(row=1, column=0, sticky="w", pady=6)
-    ent_gaji = ttk.Entry(content_frame, font=("Helvetica", 10), width=28)
-    ent_gaji.grid(row=1, column=1, sticky="e", pady=6)
+    # MAIN SCROLLABLE CONTAINER
+    main_container = tk.Frame(root, bg="#f4f6f9", padx=25, pady=15)
+    main_container.pack(fill="both", expand=True)
 
-    # 3. Tanggungan
-    lbl_tanggungan = ttk.Label(content_frame, text="3. Jumlah Tanggungan Keluarga (Orang):", font=("Helvetica", 9, "bold"))
-    lbl_tanggungan.grid(row=2, column=0, sticky="w", pady=6)
-    ent_tanggungan = ttk.Entry(content_frame, font=("Helvetica", 10), width=28)
-    ent_tanggungan.grid(row=2, column=1, sticky="e", pady=6)
+    # 2. CARD: FORM INPUT MAHASISWA
+    card_input = ttk.LabelFrame(main_container, text=" Formulir Kriteria Mahasiswa ", style="Card.TLabelframe", padding=18)
+    card_input.pack(fill="x", pady=(0, 15))
 
-    # 4. Prestasi Akademik
-    lbl_akademik = ttk.Label(content_frame, text="4. Memiliki Prestasi Akademik:", font=("Helvetica", 9, "bold"))
-    lbl_akademik.grid(row=3, column=0, sticky="w", pady=6)
-    cmb_akademik = ttk.Combobox(content_frame, values=["1 - Ya (Memiliki Prestasi)", "0 - Tidak Ada"],
-                                state="readonly", font=("Helvetica", 9), width=26)
+    card_input.columnconfigure(1, weight=1)
+
+    # Input 1: IPS
+    lbl1 = ttk.Label(card_input, text="1. Nilai IPS / IPK Terakhir:", font=("Segoe UI", 9, "bold"))
+    lbl1.grid(row=0, column=0, sticky="w", pady=7, padx=(5, 15))
+    ent_ips = ttk.Entry(card_input, font=("Segoe UI", 10))
+    ent_ips.grid(row=0, column=1, sticky="ew", pady=7)
+    lbl1_hint = ttk.Label(card_input, text="Skala 0.00 – 4.00 (Contoh: 3.75)", foreground="#7f8c8d", font=("Segoe UI", 8))
+    lbl1_hint.grid(row=0, column=2, sticky="w", padx=(10, 5))
+
+    # Input 2: Penghasilan Orang Tua
+    lbl2 = ttk.Label(card_input, text="2. Penghasilan Orang Tua (Rp):", font=("Segoe UI", 9, "bold"))
+    lbl2.grid(row=1, column=0, sticky="w", pady=7, padx=(5, 15))
+    ent_gaji = ttk.Entry(card_input, font=("Segoe UI", 10))
+    ent_gaji.grid(row=1, column=1, sticky="ew", pady=7)
+    lbl2_hint = ttk.Label(card_input, text="Contoh: 1500000 atau <2jt", foreground="#7f8c8d", font=("Segoe UI", 8))
+    lbl2_hint.grid(row=1, column=2, sticky="w", padx=(10, 5))
+
+    # Input 3: Tanggungan
+    lbl3 = ttk.Label(card_input, text="3. Jumlah Tanggungan Keluarga:", font=("Segoe UI", 9, "bold"))
+    lbl3.grid(row=2, column=0, sticky="w", pady=7, padx=(5, 15))
+    ent_tanggungan = ttk.Entry(card_input, font=("Segoe UI", 10))
+    ent_tanggungan.grid(row=2, column=1, sticky="ew", pady=7)
+    lbl3_hint = ttk.Label(card_input, text="Jumlah saudara/tanggungan (Orang)", foreground="#7f8c8d", font=("Segoe UI", 8))
+    lbl3_hint.grid(row=2, column=2, sticky="w", padx=(10, 5))
+
+    # Input 4: Prestasi Akademik
+    lbl4 = ttk.Label(card_input, text="4. Prestasi Bidang Akademik:", font=("Segoe UI", 9, "bold"))
+    lbl4.grid(row=3, column=0, sticky="w", pady=7, padx=(5, 15))
+    cmb_akademik = ttk.Combobox(card_input, values=["1 - Memiliki Prestasi Akademik", "0 - Tidak Memiliki Prestasi"],
+                                state="readonly", font=("Segoe UI", 9))
     cmb_akademik.current(0)
-    cmb_akademik.grid(row=3, column=1, sticky="e", pady=6)
+    cmb_akademik.grid(row=3, column=1, sticky="ew", pady=7)
+    lbl4_hint = ttk.Label(card_input, text="Sertifikat / Juara lomba akademik", foreground="#7f8c8d", font=("Segoe UI", 8))
+    lbl4_hint.grid(row=3, column=2, sticky="w", padx=(10, 5))
 
-    # 5. Prestasi Non-Akademik
-    lbl_nonakademik = ttk.Label(content_frame, text="5. Memiliki Prestasi Non-Akademik:", font=("Helvetica", 9, "bold"))
-    lbl_nonakademik.grid(row=4, column=0, sticky="w", pady=6)
-    cmb_nonakademik = ttk.Combobox(content_frame, values=["1 - Ya (Memiliki Prestasi)", "0 - Tidak Ada"],
-                                   state="readonly", font=("Helvetica", 9), width=26)
+    # Input 5: Prestasi Non-Akademik
+    lbl5 = ttk.Label(card_input, text="5. Prestasi Non-Akademik:", font=("Segoe UI", 9, "bold"))
+    lbl5.grid(row=4, column=0, sticky="w", pady=7, padx=(5, 15))
+    cmb_nonakademik = ttk.Combobox(card_input, values=["1 - Memiliki Prestasi Non-Akademik", "0 - Tidak Memiliki Prestasi"],
+                                   state="readonly", font=("Segoe UI", 9))
     cmb_nonakademik.current(0)
-    cmb_nonakademik.grid(row=4, column=1, sticky="e", pady=6)
+    cmb_nonakademik.grid(row=4, column=1, sticky="ew", pady=7)
+    lbl5_hint = ttk.Label(card_input, text="Seni, olahraga, organisasi, dsb.", foreground="#7f8c8d", font=("Segoe UI", 8))
+    lbl5_hint.grid(row=4, column=2, sticky="w", padx=(10, 5))
 
-    # Frame Hasil
-    result_frame = ttk.LabelFrame(root, text=" Hasil Klasifikasi Kelayakan ", padding=12)
-    result_frame.pack(fill="x", padx=20, pady=(0, 15))
+    # 3. ACTION BUTTONS
+    btn_box = tk.Frame(main_container, bg="#f4f6f9")
+    btn_box.pack(fill="x", pady=(0, 15))
 
-    lbl_status_res = tk.Label(result_frame, text="Status: MENUNGGU INPUT", font=("Helvetica", 12, "bold"), fg="#7f8c8d")
-    lbl_status_res.pack(pady=4)
+    # 4. CARD: HASIL PREDIKSI KELAYAKAN
+    card_result = ttk.LabelFrame(main_container, text=" Keputusan Prediksi Kelayakan ", style="Card.TLabelframe", padding=18)
+    card_result.pack(fill="both", expand=True)
 
-    lbl_prob_res = tk.Label(result_frame, text="Nilai Output Aktivasi Sigmoid: -", font=("Helvetica", 9))
-    lbl_prob_res.pack()
+    result_badge_frame = tk.Frame(card_result, bg="#ebedef", padx=15, pady=12, relief="groove", borderwidth=1)
+    result_badge_frame.pack(fill="x", pady=(0, 10))
 
-    lbl_norm_res = tk.Label(result_frame, text="", font=("Helvetica", 8), fg="#555555")
-    lbl_norm_res.pack(pady=2)
+    lbl_status_res = tk.Label(result_badge_frame, text="STATUS: MENUNGGU PROSES PREDIKSI",
+                              font=("Segoe UI", 13, "bold"), fg="#5d6d7e", bg="#ebedef")
+    lbl_status_res.pack()
 
-    def prediksi():
+    lbl_prob_res = tk.Label(card_result, text="Nilai Aktivasi Sigmoid: -",
+                            font=("Segoe UI", 10), bg="#ffffff", fg="#2c3e50")
+    lbl_prob_res.pack(anchor="w", pady=(2, 4))
+
+    detail_box = tk.Frame(card_result, bg="#f8f9f9", padx=12, pady=10, relief="solid", borderwidth=1)
+    detail_box.pack(fill="x", pady=(5, 0))
+
+    lbl_norm_title = tk.Label(detail_box, text="Vektor Masukan Ternormalisasi Min-Max [0, 1]:",
+                              font=("Segoe UI", 8, "bold"), bg="#f8f9f9", fg="#34495e")
+    lbl_norm_title.pack(anchor="w")
+
+    lbl_norm_res = tk.Label(detail_box, text="X1 = - | X2 = - | X3 = - | X4 = - | X5 = -",
+                            font=("Consolas", 9), bg="#f8f9f9", fg="#2c3e50")
+    lbl_norm_res.pack(anchor="w", pady=(3, 0))
+
+    def aksi_prediksi():
         try:
             val_ips = float(ent_ips.get().replace(",", ".").strip())
+            if val_ips < 0.0 or val_ips > 4.0:
+                raise ValueError("Nilai IPS harus berada dalam rentang 0.00 sampai 4.00.")
+
             val_gaji, _ = income_to_rupiah(ent_gaji.get().strip())
-            if np.isnan(val_gaji):
-                raise ValueError("Penghasilan orang tua harus berupa nominal rupiah atau format kategori (misal: <1jt, 1500000).")
+            if np.isnan(val_gaji) or val_gaji < 0:
+                raise ValueError("Penghasilan orang tua harus berupa nominal angka valid atau kategori (misal: <1jt, 1500000).")
+
             val_tang = float(ent_tanggungan.get().replace(",", ".").strip())
+            if val_tang < 0:
+                raise ValueError("Jumlah tanggungan tidak boleh bernilai negatif.")
+
             val_akd = float(cmb_akademik.get().split()[0])
             val_non = float(cmb_nonakademik.get().split()[0])
 
@@ -731,36 +785,48 @@ def launch_gui(bp_model, mins, maxs):
 
             # Forward pass Backpropagation 5-3-1
             prob = float(bp_model.predict_proba(v_norm.reshape(1, -1))[0])
-            status = "LAYAK (DITERIMA)" if prob >= 0.5 else "TIDAK LAYAK"
-            color = "#27ae60" if prob >= 0.5 else "#c0392b"
 
-            lbl_status_res.config(text=f"Status: {status}", fg=color)
-            lbl_prob_res.config(text=f"Nilai Output Aktivasi Sigmoid: {prob:.6f} (Threshold: 0.50)")
-            lbl_norm_res.config(text=f"Normalisasi Min-Max: IPS={v_norm[0]:.3f}, Gaji={v_norm[1]:.3f}, Tanggungan={v_norm[2]:.3f}, Akd={v_norm[3]:.0f}, NonAkd={v_norm[4]:.0f}")
+            if prob >= 0.5:
+                status_text = "LAYAK MENERIMA BEASISWA BAZNAS"
+                badge_bg = "#d4efdf"
+                status_fg = "#1e8449"
+            else:
+                status_text = "TIDAK LAYAK (PRIORITAS LEBIH RENDAH)"
+                badge_bg = "#fadbd8"
+                status_fg = "#b03a2e"
+
+            result_badge_frame.config(bg=badge_bg)
+            lbl_status_res.config(text=status_text, fg=status_fg, bg=badge_bg)
+            lbl_prob_res.config(text=f"Nilai Aktivasi Output Sigmoid: {prob:.6f}  (Ambang Batas / Threshold: 0.500000)")
+            lbl_norm_res.config(text=f"X1 (IPS): {v_norm[0]:.4f} | X2 (Gaji): {v_norm[1]:.4f} | X3 (Tanggungan): {v_norm[2]:.4f} | X4 (Akd): {v_norm[3]:.1f} | X5 (NonAkd): {v_norm[4]:.1f}")
 
         except Exception as e:
-            messagebox.showerror("Kesalahan Input", f"Terjadi kesalahan pada data input:\n{e}")
+            messagebox.showerror("Validasi Input Gagal", f"Periksa kembali data masukan Anda:\n\n{e}")
 
-    def reset():
+    def aksi_reset():
         ent_ips.delete(0, tk.END)
         ent_gaji.delete(0, tk.END)
         ent_tanggungan.delete(0, tk.END)
         cmb_akademik.current(0)
         cmb_nonakademik.current(0)
-        lbl_status_res.config(text="Status: MENUNGGU INPUT", fg="#7f8c8d")
-        lbl_prob_res.config(text="Nilai Output Aktivasi Sigmoid: -")
-        lbl_norm_res.config(text="")
+        result_badge_frame.config(bg="#ebedef")
+        lbl_status_res.config(text="STATUS: MENUNGGU PROSES PREDIKSI", fg="#5d6d7e", bg="#ebedef")
+        lbl_prob_res.config(text="Nilai Aktivasi Sigmoid: -")
+        lbl_norm_res.config(text="X1 = - | X2 = - | X3 = - | X4 = - | X5 = -")
+        ent_ips.focus_set()
 
-    btn_frame = tk.Frame(root)
-    btn_frame.pack(fill="x", padx=20, pady=(0, 15))
+    btn_prediksi = tk.Button(btn_box, text="⚡  Proses Prediksi Kelayakan", font=("Segoe UI", 10, "bold"),
+                             bg="#1f618d", fg="#ffffff", activebackground="#154360", activeforeground="#ffffff",
+                             relief="flat", padx=20, pady=8, cursor="hand2", command=aksi_prediksi)
+    btn_prediksi.pack(side="left", expand=True, fill="x", padx=(0, 6))
 
-    btn_prediksi = tk.Button(btn_frame, text="Proses Prediksi", font=("Helvetica", 10, "bold"),
-                             bg="#2980b9", fg="white", padx=15, pady=6, command=prediksi)
-    btn_prediksi.pack(side="left", expand=True, fill="x", padx=(0, 5))
+    btn_reset = tk.Button(btn_box, text="🔄  Reset Formulir", font=("Segoe UI", 10),
+                          bg="#7f8c8d", fg="#ffffff", activebackground="#616a6b", activeforeground="#ffffff",
+                          relief="flat", padx=16, pady=8, cursor="hand2", command=aksi_reset)
+    btn_reset.pack(side="right", expand=False, fill="y", padx=(6, 0))
 
-    btn_reset = tk.Button(btn_frame, text="Reset Form", font=("Helvetica", 10),
-                          bg="#95a5a6", fg="white", padx=15, pady=6, command=reset)
-    btn_reset.pack(side="right", expand=True, fill="x", padx=(5, 0))
+    # Autofocus pada field pertama
+    ent_ips.focus_set()
 
     root.mainloop()
 
