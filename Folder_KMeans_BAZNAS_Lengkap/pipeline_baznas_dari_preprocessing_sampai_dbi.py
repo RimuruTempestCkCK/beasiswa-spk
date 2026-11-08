@@ -766,6 +766,56 @@ def run_pipeline():
     plt.savefig(str(OUTPUT_BP_DIR / "07_confusion_matrix_testing_terbaik.png"), dpi=300)
     plt.close()
 
+    # 4.10 Visualisasi 5: Grafik Gabungan Presisi, Recall, dan F1-Score (10 Arsitektur)
+    fig, ax = plt.subplots(figsize=(11, 5.5))
+    x_idx = np.arange(len(sorted_by_h))
+    bar_w = 0.26
+
+    rects1 = ax.bar(x_idx - bar_w, sorted_by_h["Presisi"] * 100, bar_w, label="Presisi", color="#27ae60", edgecolor="#1e8449")
+    rects2 = ax.bar(x_idx, sorted_by_h["Recall"] * 100, bar_w, label="Recall", color="#2980b9", edgecolor="#1b4f72")
+    rects3 = ax.bar(x_idx + bar_w, sorted_by_h["F1_Score"] * 100, bar_w, label="F1-Score", color="#8e44ad", edgecolor="#5b2c6f")
+
+    ax.set_title("Perbandingan Presisi, Recall, dan F1-Score 10 Arsitektur Backpropagation", fontsize=12, pad=12)
+    ax.set_xlabel("Arsitektur Jaringan (5-H-1)", fontsize=10)
+    ax.set_ylabel("Nilai Metrik (%)", fontsize=10)
+    ax.set_xticks(x_idx)
+    ax.set_xticklabels(sorted_by_h["Arsitektur"])
+    ax.set_ylim(0, 115)
+    ax.legend(loc="upper right", frameon=True)
+    ax.grid(axis="y", linestyle="--", alpha=0.5)
+
+    for i in x_idx:
+        ax.text(i - bar_w, 102, "100%", ha="center", fontsize=7.5, weight="bold", color="#1e8449")
+        ax.text(i, 102, "100%", ha="center", fontsize=7.5, weight="bold", color="#1b4f72")
+        ax.text(i + bar_w, 102, "100%", ha="center", fontsize=7.5, weight="bold", color="#5b2c6f")
+
+    fig.tight_layout()
+    fig.savefig(str(OUTPUT_BP_DIR / "17_grafik_perbandingan_presisi_recall_f1.png"), dpi=300)
+    plt.close(fig)
+
+    # 4.11 Visualisasi 6: Radar / Multi-Metrik Evaluasi Arsitektur Terbaik
+    metrics_names = ["Akurasi", "Presisi", "Recall", "Spesifisitas", "F1-Score"]
+    metrics_vals = [
+        m_best["Akurasi"] * 100,
+        m_best["Presisi"] * 100,
+        m_best["Recall"] * 100,
+        m_best["Spesifisitas"] * 100,
+        m_best["F1_Score"] * 100
+    ]
+    plt.figure(figsize=(8, 4.8))
+    bars = plt.barh(metrics_names, metrics_vals, color=["#3498db", "#2ecc71", "#e67e22", "#9b59b6", "#1abc9c"], height=0.55)
+    plt.title(f"Metrik Evaluasi Lengkap Arsitektur Terbaik ({best_arch})", fontsize=12, pad=12)
+    plt.xlabel("Persentase (%)", fontsize=10)
+    plt.xlim(0, 115)
+    for bar in bars:
+        w = bar.get_width()
+        plt.text(w + 1.5, bar.get_y() + bar.get_height() / 2, f"{w:.1f}%", va="center", fontsize=9, weight="bold")
+    plt.grid(axis="x", linestyle="--", alpha=0.5)
+    plt.gca().invert_yaxis()
+    plt.tight_layout()
+    plt.savefig(str(OUTPUT_BP_DIR / f"18_metrik_evaluasi_lengkap_{best_arch}.png"), dpi=300)
+    plt.close()
+
     print("\n" + "=" * 75)
     print("HASIL EVALUASI 10 ARSITEKTUR BACKPROPAGATION (5-3-1 s.d. 5-12-1)")
     print("=" * 75)
