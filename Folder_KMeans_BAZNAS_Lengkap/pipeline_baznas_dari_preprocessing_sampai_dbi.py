@@ -261,6 +261,50 @@ def evaluate_classification(y_true, prob, threshold=0.5):
     }, y_pred
 
 
+def plot_architecture(hidden_units, out_path):
+    """Menggambar diagram arsitektur Jaringan Syaraf Tiruan Backpropagation."""
+    n_input, n_output = 5, 1
+    fig, ax = plt.subplots(figsize=(11, 6))
+    x_positions = [0.12, 0.50, 0.88]
+    input_y = np.linspace(0.12, 0.88, n_input)
+    hidden_y = np.linspace(0.08, 0.92, hidden_units)
+    output_y = [0.5]
+
+    # Garis koneksi bobot input -> hidden
+    for yi in input_y:
+        for yh in hidden_y:
+            ax.plot([x_positions[0], x_positions[1]], [yi, yh], linewidth=0.65, alpha=0.6)
+
+    # Garis koneksi bobot hidden -> output
+    for yh in hidden_y:
+        ax.plot([x_positions[1], x_positions[2]], [yh, output_y[0]], linewidth=0.65, alpha=0.6)
+
+    # Titik neuron
+    ax.scatter([x_positions[0]] * n_input, input_y, s=750, color="#2980b9", edgecolors="black", zorder=3)
+    ax.scatter([x_positions[1]] * hidden_units, hidden_y, s=520, color="#e67e22", edgecolors="black", zorder=3)
+    ax.scatter(x_positions[2], output_y, s=850, color="#27ae60", edgecolors="black", zorder=3)
+
+    # Label teks neuron
+    for i, yv in enumerate(input_y, start=1):
+        ax.text(x_positions[0], yv, f"X{i}", ha="center", va="center", fontsize=10, color="white", weight="bold", zorder=4)
+    for j, yv in enumerate(hidden_y, start=1):
+        ax.text(x_positions[1], yv, f"H{j}", ha="center", va="center", fontsize=9, color="white", weight="bold", zorder=4)
+    ax.text(x_positions[2], output_y[0], "Y", ha="center", va="center", fontsize=12, color="white", weight="bold", zorder=4)
+
+    # Header label layer
+    ax.text(x_positions[0], 1.04, "Input Layer\n5 neuron", ha="center", va="bottom", fontsize=12, weight="bold")
+    ax.text(x_positions[1], 1.04, f"Hidden Layer\n{hidden_units} neuron", ha="center", va="bottom", fontsize=12, weight="bold")
+    ax.text(x_positions[2], 1.04, "Output Layer\n1 neuron", ha="center", va="bottom", fontsize=12, weight="bold")
+    ax.text(0.5, -0.08, f"Arsitektur Backpropagation 5-{hidden_units}-1 | Aktivasi sigmoid biner", ha="center", fontsize=11, style="italic")
+
+    ax.set_xlim(0, 1)
+    ax.set_ylim(-0.14, 1.18)
+    ax.axis("off")
+    fig.tight_layout()
+    fig.savefig(out_path, dpi=300, bbox_inches="tight")
+    plt.close(fig)
+
+
 # ------------------------------------------------------------------------------
 # 3. PIPELINE UTAMA (AUDIT & EKSEKUSI TAHAP 1 s.d. 4)
 # ------------------------------------------------------------------------------
@@ -667,7 +711,7 @@ def run_pipeline():
         plt.text(idx_b, val_b + 2, f"{val_b:.1f}%", ha="center", fontsize=9, weight="bold")
     plt.grid(axis="y", linestyle="--", alpha=0.5)
     plt.tight_layout()
-    plt.savefig(OUTPUT_BP_DIR / "14_grafik_perbandingan_akurasi.png", dpi=300)
+    plt.savefig(str(OUTPUT_BP_DIR / "14_grafik_perbandingan_akurasi.png"), dpi=300)
     plt.close()
 
     # 4.6 Visualisasi 2: Grafik Perbandingan MSE 10 Arsitektur
@@ -680,7 +724,7 @@ def run_pipeline():
     for idx_p, val_p in enumerate(sorted_by_h["MSE"]):
         plt.text(idx_p, val_p, f"{val_p:.2e}", ha="center", va="bottom", fontsize=8)
     plt.tight_layout()
-    plt.savefig(OUTPUT_BP_DIR / "15_grafik_perbandingan_mse.png", dpi=300)
+    plt.savefig(str(OUTPUT_BP_DIR / "15_grafik_perbandingan_mse.png"), dpi=300)
     plt.close()
 
     # 4.7 Visualisasi 3: Grafik Penurunan MSE Training Arsitektur Terbaik
@@ -692,10 +736,14 @@ def run_pipeline():
     plt.grid(True, linestyle="--", alpha=0.6)
     plt.legend()
     plt.tight_layout()
-    plt.savefig(OUTPUT_BP_DIR / "16_grafik_mse_training_arsitektur_terbaik.png", dpi=300)
+    plt.savefig(str(OUTPUT_BP_DIR / "16_grafik_mse_training_arsitektur_terbaik.png"), dpi=300)
     plt.close()
 
-    # 4.8 Visualisasi 4: Heatmap Confusion Matrix Data Testing (Arsitektur Terbaik)
+    # 4.8 Visualisasi Diagram Arsitektur Terbaik & Arsitektur 5-3-1
+    plot_architecture(best_h, str(OUTPUT_BP_DIR / f"13_arsitektur_terbaik_{best_arch}.png"))
+    plot_architecture(3, str(OUTPUT_BP_DIR / "13_arsitektur_5-3-1.png"))
+
+    # 4.9 Visualisasi 4: Heatmap Confusion Matrix Data Testing (Arsitektur Terbaik)
     m_best = eval_df.iloc[0]
     cm = np.array([[m_best["TN"], m_best["FP"]],
                    [m_best["FN"], m_best["TP"]]])
@@ -715,7 +763,7 @@ def run_pipeline():
     plt.ylabel("Target Sebenarnya (Label K-Means)", fontsize=10)
     plt.xlabel(f"Prediksi Model BP ({best_arch})", fontsize=10)
     plt.tight_layout()
-    plt.savefig(OUTPUT_BP_DIR / "07_confusion_matrix_testing_terbaik.png", dpi=300)
+    plt.savefig(str(OUTPUT_BP_DIR / "07_confusion_matrix_testing_terbaik.png"), dpi=300)
     plt.close()
 
     print("\n" + "=" * 75)
